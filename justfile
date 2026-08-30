@@ -111,7 +111,7 @@ mutate:
 badges:
 	mkdir -p badges
 	uv run pytest -q --cov --cov-report=json:badges/coverage-raw.json
-	uv run python tests/support/badges.py
+	uv run python -m tests.support.badges
 
 # run the demo server (quickstart fixture by default; args pass through)
 [group('demo')]

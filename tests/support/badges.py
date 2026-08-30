@@ -12,16 +12,14 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from .mutation.floor import mutation_score
+
 ROOT = Path(__file__).resolve().parents[2]
 BADGES = ROOT / "badges"
 COVERAGE_RAW = BADGES / "coverage-raw.json"
 MUTANT_STATS = ROOT / "mutants" / "mutmut-cicd-stats.json"
 MUTANT_FLOOR = ROOT / "mutmut-floor.json"
 COMPLEXITY_SNAPSHOT = ROOT / "complexipy-snapshot.json"
-
-# Gate and badge must agree on the formula — share it with the floor gate.
-sys.path.insert(0, str(ROOT / "tests" / "support" / "mutation"))
-from .mutation.floor import mutation_score  # noqa: E402
 
 
 def load_json(path: Path) -> Any:
