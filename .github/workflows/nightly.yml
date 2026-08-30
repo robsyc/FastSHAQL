@@ -134,6 +134,9 @@ jobs:
             git commit -m "badges: coverage, mutants, complexity [skip ci]"
             git push origin badges
           fi
+          # The branch dance above wipes the working tree, which later steps
+          # (composite-action post runs) still need — restore it.
+          git checkout -f "$GITHUB_SHA"
 
   lint-drift:
     name: Preview lint drift (advisory)
