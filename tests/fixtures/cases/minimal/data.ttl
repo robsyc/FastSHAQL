@@ -1,0 +1,7 @@
+@prefix ex: <http://example.org/> .
+
+ex:thing-1 a ex:Thing ;
+    ex:label "Alpha" .
+
+ex:thing-2 a ex:Thing ;
+    ex:label "Beta" .

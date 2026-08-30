@@ -1,0 +1,6 @@
+query LiteralEnumSelect {
+  observations {
+    iri
+    status
+  }
+}

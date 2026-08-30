@@ -1,0 +1,10 @@
+SELECT ?iri ?recentBooks_iri
+WHERE {
+  ?iri a <http://example.org/library/Member> .
+  OPTIONAL {
+    <http://example.org/library/Book> ^a ?recentBooks_iri .
+    ?recentBooks_iri <http://example.org/library/publicationYear> ?recentBooks_iri_p0 .
+    FILTER(?recentBooks_iri_p0 >= "2020"^^<http://www.w3.org/2001/XMLSchema#integer>)
+    ?recentBooks_iri a <http://example.org/library/Book> .
+  }
+}

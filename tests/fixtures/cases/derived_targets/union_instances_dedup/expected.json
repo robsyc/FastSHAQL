@@ -1,0 +1,18 @@
+{
+  "data": {
+    "unionvariants": [
+      {
+        "iri": "http://example.org/subA",
+        "label": " substitution A "
+      },
+      {
+        "iri": "http://example.org/subB",
+        "label": "substitution B"
+      },
+      {
+        "iri": "http://example.org/delA",
+        "label": "deletion A"
+      }
+    ]
+  }
+}

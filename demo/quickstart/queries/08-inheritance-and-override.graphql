@@ -1,0 +1,13 @@
+# Member and Author both include Person's fields via sh:node (inheritance).
+# Member then redefines displayName as language-tagged — an override.
+# Send {"Accept-Language": "nl"}: only the members localize.
+{
+  authors {
+    displayName
+    contactEmail
+  }
+  members {
+    displayName
+    contactEmail
+  }
+}

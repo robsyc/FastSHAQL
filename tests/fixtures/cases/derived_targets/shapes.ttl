@@ -1,0 +1,158 @@
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Derived targets (ADR-0016): the root entity set is computed by a
+# sh:targetNode node expression, not asserted via sh:targetClass.
+
+ex:VariantsShape a sh:NodeShape ;
+    sh:codeIdentifier "Variant" ;
+    sh:targetNode [ shnex:instancesOf ex:Variant ] ;
+    sh:property [
+        sh:path ex:label ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] , [
+        sh:path ex:score ;
+        sh:datatype xsd:decimal ;
+        sh:maxCount 1
+    ] .
+
+# Same result via the composite-path idiom: from the constant focus
+# ex:Variant, walk subclasses (^rdfs:subClassOf*) then instances (^rdf:type).
+ex:CompositeVariantsShape a sh:NodeShape ;
+    sh:codeIdentifier "CompositeVariant" ;
+    sh:targetNode [
+        shnex:pathValues (
+            [ sh:zeroOrMorePath [ sh:inversePath rdfs:subClassOf ] ]
+            [ sh:inversePath rdf:type ]
+        ) ;
+        shnex:focusNode ex:Variant
+    ] ;
+    sh:property [
+        sh:path ex:label ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] , [
+        sh:path ex:score ;
+        sh:datatype xsd:decimal ;
+        sh:maxCount 1
+    ] .
+
+ex:PinnedVariantsShape a sh:NodeShape ;
+    sh:codeIdentifier "PinnedVariant" ;
+    sh:targetNode ex:snv ;
+    sh:property [
+        sh:path ex:label ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] , [
+        sh:path ex:score ;
+        sh:datatype xsd:decimal ;
+        sh:maxCount 1
+    ] .
+
+ex:CuratedVariantsShape a sh:NodeShape ;
+    sh:codeIdentifier "CuratedVariant" ;
+    sh:targetNode [
+        shnex:nodes [ shnex:instancesOf ex:Variant ] ;
+        shnex:filterShape [
+            sh:property [
+                sh:path ex:score ;
+                sh:minInclusive 0.7
+            ]
+        ]
+    ] ;
+    sh:property [
+        sh:path ex:label ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] , [
+        sh:path ex:score ;
+        sh:datatype xsd:decimal ;
+        sh:maxCount 1
+    ] .
+
+ex:DeletionVariantsShape a sh:NodeShape ;
+    sh:codeIdentifier "DeletionVariant" ;
+    sh:targetNode [
+        sh:select "SELECT ?v WHERE { ?v a <http://example.org/Deletion> }"
+    ] ;
+    sh:property [
+        sh:path ex:label ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] , [
+        sh:path ex:score ;
+        sh:datatype xsd:decimal ;
+        sh:maxCount 1
+    ] .
+
+# Distinctness (node-expr §4.5.1 "the distinct nodes"): ex:delA is a SHACL
+# instance of both listed classes — it must appear once.
+ex:UnionVariantsShape a sh:NodeShape ;
+    sh:codeIdentifier "UnionVariant" ;
+    sh:targetNode [ shnex:instancesOf ( ex:Substitution ex:Deletion ) ] ;
+    sh:property [
+        sh:path ex:label ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+# Query the classes themselves: the subclass closure of ex:Change (the
+# zero-length step includes ex:Change). Roots need not be instances.
+ex:SubclassesShape a sh:NodeShape ;
+    sh:codeIdentifier "ChangeType" ;
+    sh:targetNode [
+        shnex:pathValues [ sh:zeroOrMorePath [ sh:inversePath rdfs:subClassOf ] ] ;
+        shnex:focusNode ex:Change
+    ] ;
+    sh:property [
+        sh:path ex:label ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+# Shape-side namespace scoping: all subclasses of ex:Change whose IRI starts
+# with the variant-namespace prefix — sh:pattern over the SPARQL str form of
+# the node (Core §7.4.3), no query-side filter involved.
+ex:BranchShape a sh:NodeShape ;
+    sh:codeIdentifier "VariantBranch" ;
+    sh:targetNode [
+        shnex:nodes [
+            shnex:pathValues [ sh:zeroOrMorePath [ sh:inversePath rdfs:subClassOf ] ] ;
+            shnex:focusNode ex:Change
+        ] ;
+        shnex:filterShape [ sh:pattern "^http://example\\.org/variant/" ]
+    ] ;
+    sh:property [
+        sh:path ex:label ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+# Implicit class target (Core §3.1.3.3): ex:Change is both the class and the
+# shape — its instances (subclass-closed) are the root entity set, so the
+# where filter composes over a derived target (ADR-0016).
+ex:Change a sh:ShapeClass ;
+    sh:property [
+        sh:path ex:label ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] , [
+        sh:path ex:score ;
+        sh:datatype xsd:decimal ;
+        sh:maxCount 1
+    ] .

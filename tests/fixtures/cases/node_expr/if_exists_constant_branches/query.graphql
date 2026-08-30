@@ -1,0 +1,7 @@
+query IfExistsConstantBranches {
+  variants {
+    iri
+    refAllele
+    annotationStatus
+  }
+}

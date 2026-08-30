@@ -1,0 +1,55 @@
+@prefix ex:  <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:obs1 a ex:Observation ;
+    ex:status "active" .
+
+ex:obs2 a ex:Observation ;
+    ex:status "inactive" .
+
+ex:obs3 a ex:Observation ;
+    ex:status "entered-in-error" .
+
+ex:Pink a ex:Color ;
+    ex:label "Pink" .
+
+ex:Purple a ex:Color ;
+    ex:label "Purple" .
+
+ex:sample1 a ex:ColorSample ;
+    ex:color ex:Pink .
+
+ex:sample2 a ex:ColorSample ;
+    ex:color ex:Purple .
+
+ex:rating1 a ex:Rating ;
+    ex:level "1"^^xsd:integer .
+
+ex:rating2 a ex:Rating ;
+    ex:level "2"^^xsd:integer .
+
+ex:quantity1 a ex:Quantity ;
+    ex:comparator "<" .
+
+ex:quantity2 a ex:Quantity ;
+    ex:comparator "<=" .
+
+ex:quantity3 a ex:Quantity ;
+    ex:comparator ">=" .
+
+ex:quantity4 a ex:Quantity ;
+    ex:comparator ">" .
+
+ex:acme a ex:Company ;
+    ex:name "Acme" .
+
+ex:globex a ex:Company ;
+    ex:name "Globex" .
+
+ex:alice a ex:Person ;
+    ex:name "Alice" ;
+    ex:employer ex:acme .
+
+ex:bob a ex:Person ;
+    ex:name "Bob" ;
+    ex:employer ex:globex .

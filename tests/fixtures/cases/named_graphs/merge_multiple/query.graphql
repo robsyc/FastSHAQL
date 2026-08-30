@@ -1,0 +1,6 @@
+query MergeMultiple {
+  things {
+    iri
+    label
+  }
+}

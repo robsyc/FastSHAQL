@@ -1,0 +1,98 @@
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix ex:      <http://example.org/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
+
+ex:ApiSchema a graphql:Schema ;
+    graphql:publicShape ex:PersonShape, ex:AddressShape, ex:SecretShape ;
+    graphql:protectedShape ex:AuditShape ;
+    graphql:publicClass ex:Animal ;
+    graphql:protectedClass ex:Vehicle ;
+    graphql:privateShape ex:SecretShape .
+
+ex:Dog rdfs:subClassOf ex:Animal .
+
+ex:Car rdfs:subClassOf ex:Vehicle .
+
+ex:DogShape a sh:NodeShape ;
+    sh:codeIdentifier "Dog" ;
+    sh:targetClass ex:Dog ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:CarShape a sh:NodeShape ;
+    sh:codeIdentifier "Car" ;
+    sh:targetClass ex:Car ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:CatShape a sh:NodeShape ;
+    sh:codeIdentifier "Cat" ;
+    sh:targetClass ex:Cat ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:SecretShape a sh:NodeShape ;
+    sh:codeIdentifier "Secret" ;
+    sh:targetClass ex:Secret ;
+    sh:property [
+        sh:path ex:label ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:AuditShape a sh:NodeShape ;
+    sh:codeIdentifier "AuditLog" ;
+    sh:targetClass ex:AuditLog ;
+    sh:property [
+        sh:path ex:action ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:AddressShape a sh:NodeShape ;
+    sh:codeIdentifier "Address" ;
+    sh:targetClass ex:Address ;
+    sh:property [
+        sh:path ex:street ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:PersonShape a sh:NodeShape ;
+    sh:codeIdentifier "Person" ;
+    sh:targetClass ex:Person ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:address ;
+        sh:node ex:AddressShape ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:audit ;
+        sh:node ex:AuditShape ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] .

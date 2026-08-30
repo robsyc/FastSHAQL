@@ -1,0 +1,7 @@
+SELECT ?iri ?hasGene
+WHERE {
+  ?iri a <http://example.org/genomics/Variant> .
+  BIND(EXISTS {
+    ?iri <http://example.org/genomics/inGene> ?_exists_hasGene .
+  } AS ?hasGene)
+}

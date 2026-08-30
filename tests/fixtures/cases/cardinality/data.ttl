@@ -1,0 +1,20 @@
+@prefix ex: <http://example.org/> .
+
+ex:thing-1 a ex:Thing ;
+    ex:label "Alpha" ;
+    ex:subtitle "The First" ;
+    ex:tag "red" ;
+    ex:tag "blue" ;
+    ex:altLabel "A" ;
+    ex:altLabel "B" .
+
+ex:thing-2 a ex:Thing ;
+    ex:label "Beta" ;
+    ex:tag "green" .
+
+ex:thing-3 a ex:Thing ;
+    ex:label "Gamma" ;
+    ex:subtitle "The Third" ;
+    ex:tag "red" ;
+    ex:tag "green" ;
+    ex:tag "blue" .

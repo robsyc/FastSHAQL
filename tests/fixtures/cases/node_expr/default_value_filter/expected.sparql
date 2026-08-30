@@ -1,0 +1,9 @@
+SELECT ?iri ?assayVersion
+WHERE {
+  ?iri a <http://example.org/genomics/Gene> .
+  OPTIONAL {
+    ?iri <http://example.org/genomics/assayVersion> ?_dv_assayVersion .
+  }
+  BIND(COALESCE(?_dv_assayVersion, "v1") AS ?assayVersion)
+  FILTER(?assayVersion = "v1")
+}

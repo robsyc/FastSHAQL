@@ -1,0 +1,12 @@
+{
+  "data": {
+    "persons": [
+      {
+        "name": "Alice",
+        "address": {
+          "street": "Main St"
+        }
+      }
+    ]
+  }
+}

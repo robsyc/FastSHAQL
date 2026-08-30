@@ -1,0 +1,6 @@
+query ImplicitTargetWhere {
+  changes(where: { score: { gte: 0.7 } }) {
+    iri
+    label
+  }
+}

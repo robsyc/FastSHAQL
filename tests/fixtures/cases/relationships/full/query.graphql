@@ -1,0 +1,14 @@
+query RelationshipFull {
+  persons {
+    name
+    employer {
+      name
+      locatedIn {
+        name
+      }
+    }
+    knows {
+      name
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "data": {
+    "genes": [
+      {
+        "iri": "http://example.org/genomics/g1",
+        "summary": "Full-length transcript"
+      },
+      {
+        "iri": "http://example.org/genomics/g2",
+        "summary": "Short variant"
+      },
+      {
+        "iri": "http://example.org/genomics/g3",
+        "summary": null
+      }
+    ]
+  }
+}

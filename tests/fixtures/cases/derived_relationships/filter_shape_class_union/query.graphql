@@ -1,0 +1,9 @@
+query SpecialCollections {
+  members {
+    iri
+    specialCollections {
+      iri
+      title
+    }
+  }
+}

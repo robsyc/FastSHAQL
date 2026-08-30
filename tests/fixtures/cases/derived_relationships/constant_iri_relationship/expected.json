@@ -1,0 +1,27 @@
+{
+  "data": {
+    "members": [
+      {
+        "iri": "http://example.org/library/m1",
+        "homeBranch": {
+          "iri": "http://example.org/library/central",
+          "name": "Central"
+        }
+      },
+      {
+        "iri": "http://example.org/library/m2",
+        "homeBranch": {
+          "iri": "http://example.org/library/central",
+          "name": "Central"
+        }
+      },
+      {
+        "iri": "http://example.org/library/m3",
+        "homeBranch": {
+          "iri": "http://example.org/library/central",
+          "name": "Central"
+        }
+      }
+    ]
+  }
+}

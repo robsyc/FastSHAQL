@@ -1,0 +1,67 @@
+{
+  "data": {
+    "persons": [
+      {
+        "iri": "http://example.org/personA",
+        "name": "Alice",
+        "bio": "Bio en",
+        "altLabel": [
+          "Alt-A-en",
+          "Alt-A-enUS"
+        ],
+        "note": "Note-A-en",
+        "plain": "Plain-A",
+        "summary": "Sum-A-en",
+        "employer": {
+          "iri": "http://example.org/orgA",
+          "label": "Acme"
+        }
+      },
+      {
+        "iri": "http://example.org/personB",
+        "name": "Bob",
+        "bio": "Bio-B",
+        "altLabel": [
+          "Alt-B"
+        ],
+        "note": "Note-B",
+        "plain": "Plain-B",
+        "summary": "Sum-B",
+        "employer": null
+      },
+      {
+        "iri": "http://example.org/personE",
+        "name": "Eva",
+        "bio": null,
+        "altLabel": [],
+        "note": "Note-E",
+        "plain": "Plain-E",
+        "summary": null,
+        "employer": null
+      },
+      {
+        "iri": "http://example.org/personF",
+        "name": "Finn",
+        "bio": null,
+        "altLabel": [],
+        "note": null,
+        "plain": null,
+        "summary": null,
+        "employer": null
+      },
+      {
+        "iri": "http://example.org/personG",
+        "name": "Gail",
+        "bio": "Bio-G",
+        "altLabel": [
+          "Alt-G-1",
+          "Alt-G-2"
+        ],
+        "note": "Note-G",
+        "plain": "Plain-G",
+        "summary": "Sum-G",
+        "employer": null
+      }
+    ]
+  }
+}

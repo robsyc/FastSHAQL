@@ -1,0 +1,92 @@
+@prefix sh:       <http://www.w3.org/ns/shacl#> .
+@prefix clinical: <http://example.org/clinical/> .
+@prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+
+clinical:prefixes a sh:ShapesGraph ;
+    sh:declare [
+        sh:prefix "clinical" ;
+        sh:namespace "http://example.org/clinical/" ;
+    ] ;
+    sh:declare [
+        sh:prefix "rdfs" ;
+        sh:namespace "http://www.w3.org/2000/01/rdf-schema#" ;
+    ] .
+
+clinical:ConditionShape a sh:NodeShape ;
+    sh:codeIdentifier "Condition" ;
+    sh:targetClass clinical:Condition ;
+    sh:property [
+        sh:path clinical:mostSpecificClass ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:values [
+            sh:prefixes clinical:prefixes ;
+            sh:select """
+              SELECT ?label
+              WHERE {
+                $this a ?cls .
+                FILTER NOT EXISTS { $this a ?sub . ?sub rdfs:subClassOf+ ?cls . FILTER(?sub != ?cls) }
+                BIND(STR(?cls) AS ?label)
+              }
+            """ ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path clinical:summaryNote ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:values [
+            sh:prefixes clinical:prefixes ;
+            sh:select """
+                SELECT ?note
+                WHERE { $this clinical:note ?note }
+            """ ;
+        ] ;
+    ] .
+
+clinical:PatientShape a sh:NodeShape ;
+    sh:codeIdentifier "Patient" ;
+    sh:targetClass clinical:Patient ;
+    sh:property [
+        sh:path clinical:hasCondition ;
+        sh:class clinical:Condition ;
+        sh:minCount 0 ;
+    ] ;
+    sh:property [
+        sh:path clinical:activeConditions ;
+        sh:class clinical:Condition ;
+        sh:values [
+            sh:prefixes clinical:prefixes ;
+            sh:select """
+                SELECT ?condition
+                WHERE {
+                    $this clinical:hasCondition ?condition .
+                }
+            """ ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path clinical:applicableProtocolTitles ;
+        sh:datatype xsd:string ;
+        sh:values [
+            sh:prefixes clinical:prefixes ;
+            sh:select """
+                SELECT ?title
+                WHERE {
+                    $this clinical:appliesProtocol ?protocol .
+                    ?protocol clinical:title ?title .
+                }
+            """ ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path clinical:protocolStatus ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:values [
+            sh:prefixes clinical:prefixes ;
+            sh:sparqlExpr "IF(EXISTS { $this clinical:appliesProtocol ?p }, \"assigned\", \"unassigned\")" ;
+        ] ;
+    ] .

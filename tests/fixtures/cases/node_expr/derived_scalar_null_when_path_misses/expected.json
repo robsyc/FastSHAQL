@@ -1,0 +1,18 @@
+{
+  "data": {
+    "genes": [
+      {
+        "iri": "http://example.org/genomics/g1",
+        "confidence": 0.95
+      },
+      {
+        "iri": "http://example.org/genomics/g2",
+        "confidence": null
+      },
+      {
+        "iri": "http://example.org/genomics/g3",
+        "confidence": null
+      }
+    ]
+  }
+}

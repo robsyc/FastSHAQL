@@ -1,0 +1,222 @@
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix ex:  <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# --- Single parent ---
+ex:SingleBaseShape a sh:NodeShape ;
+    sh:codeIdentifier "SingleBase" ;
+    sh:property [
+        sh:path ex:baseTag ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:SingleChildShape a sh:NodeShape ;
+    sh:codeIdentifier "SingleChild" ;
+    sh:node ex:SingleBaseShape ;
+    sh:property [
+        sh:path ex:childTag ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+# --- Multi parent ---
+ex:ParentOneShape a sh:NodeShape ;
+    sh:codeIdentifier "ParentOne" ;
+    sh:property [
+        sh:path ex:oneTag ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:ParentTwoShape a sh:NodeShape ;
+    sh:codeIdentifier "ParentTwo" ;
+    sh:property [
+        sh:path ex:twoTag ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:MultiChildShape a sh:NodeShape ;
+    sh:codeIdentifier "MultiChild" ;
+    sh:node ex:ParentOneShape, ex:ParentTwoShape ;
+    sh:property [
+        sh:path ex:childOnly ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+# --- Transitive chain ---
+ex:TransRootShape a sh:NodeShape ;
+    sh:codeIdentifier "TransRoot" ;
+    sh:property [
+        sh:path ex:rootTag ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:TransMidShape a sh:NodeShape ;
+    sh:codeIdentifier "TransMid" ;
+    sh:node ex:TransRootShape ;
+    sh:property [
+        sh:path ex:midTag ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:TransLeafShape a sh:NodeShape ;
+    sh:codeIdentifier "TransLeaf" ;
+    sh:node ex:TransMidShape ;
+    sh:property [
+        sh:path ex:leafTag ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+# --- Shared-grandparent diamond ---
+ex:DiamondRootShape a sh:NodeShape ;
+    sh:codeIdentifier "DiamondRoot" ;
+    sh:property [
+        sh:path ex:rootTag ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:MidAShape a sh:NodeShape ;
+    sh:codeIdentifier "MidA" ;
+    sh:node ex:DiamondRootShape ;
+    sh:property [
+        sh:path ex:midATag ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:MidBShape a sh:NodeShape ;
+    sh:codeIdentifier "MidB" ;
+    sh:node ex:DiamondRootShape ;
+    sh:property [
+        sh:path ex:midBTag ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:DiamondChildShape a sh:NodeShape ;
+    sh:codeIdentifier "DiamondChild" ;
+    sh:node ex:MidAShape, ex:MidBShape ;
+    sh:property [
+        sh:path ex:diamondTag ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+# --- E2E: Manager inherits Employee ---
+ex:LocationShape a sh:NodeShape ;
+    sh:codeIdentifier "Location" ;
+    sh:targetClass ex:Location ;
+    sh:property [
+        sh:path ex:locationName ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:EmployeeShape a sh:NodeShape ;
+    sh:codeIdentifier "Employee" ;
+    sh:targetClass ex:Employee ;
+    sh:property [
+        sh:path ex:employeeId ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:workLocation ;
+        sh:class ex:Location ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:employmentStatus ;
+        sh:datatype xsd:string ;
+        sh:in ("active" "inactive") ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:ManagerShape a sh:NodeShape ;
+    sh:codeIdentifier "Manager" ;
+    sh:targetClass ex:Manager ;
+    sh:node ex:EmployeeShape ;
+    sh:property [
+        sh:path ex:managerName ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+# --- Inherited enum ---
+ex:StatusBaseShape a sh:NodeShape ;
+    sh:codeIdentifier "StatusBase" ;
+    sh:property [
+        sh:path ex:status ;
+        sh:datatype xsd:string ;
+        sh:in ("active" "inactive") ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:StatusChildShape a sh:NodeShape ;
+    sh:codeIdentifier "StatusChild" ;
+    sh:node ex:StatusBaseShape .
+
+# --- Inherited composite path (sequence) ---
+ex:SeqBaseShape a sh:NodeShape ;
+    sh:codeIdentifier "SeqBase" ;
+    sh:property [
+        sh:codeIdentifier "employeeName" ;
+        sh:path ( ex:employer ex:name ) ;
+        sh:datatype xsd:string ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] .
+
+ex:SeqChildShape a sh:NodeShape ;
+    sh:codeIdentifier "SeqChild" ;
+    sh:node ex:SeqBaseShape .
+
+# --- Override: own field beats inherited (ADR-0005) ---
+# The override is a cardinality-lane change (scalar -> list): a datatype
+# override would make the data unsatisfiable under SHACL's AND-semantics for
+# sh:node (no literal is both xsd:integer and xsd:string) — datatype overrides
+# are unit-pinned (test_child_own_field_overrides_inherited).
+ex:BadgeHolderShape a sh:NodeShape ;
+    sh:codeIdentifier "BadgeHolder" ;
+    sh:targetClass ex:BadgeHolder ;
+    sh:property [
+        sh:path ex:badgeLevel ;
+        sh:datatype xsd:integer ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:ManagerBadgeShape a sh:NodeShape ;
+    sh:codeIdentifier "ManagerBadge" ;
+    sh:targetClass ex:ManagerBadge ;
+    sh:node ex:BadgeHolderShape ;
+    sh:property [
+        sh:path ex:badgeLevel ;
+        sh:datatype xsd:integer ;
+        sh:minCount 1
+    ] .

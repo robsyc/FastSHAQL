@@ -1,0 +1,9 @@
+SELECT ?iri ?supportScore
+WHERE {
+  ?iri a <http://example.org/genomics/Gene> .
+  OPTIONAL {
+    ?iri <http://example.org/genomics/support>/<http://example.org/genomics/score> ?_dv_supportScore .
+  }
+  BIND(COALESCE(?_dv_supportScore, "0.0"^^<http://www.w3.org/2001/XMLSchema#decimal>) AS ?supportScore)
+  FILTER(?supportScore = "0.0"^^<http://www.w3.org/2001/XMLSchema#decimal>)
+}

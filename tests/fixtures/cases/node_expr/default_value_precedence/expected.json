@@ -1,0 +1,24 @@
+{
+  "data": {
+    "genes": [
+      {
+        "iri": "http://example.org/genomics/g1",
+        "symbol": "BRCA1",
+        "assayVersion": "v2",
+        "supportScore": 0.95
+      },
+      {
+        "iri": "http://example.org/genomics/g2",
+        "symbol": "TP53",
+        "assayVersion": "v1",
+        "supportScore": 0.0
+      },
+      {
+        "iri": "http://example.org/genomics/g3",
+        "symbol": "KRAS",
+        "assayVersion": "v1",
+        "supportScore": 0.0
+      }
+    ]
+  }
+}

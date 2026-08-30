@@ -1,0 +1,10 @@
+SELECT ?iri ?name ?contact_iri ?contact_name
+WHERE {
+  ?iri a <http://example.org/ContactPerson> .
+  ?iri <http://example.org/name> ?name .
+  OPTIONAL {
+    ?iri <http://example.org/spouse>|<http://example.org/partner> ?contact_iri .
+    ?contact_iri a <http://example.org/ContactPerson> .
+    ?contact_iri <http://example.org/name> ?contact_name .
+  }
+}

@@ -1,0 +1,9 @@
+SELECT ?iri ?displayName
+WHERE {
+  ?iri a <http://example.org/genomics/Gene> .
+  OPTIONAL {
+    ?iri <http://example.org/genomics/displayName> ?_l0_displayName .
+    FILTER(langMatches(LANG(?_l0_displayName), "en"))
+  }
+  BIND(COALESCE(?_l0_displayName, "unnamed") AS ?displayName)
+}

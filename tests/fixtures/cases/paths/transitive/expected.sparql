@@ -1,0 +1,15 @@
+SELECT ?iri ?name ?ancestors_iri ?ancestors_name ?selfAndAncestors_iri ?selfAndAncestors_name
+WHERE {
+  ?iri a <http://example.org/FamilyPerson> .
+  ?iri <http://example.org/name> ?name .
+  OPTIONAL {
+    ?iri <http://example.org/parent>+ ?ancestors_iri .
+    ?ancestors_iri a <http://example.org/FamilyPerson> .
+    ?ancestors_iri <http://example.org/name> ?ancestors_name .
+  }
+  OPTIONAL {
+    ?iri <http://example.org/parent>* ?selfAndAncestors_iri .
+    ?selfAndAncestors_iri a <http://example.org/FamilyPerson> .
+    ?selfAndAncestors_iri <http://example.org/name> ?selfAndAncestors_name .
+  }
+}

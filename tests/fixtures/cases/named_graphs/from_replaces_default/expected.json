@@ -1,0 +1,10 @@
+{
+  "data": {
+    "things": [
+      {
+        "iri": "http://example.org/thing-1",
+        "label": "Alpha"
+      }
+    ]
+  }
+}

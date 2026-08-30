@@ -1,0 +1,6 @@
+query IfBranchesValueSets {
+  variants {
+    iri
+    evidenceTags
+  }
+}

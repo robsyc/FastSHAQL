@@ -1,0 +1,36 @@
+{
+  "data": {
+    "persons": [
+      {
+        "name": "Alice",
+        "employer": {
+          "name": "Acme",
+          "locatedIn": {
+            "name": "Amsterdam"
+          }
+        },
+        "knows": [
+          { "name": "Bob" },
+          { "name": "Carol" }
+        ]
+      },
+      {
+        "name": "Bob",
+        "employer": {
+          "name": "Globex",
+          "locatedIn": {
+            "name": "Berlin"
+          }
+        },
+        "knows": [
+          { "name": "Alice" }
+        ]
+      },
+      {
+        "name": "Carol",
+        "employer": null,
+        "knows": []
+      }
+    ]
+  }
+}

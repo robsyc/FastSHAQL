@@ -1,0 +1,18 @@
+{
+  "data": {
+    "managers": [
+      {
+        "iri": "http://example.org/alice",
+        "managerName": "Alice",
+        "workLocation": {
+          "locationName": "Headquarters"
+        }
+      },
+      {
+        "iri": "http://example.org/bob",
+        "managerName": "Bob",
+        "workLocation": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+query RelationshipOverlay {
+  persons {
+    iri
+    name
+    employer {
+      iri
+      name
+    }
+  }
+}

@@ -1,0 +1,12 @@
+SELECT ?iri ?hasCondition_iri ?hasCondition_mostSpecificClass
+WHERE {
+  ?iri a <http://example.org/clinical/Patient> .
+  OPTIONAL {
+    ?iri <http://example.org/clinical/hasCondition> ?hasCondition_iri .
+    ?hasCondition_iri a <http://example.org/clinical/Condition> .
+    ?hasCondition_iri a ?cls .
+    FILTER NOT EXISTS { ?hasCondition_iri a ?sub . ?sub <http://www.w3.org/2000/01/rdf-schema#subClassOf>+ ?cls . FILTER(?sub != ?cls) }
+    BIND(STR(?cls) AS ?label)
+    BIND(?label AS ?hasCondition_mostSpecificClass)
+  }
+}

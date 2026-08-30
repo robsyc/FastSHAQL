@@ -1,0 +1,9 @@
+SELECT ?iri ?homeBranch_iri ?homeBranch_name
+WHERE {
+  ?iri a <http://example.org/library/Member> .
+  OPTIONAL {
+    BIND(<http://example.org/library/central> AS ?homeBranch_iri)
+    ?homeBranch_iri a <http://example.org/library/Branch> .
+    ?homeBranch_iri <http://example.org/library/name> ?homeBranch_name .
+  }
+}

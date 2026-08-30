@@ -1,0 +1,20 @@
+{
+  "data": {
+    "persons": [
+      {
+        "name": "Alice",
+        "employer": [
+          { "name": "Acme" },
+          { "name": "Globex" }
+        ]
+      },
+      {
+        "name": "Bob",
+        "employer": [
+          { "name": "Acme" },
+          { "name": "Globex" }
+        ]
+      }
+    ]
+  }
+}

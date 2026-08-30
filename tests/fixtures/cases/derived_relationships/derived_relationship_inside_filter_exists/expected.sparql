@@ -1,0 +1,13 @@
+SELECT ?iri ?name
+WHERE {
+  ?iri a <http://example.org/library/Member> .
+  ?iri <http://example.org/library/name> ?name .
+  ?iri <http://example.org/library/borrowed>/<http://example.org/library/author>/^<http://example.org/library/author> ?recommendedBooks_iri .
+  ?recommendedBooks_iri <http://example.org/library/status> ?recommendedBooks_iri_p0 .
+  FILTER(?recommendedBooks_iri_p0 = "available")
+  FILTER(EXISTS {
+    ?recommendedBooks_iri a <http://example.org/library/Book> .
+    ?recommendedBooks_iri <http://example.org/library/title> ?_rf_recommendedBooks_title .
+    FILTER(?_rf_recommendedBooks_title = "SPARQL 101")
+  })
+}

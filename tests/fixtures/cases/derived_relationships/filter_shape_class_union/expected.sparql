@@ -1,0 +1,14 @@
+SELECT ?iri ?specialCollections_iri ?specialCollections_title
+WHERE {
+  ?iri a <http://example.org/library/Member> .
+  OPTIONAL {
+    ?iri <http://example.org/library/sponsors> ?specialCollections_iri .
+    ?specialCollections_iri a ?specialCollections_iri_cls0 .
+    VALUES ?specialCollections_iri_cls0 {
+      <http://example.org/library/RareBook>
+      <http://example.org/library/Manuscript>
+    }
+    ?specialCollections_iri a <http://example.org/library/SpecialCollection> .
+    ?specialCollections_iri <http://example.org/library/title> ?specialCollections_title .
+  }
+}

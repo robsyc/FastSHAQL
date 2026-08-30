@@ -1,0 +1,5 @@
+SELECT ?iri ?employmentStatus
+WHERE {
+  ?iri a <http://example.org/Manager> .
+  ?iri <http://example.org/employmentStatus> ?employmentStatus .
+}

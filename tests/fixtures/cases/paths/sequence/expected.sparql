@@ -1,0 +1,10 @@
+SELECT ?iri ?name ?employerCity_iri ?employerCity_name
+WHERE {
+  ?iri a <http://example.org/EmployerCityPerson> .
+  ?iri <http://example.org/name> ?name .
+  OPTIONAL {
+    ?iri <http://example.org/employer>/<http://example.org/locatedIn> ?employerCity_iri .
+    ?employerCity_iri a <http://example.org/City> .
+    ?employerCity_iri <http://example.org/name> ?employerCity_name .
+  }
+}

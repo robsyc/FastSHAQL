@@ -1,0 +1,11 @@
+{
+  "data": {
+    "items": [
+      {
+        "iri": "http://example.org/industrial-component",
+        "label": "Heavy Industry",
+        "iriLength": 39
+      }
+    ]
+  }
+}

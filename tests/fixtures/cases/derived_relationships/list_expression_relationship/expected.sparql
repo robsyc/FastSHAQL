@@ -1,0 +1,13 @@
+SELECT ?iri ?friendBranches_iri ?friendBranches_name
+WHERE {
+  ?iri a <http://example.org/library/Member> .
+  OPTIONAL {
+    VALUES ?friendBranches_iri {
+      <http://example.org/library/central>
+      <http://example.org/library/east>
+      <http://example.org/library/kiosk>
+    }
+    ?friendBranches_iri a <http://example.org/library/Branch> .
+    ?friendBranches_iri <http://example.org/library/name> ?friendBranches_name .
+  }
+}

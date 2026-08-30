@@ -1,0 +1,11 @@
+query RowVsEntity {
+  persons(limit: 2) {
+    name
+    employer {
+      name
+    }
+    knows {
+      name
+    }
+  }
+}

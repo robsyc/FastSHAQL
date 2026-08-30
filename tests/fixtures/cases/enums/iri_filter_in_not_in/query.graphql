@@ -1,0 +1,8 @@
+query IriEnumFilterInNotIn {
+  colorsamples(
+    where: { color: { in: [PINK, PURPLE], notIn: [PURPLE] } }
+  ) {
+    iri
+    color
+  }
+}

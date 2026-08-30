@@ -1,0 +1,9 @@
+query DefaultValueRelationshipNested {
+  variants(where: {inGene: {assayVersion: {eq: "v1"}}}) {
+    iri
+    inGene {
+      iri
+      assayVersion
+    }
+  }
+}

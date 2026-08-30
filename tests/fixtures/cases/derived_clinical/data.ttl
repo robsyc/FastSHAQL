@@ -1,0 +1,31 @@
+@prefix clinical: <http://example.org/clinical/> .
+@prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+
+clinical:Condition a rdfs:Class .
+clinical:LiverDisorder a rdfs:Class ;
+    rdfs:subClassOf clinical:Condition .
+clinical:HepatitisB a rdfs:Class ;
+    rdfs:subClassOf clinical:LiverDisorder .
+clinical:NonAlcoholicSteatohepatitis a rdfs:Class ;
+    rdfs:subClassOf clinical:HepatitisB .
+
+clinical:patient-1 a clinical:Patient .
+clinical:patient-2 a clinical:Patient .
+clinical:patient-3 a clinical:Patient .
+
+clinical:cond-nash a clinical:Condition, clinical:NonAlcoholicSteatohepatitis ;
+    clinical:note "NASH management plan" .
+clinical:cond-hepb a clinical:Condition, clinical:HepatitisB .
+
+clinical:patient-1 clinical:hasCondition clinical:cond-nash .
+clinical:patient-2 clinical:hasCondition clinical:cond-hepb .
+
+clinical:protocol-diet a clinical:Protocol ;
+    clinical:title "Low-sodium diet" .
+clinical:protocol-exercise a clinical:Protocol ;
+    clinical:title "Exercise plan" .
+clinical:protocol-antiviral a clinical:Protocol ;
+    clinical:title "Antiviral therapy" .
+
+clinical:patient-1 clinical:appliesProtocol clinical:protocol-diet, clinical:protocol-exercise .
+clinical:patient-2 clinical:appliesProtocol clinical:protocol-antiviral .

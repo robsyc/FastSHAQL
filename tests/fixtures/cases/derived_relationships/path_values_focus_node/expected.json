@@ -1,0 +1,93 @@
+{
+  "data": {
+    "members": [
+      {
+        "iri": "http://example.org/library/m1",
+        "allBooks": [
+          {
+            "iri": "http://example.org/library/b1",
+            "title": "SPARQL 101"
+          },
+          {
+            "iri": "http://example.org/library/b2",
+            "title": "Advanced RDF"
+          },
+          {
+            "iri": "http://example.org/library/b4",
+            "title": "Other RDF Tales"
+          },
+          {
+            "iri": "http://example.org/library/b3",
+            "title": "GraphQL Basics"
+          },
+          {
+            "iri": "http://example.org/library/b5",
+            "title": "Co-authored SPARQL"
+          },
+          {
+            "iri": "http://example.org/library/b6",
+            "title": "Shared Sequel"
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/library/m2",
+        "allBooks": [
+          {
+            "iri": "http://example.org/library/b1",
+            "title": "SPARQL 101"
+          },
+          {
+            "iri": "http://example.org/library/b2",
+            "title": "Advanced RDF"
+          },
+          {
+            "iri": "http://example.org/library/b4",
+            "title": "Other RDF Tales"
+          },
+          {
+            "iri": "http://example.org/library/b3",
+            "title": "GraphQL Basics"
+          },
+          {
+            "iri": "http://example.org/library/b5",
+            "title": "Co-authored SPARQL"
+          },
+          {
+            "iri": "http://example.org/library/b6",
+            "title": "Shared Sequel"
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/library/m3",
+        "allBooks": [
+          {
+            "iri": "http://example.org/library/b1",
+            "title": "SPARQL 101"
+          },
+          {
+            "iri": "http://example.org/library/b2",
+            "title": "Advanced RDF"
+          },
+          {
+            "iri": "http://example.org/library/b4",
+            "title": "Other RDF Tales"
+          },
+          {
+            "iri": "http://example.org/library/b3",
+            "title": "GraphQL Basics"
+          },
+          {
+            "iri": "http://example.org/library/b5",
+            "title": "Co-authored SPARQL"
+          },
+          {
+            "iri": "http://example.org/library/b6",
+            "title": "Shared Sequel"
+          }
+        ]
+      }
+    ]
+  }
+}

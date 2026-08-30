@@ -1,0 +1,22 @@
+SELECT ?iri ?name ?employer_iri ?employer_name ?employer_locatedIn_iri ?employer_locatedIn_name
+WHERE {
+  ?iri a <http://example.org/Person> .
+  ?iri <http://example.org/name> ?name .
+  ?iri <http://example.org/employer> ?employer_iri .
+  ?employer_iri a <http://example.org/Company> .
+  ?employer_iri <http://example.org/name> ?employer_name .
+  OPTIONAL {
+    ?employer_iri <http://example.org/locatedIn> ?employer_locatedIn_iri .
+    ?employer_locatedIn_iri a <http://example.org/City> .
+    ?employer_locatedIn_iri <http://example.org/name> ?employer_locatedIn_name .
+  }
+  FILTER(EXISTS {
+    ?employer_iri a <http://example.org/Company> .
+    ?employer_iri <http://example.org/locatedIn> ?employer_locatedIn_iri .
+    FILTER(EXISTS {
+      ?employer_locatedIn_iri a <http://example.org/City> .
+      ?employer_locatedIn_iri <http://example.org/name> ?_rf_employer_locatedIn_name .
+      FILTER(?_rf_employer_locatedIn_name = "Amsterdam")
+    })
+  })
+}

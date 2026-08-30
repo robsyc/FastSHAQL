@@ -1,0 +1,12 @@
+{
+  "data": {
+    "managerbadges": [
+      {
+        "iri": "http://example.org/carol",
+        "badgeLevel": [
+          3
+        ]
+      }
+    ]
+  }
+}

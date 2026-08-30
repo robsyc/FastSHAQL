@@ -1,0 +1,23 @@
+{
+  "data": {
+    "patients": [
+      {
+        "hasCondition": [
+          {
+            "summaryNote": "NASH management plan"
+          }
+        ]
+      },
+      {
+        "hasCondition": [
+          {
+            "summaryNote": null
+          }
+        ]
+      },
+      {
+        "hasCondition": []
+      }
+    ]
+  }
+}

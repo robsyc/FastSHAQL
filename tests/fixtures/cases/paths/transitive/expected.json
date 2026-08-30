@@ -1,0 +1,53 @@
+{
+  "data": {
+    "familypersons": [
+      {
+        "name": "Grandpa",
+        "ancestors": [],
+        "selfAndAncestors": [
+          {
+            "name": "Grandpa"
+          }
+        ]
+      },
+      {
+        "name": "Dad",
+        "ancestors": [
+          {
+            "name": "Grandpa"
+          }
+        ],
+        "selfAndAncestors": [
+          {
+            "name": "Grandpa"
+          },
+          {
+            "name": "Dad"
+          }
+        ]
+      },
+      {
+        "name": "Kid",
+        "ancestors": [
+          {
+            "name": "Grandpa"
+          },
+          {
+            "name": "Dad"
+          }
+        ],
+        "selfAndAncestors": [
+          {
+            "name": "Grandpa"
+          },
+          {
+            "name": "Dad"
+          },
+          {
+            "name": "Kid"
+          }
+        ]
+      }
+    ]
+  }
+}

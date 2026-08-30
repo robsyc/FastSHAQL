@@ -1,0 +1,17 @@
+# Graph selection is per request, via the X-Default-Graph header — the
+# queried dataset is the RDF merge of the listed graphs.
+# GraphiQL Headers pane variants:
+#   {"X-Default-Graph": "http://example.org/graphs/catalog"}
+#     → 8 works, no loans (the <archive> graph is out of scope)
+#   {"X-Default-Graph": "http://example.org/graphs/catalog, http://example.org/graphs/loans"}
+#     → the same 8 works plus 6 loans (comma-joined = merged)
+#   no header
+#     → the store's default: the union of every graph (10 works, 6 loans)
+{
+  works {
+    title
+  }
+  loans {
+    status
+  }
+}

@@ -1,0 +1,22 @@
+SELECT ?iri ?name ?employer_iri ?employer_name ?knows_iri ?knows_name
+WHERE {
+  {
+    SELECT DISTINCT ?iri
+    WHERE {
+      ?iri a <http://example.org/Person> .
+    }
+    ORDER BY ?iri
+    LIMIT 2
+  }
+  ?iri <http://example.org/name> ?name .
+  OPTIONAL {
+    ?iri <http://example.org/employer> ?employer_iri .
+    ?employer_iri a <http://example.org/Company> .
+    ?employer_iri <http://example.org/name> ?employer_name .
+  }
+  OPTIONAL {
+    ?iri <http://example.org/knows> ?knows_iri .
+    ?knows_iri a <http://example.org/Person> .
+    ?knows_iri <http://example.org/name> ?knows_name .
+  }
+}

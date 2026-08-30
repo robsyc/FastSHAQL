@@ -1,0 +1,47 @@
+{
+  "data": {
+    "persons": [
+      {
+        "iri": "http://example.org/personA",
+        "altLabel": [
+          "Alt-A-en",
+          "Alt-A-enUS",
+          "Alt-A-nl"
+        ],
+        "plain": "Plain-A"
+      },
+      {
+        "iri": "http://example.org/personB",
+        "altLabel": [
+          "Alt-B"
+        ],
+        "plain": "Plain-B"
+      },
+      {
+        "iri": "http://example.org/personC",
+        "altLabel": [
+          "Alt-C"
+        ],
+        "plain": "Plain-C"
+      },
+      {
+        "iri": "http://example.org/personE",
+        "altLabel": [],
+        "plain": "Plain-E"
+      },
+      {
+        "iri": "http://example.org/personF",
+        "altLabel": [],
+        "plain": null
+      },
+      {
+        "iri": "http://example.org/personG",
+        "altLabel": [
+          "Alt-G-1",
+          "Alt-G-2"
+        ],
+        "plain": "Plain-G"
+      }
+    ]
+  }
+}

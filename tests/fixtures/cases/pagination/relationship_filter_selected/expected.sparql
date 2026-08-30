@@ -1,0 +1,22 @@
+SELECT ?iri ?name ?employer_iri ?employer_name
+WHERE {
+  {
+    SELECT DISTINCT ?iri
+    WHERE {
+      ?iri a <http://example.org/Person> .
+      ?iri <http://example.org/employer> ?employer_iri .
+      ?employer_iri a <http://example.org/Company> .
+      FILTER(EXISTS {
+        ?employer_iri a <http://example.org/Company> .
+        ?employer_iri <http://example.org/name> ?_rf_employer_name .
+        FILTER(?_rf_employer_name = "Acme")
+      })
+    }
+    ORDER BY ?iri
+    LIMIT 2
+  }
+  ?iri <http://example.org/name> ?name .
+  ?iri <http://example.org/employer> ?employer_iri .
+  ?employer_iri a <http://example.org/Company> .
+  ?employer_iri <http://example.org/name> ?employer_name .
+}

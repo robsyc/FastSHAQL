@@ -1,0 +1,52 @@
+[
+  {
+    "path": "src/fastshaql/core/execution/converter.py",
+    "file_name": "converter.py",
+    "functions": [
+      {
+        "name": "_apply_scalar_fields",
+        "complexity": 17
+      }
+    ]
+  },
+  {
+    "path": "src/fastshaql/core/parser/node_expr/parse.py",
+    "file_name": "parse.py",
+    "functions": [
+      {
+        "name": "_sole_key_parameter",
+        "complexity": 17
+      }
+    ]
+  },
+  {
+    "path": "src/fastshaql/core/parser/parse.py",
+    "file_name": "parse.py",
+    "functions": [
+      {
+        "name": "_resolve_inheritance",
+        "complexity": 17
+      }
+    ]
+  },
+  {
+    "path": "src/fastshaql/core/parser/shacl_in.py",
+    "file_name": "shacl_in.py",
+    "functions": [
+      {
+        "name": "parse_shacl_in",
+        "complexity": 16
+      }
+    ]
+  },
+  {
+    "path": "src/fastshaql/core/parser/shacl_path.py",
+    "file_name": "shacl_path.py",
+    "functions": [
+      {
+        "name": "parse_shacl_path_node",
+        "complexity": 16
+      }
+    ]
+  }
+]

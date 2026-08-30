@@ -1,0 +1,14 @@
+[project]
+name = "fastshaql-demo"
+version = "0.0.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastshaql[fastapi,httpx]",
+    "uvicorn[standard]>=0.30",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+fastshaql = { workspace = true }

@@ -1,0 +1,11 @@
+# No preference: the unfiltered baseline. Scalar fields with multiple
+# values are order-dependent under no chain, so this stop pins the
+# deterministic fields (list lane, PLAIN control) and the no-machinery
+# SPARQL shape.
+query LanguageNoChain {
+  persons {
+    iri
+    altLabel
+    plain
+  }
+}

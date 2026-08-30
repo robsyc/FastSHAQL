@@ -1,0 +1,129 @@
+# Module boundaries (Phase 2 — fine-grained; ADR-0003). Layer order (bottom →
+# top): sparql ∥ kernel → ir → registry → {parser, schema, translation} →
+# execution → {fastshaql (root, composition root), fastshaql.core (advanced
+# surface)} → adapters. parser/ and translation/ are single modules by design —
+# their internal parent↔child import cycles stay hidden inside the module.
+# tests/ and demo/ sit outside the source roots: tach governs src only.
+source_roots = ["src"]
+exclude = ["demo"] # separate uv workspace member, not part of this import graph
+
+exact = true # declared-but-unused dependencies fail the check
+forbid_circular_dependencies = true
+root_module = "forbid" # every file under src/ must belong to a declared module
+
+[[modules]]
+path = "fastshaql.core.sparql" # pure SPARQL AST/lexer/render — zero fastshaql deps
+depends_on = []
+
+[[modules]]
+path = "fastshaql.core.kernel" # shared leaves (constants, identifiers, context, io, envelope, operators)
+depends_on = [] # ADR-0003's ComparisonOp alias is now TYPE_CHECKING-only — no runtime dep
+
+[[modules]]
+path = "fastshaql.core.ir"
+depends_on = ["fastshaql.core.kernel"]
+
+[[modules]]
+path = "fastshaql.core.registry" # ShapeRegistry + visibility resolution (merged module)
+depends_on = ["fastshaql.core.kernel", "fastshaql.core.ir"]
+
+[[modules]]
+path = "fastshaql.core.parser" # single module: internal cycles
+depends_on = [
+    "fastshaql.core.kernel",
+    "fastshaql.core.ir",
+    "fastshaql.core.registry",
+    "fastshaql.core.sparql",
+]
+
+[[modules]]
+path = "fastshaql.core.schema"
+depends_on = [
+    "fastshaql.core.kernel",
+    "fastshaql.core.ir",
+    "fastshaql.core.registry",
+]
+
+[[modules]]
+path = "fastshaql.core.translation" # single module: internal cycles
+depends_on = [
+    "fastshaql.core.kernel",
+    "fastshaql.core.ir",
+    "fastshaql.core.sparql",
+]
+
+[[modules]]
+path = "fastshaql.core.execution"
+depends_on = [
+    "fastshaql.core.kernel",
+    "fastshaql.core.ir",
+    "fastshaql.core.translation",
+]
+
+[[modules]]
+path = "fastshaql" # root package: the three entry points + composition root (executable.py)
+depends_on = [
+    "fastshaql.core.kernel",
+    "fastshaql.core.parser",
+    "fastshaql.core.schema",
+    "fastshaql.core.execution",
+]
+
+[[modules]]
+path = "fastshaql.core" # core/__init__ — the advanced surface, re-exported from the stages
+depends_on = [
+    "fastshaql.core.kernel",
+    "fastshaql.core.registry",
+    "fastshaql.core.parser",
+    "fastshaql.core.schema",
+    "fastshaql.core.translation",
+    "fastshaql.core.execution",
+]
+
+[[modules]]
+path = "fastshaql.adapters" # thin framework wrappers (fastapi, django, shared graphiql)
+depends_on = ["fastshaql.core"]
+
+[[modules]]
+path = "fastshaql.stores" # optional-dependency stores (one module per transport extra)
+depends_on = ["fastshaql.core"]
+
+# --- Pinned public interfaces (CONTEXT.md "Public API") ---------------------
+# Stage modules carry no interface: tests legitimately import their internals;
+# stage internality is a doc-level rule ("Public API" entry).
+
+[[interfaces]]
+# the composition root lives at fastshaql.executable (ADR-0003); the two
+# parsing entry points are re-exported from core stages.
+# patterns are full-match regexes (tach auto-anchors) — escape the dots.
+expose = ["parse_shapes", "load_shapes", "executable\\.build_executable_schema"]
+from = ["fastshaql"]
+
+[[interfaces]]
+expose = [
+    "ExecutionMetrics",
+    "GraphqlHttpRequest",
+    "InMemoryStore",
+    "QueryContext",
+    "RequestError",
+    "ResolverContext",
+    "ShapeRegistry",
+    "SparqlRow",
+    "SparqlStore",
+    "build_schema",
+    "decode_sparql_results",
+    "dump_graphql_json",
+    "execute_graphql_http",
+    "execute_query",
+    "graphql_error_payload",
+    "lang_tags_from_accept_language",
+    "load_shapes",
+    "parse_graphql_http_request",
+    "parse_shapes",
+    "translate_query",
+]
+from = ["fastshaql\\.core"]
+
+[[interfaces]]
+expose = ["build_graphql_router", "build_graphql_view"]
+from = ["fastshaql\\.adapters"]

@@ -1,0 +1,8 @@
+query PublicSelect {
+  persons {
+    name
+    address {
+      street
+    }
+  }
+}

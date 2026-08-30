@@ -1,0 +1,23 @@
+{
+  "data": {
+    "persons": [
+      {
+        "name": "Alice",
+        "knows": [
+          { "name": "Bob" },
+          { "name": "Carol" }
+        ]
+      },
+      {
+        "name": "Bob",
+        "knows": [
+          { "name": "Alice" }
+        ]
+      },
+      {
+        "name": "Carol",
+        "knows": []
+      }
+    ]
+  }
+}

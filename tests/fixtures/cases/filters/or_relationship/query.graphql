@@ -1,0 +1,12 @@
+query OrRelationship {
+  persons(
+    where: {
+      OR: [
+        { employer: { name: { eq: "Acme" } } }
+        { employer: { name: { eq: "Globex" } } }
+      ]
+    }
+  ) {
+    name
+  }
+}

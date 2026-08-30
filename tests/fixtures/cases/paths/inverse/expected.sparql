@@ -1,0 +1,10 @@
+SELECT ?iri ?name ?owner_iri ?owner_name
+WHERE {
+  ?iri a <http://example.org/Pet> .
+  ?iri <http://example.org/name> ?name .
+  OPTIONAL {
+    ?iri ^<http://example.org/hasPet> ?owner_iri .
+    ?owner_iri a <http://example.org/Person> .
+    ?owner_iri <http://example.org/name> ?owner_name .
+  }
+}

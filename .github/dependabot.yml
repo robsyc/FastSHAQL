@@ -1,0 +1,27 @@
+version: 2
+
+updates:
+  # Python deps: root + benchmark/ workspace member (single shared uv.lock at root).
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    groups:
+      python:
+        patterns: ["*"]
+    commit-message:
+      prefix: "deps"
+    open-pull-requests-limit: 5
+
+  # GitHub Actions in .github/workflows/* (handles @vN and SHA-pinned).
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    groups:
+      github-actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "ci"

@@ -1,0 +1,6 @@
+SELECT ?iri ?name
+WHERE {
+  ?iri a <http://example.org/Person> .
+  ?iri <http://example.org/name> ?name .
+  FILTER(?name = "Alice")
+}

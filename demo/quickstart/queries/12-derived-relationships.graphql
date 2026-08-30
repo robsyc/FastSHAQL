@@ -1,0 +1,13 @@
+# A derived relationship: works by the authors you have borrowed from,
+# narrowed by a filter shape (price <= 20). It traverses, filters, groups
+# and paginates like any asserted relationship.
+{
+  members {
+    displayName
+    recommendedWorks {
+      title
+      price
+      genrePath
+    }
+  }
+}

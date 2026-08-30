@@ -1,0 +1,21 @@
+{
+  "data": {
+    "items": [
+      {
+        "iri": "http://example.org/widget",
+        "source": "Fastshaql",
+        "iriLength": 25
+      },
+      {
+        "iri": "http://example.org/gadget",
+        "source": "Fastshaql",
+        "iriLength": 25
+      },
+      {
+        "iri": "http://example.org/industrial-component",
+        "source": "Fastshaql",
+        "iriLength": 39
+      }
+    ]
+  }
+}

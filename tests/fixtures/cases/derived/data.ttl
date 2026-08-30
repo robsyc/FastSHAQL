@@ -1,0 +1,15 @@
+@prefix ex: <http://example.org/> .
+
+ex:widget a ex:Item ;
+    ex:hasFlag ex:flagA ;
+    ex:givenName "Acme" ;
+    ex:familyName "Widget" ;
+    ex:label "ASSERTED-WRONG" .
+
+ex:gadget a ex:Item ;
+    ex:givenName "Plain" ;
+    ex:familyName "Gadget" .
+
+ex:industrial-component a ex:Item ;
+    ex:givenName "Heavy" ;
+    ex:familyName "Industry" .

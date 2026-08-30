@@ -1,0 +1,8 @@
+query EnumFilterInNotIn {
+  observations(
+    where: { status: { in: [ACTIVE, INACTIVE], notIn: [ENTERED_IN_ERROR] } }
+  ) {
+    iri
+    status
+  }
+}

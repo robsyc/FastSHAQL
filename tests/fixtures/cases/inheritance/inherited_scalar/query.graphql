@@ -1,0 +1,7 @@
+query InheritedScalar {
+  managers {
+    iri
+    managerName
+    employeeId
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "data": {
+    "members": [
+      {
+        "iri": "http://example.org/library/m1",
+        "name": "Alice"
+      },
+      {
+        "iri": "http://example.org/library/m3",
+        "name": "Cara"
+      }
+    ]
+  }
+}

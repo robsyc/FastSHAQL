@@ -1,0 +1,71 @@
+{
+  "data": {
+    "variants": [
+      {
+        "iri": "http://example.org/genomics/v1",
+        "refAllele": "A",
+        "geneSymbol": "BRCA1",
+        "annotationStatus": "annotated",
+        "hasGene": true,
+        "evidenceTags": [
+          "clinvar",
+          "cosmic"
+        ]
+      },
+      {
+        "iri": "http://example.org/genomics/v2",
+        "refAllele": "G",
+        "geneSymbol": "BRCA1",
+        "annotationStatus": "annotated",
+        "hasGene": true,
+        "evidenceTags": [
+          "unreviewed"
+        ]
+      },
+      {
+        "iri": "http://example.org/genomics/v3",
+        "refAllele": "T",
+        "geneSymbol": "TP53",
+        "annotationStatus": "annotated",
+        "hasGene": true,
+        "evidenceTags": [
+          "locus"
+        ]
+      },
+      {
+        "iri": "http://example.org/genomics/v4",
+        "refAllele": "C",
+        "geneSymbol": null,
+        "annotationStatus": "novel",
+        "hasGene": false,
+        "evidenceTags": []
+      },
+      {
+        "iri": "http://example.org/genomics/v5",
+        "refAllele": "AG",
+        "geneSymbol": "TP53",
+        "annotationStatus": "annotated",
+        "hasGene": true,
+        "evidenceTags": [
+          "clinvar"
+        ]
+      },
+      {
+        "iri": "http://example.org/genomics/v6",
+        "refAllele": "TT",
+        "geneSymbol": null,
+        "annotationStatus": "novel",
+        "hasGene": false,
+        "evidenceTags": []
+      },
+      {
+        "iri": "http://example.org/genomics/v7",
+        "refAllele": "GA",
+        "geneSymbol": null,
+        "annotationStatus": "novel",
+        "hasGene": false,
+        "evidenceTags": []
+      }
+    ]
+  }
+}

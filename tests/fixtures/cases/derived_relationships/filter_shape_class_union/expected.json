@@ -1,0 +1,31 @@
+{
+  "data": {
+    "members": [
+      {
+        "iri": "http://example.org/library/m1",
+        "specialCollections": [
+          {
+            "iri": "http://example.org/library/sc-rare",
+            "title": "First Edition Folio"
+          },
+          {
+            "iri": "http://example.org/library/sc-ms",
+            "title": "Illuminated Codex"
+          },
+          {
+            "iri": "http://example.org/library/sc-both",
+            "title": "Annotated Codex"
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/library/m2",
+        "specialCollections": []
+      },
+      {
+        "iri": "http://example.org/library/m3",
+        "specialCollections": []
+      }
+    ]
+  }
+}

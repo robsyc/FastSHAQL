@@ -1,0 +1,6 @@
+query IriEnumSelect {
+  colorsamples {
+    iri
+    color
+  }
+}

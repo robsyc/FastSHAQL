@@ -1,0 +1,8 @@
+query PaginatedDerivedFilter {
+  patients(limit: 1, offset: 1, where: {
+    applicableProtocolTitles: { contains: " " }
+  }) {
+    iri
+    applicableProtocolTitles
+  }
+}

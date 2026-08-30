@@ -1,0 +1,69 @@
+# Language-preference chain fixture (ADR-0012): every literal space and
+# cardinality lane over one Person shape — required/optional scalars, an
+# optional list, the string union (datatype-list form), a PLAIN control
+# field, a derived langString (sh:values), and a nested relationship whose
+# label inherits the chain.
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix ex:    <http://example.org/> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
+
+ex:PersonShape a sh:NodeShape ;
+    sh:codeIdentifier "Person" ;
+    sh:targetClass ex:Person ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype rdf:langString ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:bio ;
+        sh:datatype rdf:langString ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:altLabel ;
+        sh:datatype rdf:langString ;
+        sh:minCount 0
+    ] ;
+    # The string union in its SHACL 1.2 datatype-list form; the classic
+    # datatype-only sh:or syntax normalizes to the same IR (unit-pinned by
+    # test_both_union_syntaxes_normalize_identically).
+    sh:property [
+        sh:path ex:note ;
+        sh:datatype ( xsd:string rdf:langString ) ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:plain ;
+        sh:datatype xsd:string ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:summary ;
+        sh:datatype rdf:langString ;
+        sh:minCount 0 ;
+        sh:maxCount 1 ;
+        sh:values [ shnex:pathValues ( ex:summarySource ) ]
+    ] ;
+    sh:property [
+        sh:path ex:employer ;
+        sh:class ex:Org ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] .
+
+ex:OrgShape a sh:NodeShape ;
+    sh:codeIdentifier "Org" ;
+    sh:targetClass ex:Org ;
+    sh:property [
+        sh:path ex:label ;
+        sh:datatype rdf:langString ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] .

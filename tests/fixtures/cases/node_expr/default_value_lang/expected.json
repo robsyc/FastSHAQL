@@ -1,0 +1,18 @@
+{
+  "data": {
+    "genes": [
+      {
+        "iri": "http://example.org/genomics/g1",
+        "displayName": "Breast cancer 1"
+      },
+      {
+        "iri": "http://example.org/genomics/g2",
+        "displayName": "unnamed"
+      },
+      {
+        "iri": "http://example.org/genomics/g3",
+        "displayName": "unnamed"
+      }
+    ]
+  }
+}

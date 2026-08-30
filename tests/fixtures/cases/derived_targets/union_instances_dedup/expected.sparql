@@ -1,0 +1,9 @@
+SELECT ?iri ?label
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* ?_class_iri .
+  VALUES ?_class_iri {
+    <http://example.org/Substitution>
+    <http://example.org/Deletion>
+  }
+  ?iri <http://example.org/label> ?label .
+}

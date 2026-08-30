@@ -1,0 +1,19 @@
+@prefix ex: <http://example.org/> .
+
+# Default (unnamed) graph — present so the ``from_replaces_default`` case can pin
+# that an explicit ``FROM`` makes it unreachable (SPARQL §13.2: the FROM-described
+# dataset is "used in place of" the store's default; ADR-0011).
+ex:thing-default a ex:Thing ;
+    ex:label "Default" .
+
+# Named graph g1.
+<urn:ex:g1> {
+    ex:thing-1 a ex:Thing ;
+        ex:label "Alpha" .
+}
+
+# Named graph g2.
+<urn:ex:g2> {
+    ex:thing-2 a ex:Thing ;
+        ex:label "Beta" .
+}

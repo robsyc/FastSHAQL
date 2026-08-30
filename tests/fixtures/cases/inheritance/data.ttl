@@ -1,0 +1,21 @@
+@prefix ex: <http://example.org/> .
+
+ex:hq a ex:Location ;
+    ex:locationName "Headquarters" .
+
+ex:alice a ex:Manager ;
+    ex:managerName "Alice" ;
+    ex:employeeId "E-001" ;
+    ex:employmentStatus "active" ;
+    ex:workLocation ex:hq .
+
+ex:bob a ex:Manager ;
+    ex:managerName "Bob" ;
+    ex:employeeId "E-002" ;
+    ex:employmentStatus "inactive" .
+
+ex:carol a ex:ManagerBadge ;
+    ex:badgeLevel 3 .
+
+ex:dave a ex:BadgeHolder ;
+    ex:badgeLevel 3 .

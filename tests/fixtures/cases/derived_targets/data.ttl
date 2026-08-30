@@ -1,0 +1,30 @@
+@prefix ex: <http://example.org/> .
+@prefix var: <http://example.org/variant/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Class hierarchy: Change > Variant > {Substitution, Deletion}, and a
+# cross-prefix structural branch: Change > var:StructuralVariant > var:Inversion.
+ex:Change ex:label "change" .
+ex:Variant ex:label "variant" ; rdfs:subClassOf ex:Change .
+ex:Substitution ex:label "substitution" ; rdfs:subClassOf ex:Variant .
+ex:Deletion ex:label "deletion" ; rdfs:subClassOf ex:Variant .
+var:StructuralVariant ex:label "structural variant" ; rdfs:subClassOf ex:Change .
+var:Inversion ex:label "inversion" ; rdfs:subClassOf var:StructuralVariant .
+
+ex:snv a ex:Variant ;
+    ex:label "reference snv" ;
+    ex:score 0.5 .
+
+ex:subA a ex:Substitution ;
+    ex:label " substitution A " ;
+    ex:score 0.9 .
+
+ex:subB a ex:Substitution ;
+    ex:label "substitution B" ;
+    ex:score 0.4 .
+
+# Dual-typed: in the subclass closure of both list classes below.
+ex:delA a ex:Deletion, ex:Substitution ;
+    ex:label "deletion A" ;
+    ex:score 0.7 .

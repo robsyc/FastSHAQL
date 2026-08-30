@@ -1,0 +1,5 @@
+SELECT ?iri ?badgeLevel
+WHERE {
+  ?iri a <http://example.org/ManagerBadge> .
+  ?iri <http://example.org/badgeLevel> ?badgeLevel .
+}

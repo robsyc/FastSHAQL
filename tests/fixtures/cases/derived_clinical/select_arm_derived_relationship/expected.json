@@ -1,0 +1,28 @@
+{
+  "data": {
+    "patients": [
+      {
+        "iri": "http://example.org/clinical/patient-1",
+        "activeConditions": [
+          {
+            "iri": "http://example.org/clinical/cond-nash",
+            "mostSpecificClass": "http://example.org/clinical/NonAlcoholicSteatohepatitis"
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/clinical/patient-2",
+        "activeConditions": [
+          {
+            "iri": "http://example.org/clinical/cond-hepb",
+            "mostSpecificClass": "http://example.org/clinical/HepatitisB"
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/clinical/patient-3",
+        "activeConditions": []
+      }
+    ]
+  }
+}

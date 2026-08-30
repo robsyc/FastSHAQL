@@ -1,0 +1,5 @@
+SELECT ?iri ?comparator
+WHERE {
+  ?iri a <http://example.org/Quantity> .
+  ?iri <http://example.org/comparator> ?comparator .
+}

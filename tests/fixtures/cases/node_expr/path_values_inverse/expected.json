@@ -1,0 +1,27 @@
+{
+  "data": {
+    "genes": [
+      {
+        "iri": "http://example.org/genomics/g1",
+        "symbol": "BRCA1",
+        "variantIris": [
+          "http://example.org/genomics/v1",
+          "http://example.org/genomics/v2"
+        ]
+      },
+      {
+        "iri": "http://example.org/genomics/g2",
+        "symbol": "TP53",
+        "variantIris": [
+          "http://example.org/genomics/v3",
+          "http://example.org/genomics/v5"
+        ]
+      },
+      {
+        "iri": "http://example.org/genomics/g3",
+        "symbol": "KRAS",
+        "variantIris": []
+      }
+    ]
+  }
+}

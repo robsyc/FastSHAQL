@@ -1,0 +1,45 @@
+{
+  "data": {
+    "members": [
+      {
+        "iri": "http://example.org/library/m1",
+        "friendBranches": [
+          {
+            "iri": "http://example.org/library/central",
+            "name": "Central"
+          },
+          {
+            "iri": "http://example.org/library/east",
+            "name": "East"
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/library/m2",
+        "friendBranches": [
+          {
+            "iri": "http://example.org/library/central",
+            "name": "Central"
+          },
+          {
+            "iri": "http://example.org/library/east",
+            "name": "East"
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/library/m3",
+        "friendBranches": [
+          {
+            "iri": "http://example.org/library/central",
+            "name": "Central"
+          },
+          {
+            "iri": "http://example.org/library/east",
+            "name": "East"
+          }
+        ]
+      }
+    ]
+  }
+}

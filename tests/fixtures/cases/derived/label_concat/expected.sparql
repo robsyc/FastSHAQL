@@ -1,0 +1,7 @@
+SELECT ?iri ?label
+WHERE {
+  ?iri a <http://example.org/Item> .
+  ?iri <http://example.org/givenName> ?given .
+  ?iri <http://example.org/familyName> ?family .
+  BIND(CONCAT(?given, " ", ?family) AS ?label)
+}

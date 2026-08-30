@@ -1,0 +1,5 @@
+query PublicClassClosure {
+  dogs {
+    name
+  }
+}

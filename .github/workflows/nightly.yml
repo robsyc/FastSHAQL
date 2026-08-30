@@ -1,0 +1,145 @@
+name: Nightly
+
+on:
+  schedule:
+    # Nightly, not PR-gated — slow (Docker, mutation) and advisory-to-release.
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Nightly charter: the home of slow / advisory / release-gating checks that are
+# too heavy for the PR path — GraphDB evaluation, preview lint drift, and the
+# mutation score floor. Check commands live in the justfile; jobs install the
+# shared toolchain (.github/actions/toolchain, versions from .tool-versions) and
+# this file carries only glue (secret decode, caching, report upload).
+
+env:
+  EVAL_REPORT_PATH: evaluation-report.json
+
+jobs:
+  evaluation:
+    name: GraphDB eval
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Write GraphDB license
+        env:
+          GRAPHDB_LICENSE: ${{ secrets.GRAPHDB_LICENSE }}
+        # Secret is base64 of the binary license; decode to the file verbatim.
+        # (GNU base64 -d ignores line wrapping; empty secret -> empty file -> conftest skips.)
+        run: printf '%s' "$GRAPHDB_LICENSE" | base64 -d > tests/tiers/evaluation/graphdb.license
+
+      - uses: ./.github/actions/toolchain
+
+      - name: Run evaluation tests
+        # Conftest skips cleanly when the license file is absent/empty (secret unset).
+        run: just eval
+
+      - name: Write workflow summary
+        if: always()
+        run: just eval-report
+
+      - name: Upload evaluation report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: evaluation-report
+          path: ${{ env.EVAL_REPORT_PATH }}
+          retention-days: 14
+          if-no-files-found: ignore
+
+  mutation:
+    name: Mutation score floor
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Full history for mutmut's git-based change detection.
+          fetch-depth: 0
+
+      # mutants/ is mutmut's resumable cache. Exact key on source hashes only —
+      # no restore-keys prefix: mutmut's copy step never deletes removed files,
+      # so restoring across file moves yields a poisoned franken-tree.
+      - name: Cache mutants/
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: mutants
+          key: mutmut-${{ runner.os }}-${{ hashFiles('uv.lock', 'pyproject.toml', 'src/fastshaql/**', 'tests/**') }}
+
+      - uses: ./.github/actions/toolchain
+
+      - name: Run mutation tests (gates on score floor)
+        run: just mutate
+
+      - name: Upload mutation stats
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: mutation-stats
+          path: mutants/mutmut-cicd-stats.json
+          retention-days: 14
+          if-no-files-found: ignore
+
+  badges:
+    name: Endpoint badges
+    needs: mutation
+    # Run even when the mutation floor fails — a dipping score is exactly
+    # when the mutants badge should update.
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write # push the endpoint JSONs to the `badges` data branch
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The mutation job's stats artifact, unpacked to the path `just badges` reads.
+      - name: Download mutation stats
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: mutation-stats
+          path: mutants/
+
+      - uses: ./.github/actions/toolchain
+
+      - name: Regenerate endpoint badges
+        run: just badges
+
+      # Plain git onto the `badges` data branch (orphan root on first run);
+      # only the three endpoint JSONs are replaced.
+      - name: Publish endpoint badges
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch origin badges --depth=1; then
+            git checkout -B badges origin/badges
+          else
+            git checkout --orphan badges
+            git rm -rf --quiet .
+          fi
+          cp badges/coverage.json badges/mutants.json badges/complexity.json ./
+          git add coverage.json mutants.json complexity.json
+          if git diff --cached --quiet; then
+            echo "endpoint badges unchanged"
+          else
+            git commit -m "badges: coverage, mutants, complexity [skip ci]"
+            git push origin badges
+          fi
+
+  lint-drift:
+    name: Preview lint drift (advisory)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/toolchain
+      - run: just lint-preview

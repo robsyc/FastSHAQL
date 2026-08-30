@@ -1,0 +1,5 @@
+query PromotedScalarFilter {
+  persons(where: { title: { eq: "Engineer" } }, limit: 2) {
+    name
+  }
+}

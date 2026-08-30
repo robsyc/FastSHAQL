@@ -1,0 +1,10 @@
+{
+  "data": {
+    "quantitys": [
+      { "iri": "http://example.org/quantity1", "comparator": "_" },
+      { "iri": "http://example.org/quantity2", "comparator": "_2" },
+      { "iri": "http://example.org/quantity3", "comparator": "_3" },
+      { "iri": "http://example.org/quantity4", "comparator": "_4" }
+    ]
+  }
+}

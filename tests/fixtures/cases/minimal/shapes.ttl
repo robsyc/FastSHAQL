@@ -1,0 +1,14 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:ThingShape a sh:NodeShape ;
+    sh:codeIdentifier "Thing" ;
+    sh:targetClass ex:Thing ;
+    sh:property [
+        sh:path ex:label ;
+        sh:codeIdentifier "label" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] .

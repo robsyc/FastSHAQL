@@ -1,0 +1,14 @@
+# Enums arrive from sh:in lists (ex:Gold → GOLD, "active" → ACTIVE) and
+# filter like scalars. Scalar filters on one where-level compose with an
+# implicit AND.
+{
+  members(where: { tier: { eq: GOLD } }) {
+    displayName
+    tier
+  }
+  works(where: { pages: { gt: 300 }, price: { lte: 16 } }) {
+    title
+    pages
+    price
+  }
+}

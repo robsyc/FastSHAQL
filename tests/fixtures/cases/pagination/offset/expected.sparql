@@ -1,0 +1,12 @@
+SELECT ?iri ?name
+WHERE {
+  {
+    SELECT DISTINCT ?iri
+    WHERE {
+      ?iri a <http://example.org/Person> .
+    }
+    ORDER BY ?iri
+    OFFSET 2
+  }
+  ?iri <http://example.org/name> ?name .
+}

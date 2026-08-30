@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+
+# Single-phase release: any v*.*.* tag builds and publishes to PyPI (OIDC
+# trusted publishing, `pypi` environment — a pending publisher already matches
+# this file), then opens the GitHub Release whose body is the tagged section
+# of CHANGELOG.md (`just release-notes`). PRs into main run the same build +
+# smoke in CI's build job. See docs/adr/0023-package-release-and-ci.md.
+
+jobs:
+  build:
+    name: Build & smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: ./.github/actions/toolchain
+        with:
+          sync: "false"
+
+      - name: Build distributions
+        run: just build
+
+      - name: Smoke test (wheel + sdist)
+        run: just smoke-dist
+
+      # Fails the release before publish when the tag has no CHANGELOG section.
+      - name: Extract release notes from CHANGELOG.md
+        run: just release-notes "${GITHUB_REF_NAME#v}" > release-body.md
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist
+          path: |
+            dist/
+            release-body.md
+          retention-days: 7
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: pypi
+      url: https://pypi.org/p/fastshaql
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: ./.github/actions/toolchain
+        with:
+          just: "false"
+          sync: "false"
+
+      # Artifact root is the workspace (dist/ + release-body.md), so uv publish
+      # and attest-action see their default dist/* paths.
+      - name: Download dist
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist
+
+      # PEP 740 attestations: uv uploads them but never generates them.
+      - name: Generate attestations
+        uses: astral-sh/attest-action@f589a42a7efb6fe400b4f400de60b4bc90390027 # v0.0.6
+
+      - name: Publish to PyPI
+        run: uv publish --trusted-publishing always
+
+  github-release:
+    name: GitHub Release
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download dist
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        with:
+          files: dist/*
+          body_path: release-body.md

@@ -1,0 +1,6 @@
+SELECT ?iri ?iriLength
+WHERE {
+  ?iri a <http://example.org/Item> .
+  BIND(STRLEN(STR(?iri)) AS ?iriLength)
+  FILTER(?iriLength > "30"^^<http://www.w3.org/2001/XMLSchema#integer>)
+}

@@ -1,0 +1,10 @@
+SELECT ?iri ?managerName ?workLocation_iri ?workLocation_locationName
+WHERE {
+  ?iri a <http://example.org/Manager> .
+  ?iri <http://example.org/managerName> ?managerName .
+  OPTIONAL {
+    ?iri <http://example.org/workLocation> ?workLocation_iri .
+    ?workLocation_iri a <http://example.org/Location> .
+    ?workLocation_iri <http://example.org/locationName> ?workLocation_locationName .
+  }
+}

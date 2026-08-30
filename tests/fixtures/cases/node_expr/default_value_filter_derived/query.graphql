@@ -1,0 +1,6 @@
+query DefaultValueFilterDerivedMatchesDefaultFilled {
+  genes(where: {supportScore: {eq: 0.0}}) {
+    iri
+    supportScore
+  }
+}

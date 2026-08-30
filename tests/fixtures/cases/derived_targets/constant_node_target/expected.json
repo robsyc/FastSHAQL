@@ -1,0 +1,10 @@
+{
+  "data": {
+    "pinnedvariants": [
+      {
+        "iri": "http://example.org/snv",
+        "label": "reference snv"
+      }
+    ]
+  }
+}

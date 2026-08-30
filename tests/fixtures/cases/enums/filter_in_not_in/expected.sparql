@@ -1,0 +1,6 @@
+SELECT ?iri ?status
+WHERE {
+  ?iri a <http://example.org/Observation> .
+  ?iri <http://example.org/status> ?status .
+  FILTER(?status IN ("active", "inactive") && !(?status IN ("entered-in-error")))
+}

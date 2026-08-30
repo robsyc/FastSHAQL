@@ -1,0 +1,6 @@
+SELECT ?iri ?color
+WHERE {
+  ?iri a <http://example.org/ColorSample> .
+  ?iri <http://example.org/color> ?color .
+  FILTER(?color IN (<http://example.org/Pink>, <http://example.org/Purple>) && !(?color IN (<http://example.org/Purple>)))
+}

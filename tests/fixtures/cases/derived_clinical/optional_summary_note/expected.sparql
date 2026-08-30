@@ -1,0 +1,12 @@
+SELECT ?iri ?hasCondition_iri ?hasCondition_summaryNote
+WHERE {
+  ?iri a <http://example.org/clinical/Patient> .
+  OPTIONAL {
+    ?iri <http://example.org/clinical/hasCondition> ?hasCondition_iri .
+    ?hasCondition_iri a <http://example.org/clinical/Condition> .
+    OPTIONAL {
+      ?hasCondition_iri <http://example.org/clinical/note> ?note
+      BIND(?note AS ?hasCondition_summaryNote)
+    }
+  }
+}

@@ -1,0 +1,11 @@
+query PathTransitive {
+  familypersons {
+    name
+    ancestors {
+      name
+    }
+    selfAndAncestors {
+      name
+    }
+  }
+}

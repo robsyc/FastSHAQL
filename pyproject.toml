@@ -1,0 +1,213 @@
+[project]
+name = "fastshaql"
+version = "0.1.0"
+description = "SHACL shapes to GraphQL schema; GraphQL operations to SPARQL"
+readme = "README.md"
+authors = [{ name = "robsyc", email = "robbe@pointcare.be" }]
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12,<3.15"
+keywords = ["shacl", "graphql", "sparql", "rdf", "semantic-web"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Typing :: Typed",
+]
+dependencies = [
+    "graphql-core>=3.2",
+    "orjson>=3.10",
+    "rdflib>=7.6.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/robsyc/fastshaql"
+Documentation = "https://github.com/robsyc/fastshaql#readme"
+Repository = "https://github.com/robsyc/fastshaql"
+Issues = "https://github.com/robsyc/fastshaql/issues"
+Changelog = "https://github.com/robsyc/fastshaql/releases"
+
+# One extra per optional dependency — no cross-coupling (ADR-0018).
+[project.optional-dependencies]
+fastapi = ["fastapi>=0.130"]
+django = ["django>=5.2"]
+httpx = ["httpx>=0.28"]
+all = ["fastshaql[fastapi,django,httpx]"]
+
+[build-system]
+requires = ["uv_build>=0.12.6,<0.13"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0",
+    "pytest-asyncio>=1.4",
+    "pytest-cov>=6.0",
+    "pytest-django>=4.11",
+    "ruff>=0.15",
+    "ty>=0.0.42",
+    "cffconvert>=2.0.0",
+    "testcontainers>=4.9",
+    "markdownify>=1.0",
+    "beautifulsoup4>=4.12",
+    "complexipy>=7.0.1",
+    "lefthook>=2.1.11",
+    "mutmut==3.7.0",
+    "tach==0.35.0",
+    "pyshacl>=0.40.1",
+]
+
+[tool.uv.workspace]
+members = ["demo"]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.complexipy]
+paths = ["src", "tests"]
+max-complexity-allowed = 15
+sort = "desc"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+src = ["src", "tests", "demo"]
+extend-exclude = [
+    "docs/references", # vendored upstream trees + spec markdown snapshots
+    "*.md",            # ruff 0.16 formats md code blocks by default — opted out
+]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "SIM",    # flake8-simplify
+    "RUF",    # ruff-specific
+    "C901",   # mccabe complexity
+    "PLR0911",# pylint too-many-return-statements
+    "PLR0912",# pylint too-many-branches
+    "PLR0915",# pylint too-many-statements
+    # --- zero-violation future-proofing ---
+    "PERF",   # perflint
+    "FURB",   # refurb
+    "DTZ",    # flake8-datetimez
+    "ASYNC",  # flake8-async
+    "N",      # pep8-naming
+    "ICN",    # import conventions
+    "PIE",    # flake8-pie
+    "FLY",    # flynt
+    "ISC",    # implicit-str-concat
+    "LOG",    # flake8-logging
+    "G",      # flake8-logging-format
+    "PGH",    # pygrep-hooks
+    "PTH",    # flake8-use-pathlib
+    "T20",    # flake8-print
+    "BLE",    # blind-except
+    "TC",     # flake8-type-checking
+    # TC caveat: adapters/fastapi.py must never add `from __future__ import
+    # annotations` — FastAPI resolves signature annotations at runtime, so TC
+    # moving imports into TYPE_CHECKING there would silently break it.
+    # --- real signal ---
+    "C4",     # flake8-comprehensions
+    "RET",    # flake8-return
+    "A",      # builtins shadowing
+    "ARG",    # unused arguments
+    "S",      # flake8-bandit
+    "PT",     # flake8-pytest-style
+    "TRY",    # tryceratops
+    "PL",     # full pylint (PLE/PLW bug-catchers + PLR0913 too-many-args)
+]
+ignore = [
+    "E501",    # line length handled by formatter
+    "ISC001",  # conflicts with the formatter
+    "TRY003",  # rich raise-messages are deliberate API in this repo
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "PLR2004", "PLC0415"]                 # magic values + fixture-local imports
+"demo/**" = ["S101", "PLR2004", "PLC0415", "T20"]           # demo scripts: prints + lazy optional deps
+"tests/support/django_conf/**" = ["S105"]
+"tests/support/eval/report.py" = ["PLW0603", "T20"]         # report accumulator; CLI output
+"tests/support/import_guard.py" = ["T20"]                   # check-script CLI output
+"tests/support/mutation/floor.py" = ["T20"]                 # CLI output
+"tests/support/architecture/module_graph.py" = ["T20"]      # CLI output
+"tests/fixtures/scenarios/cartesian/generate.py" = ["T20"]  # generator CLI output
+"src/fastshaql/adapters/**" = ["ARG002"]                    # framework-mandated view signatures
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15
+
+[tool.ruff.lint.pylint]
+max-returns = 8
+max-args = 8
+
+[tool.ruff.lint.isort]
+known-first-party = ["fastshaql"]
+
+[tool.ruff.format]
+quote-style = "double"
+docstring-code-format = true
+
+[tool.ty.environment]
+python-version = "3.12"
+python = ".venv/bin/python"
+root = ["./src", "./tests", "."]
+
+[tool.ty.src]
+include = ["src", "tests", "demo"]
+
+[tool.ty.terminal]
+error-on-warning = true
+
+[[tool.ty.overrides]]
+include = ["tests/**"]
+
+[tool.ty.overrides.rules]
+possibly-unresolved-reference = "warn"
+
+[tool.coverage.run]
+source = ["fastshaql"] # the shipped surface; the extras-gated store lives in src too
+branch = true
+relative_files = true
+
+[tool.coverage.report]
+fail_under = 100
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
+
+[tool.mutmut]
+source_paths = ["src/fastshaql"]
+also_copy = ["demo"]  # tests import the demo package (reference store, scenarios)
+on_dependency_change = "rerun"  # a changed dependency force-retests instead of warning
+pytest_add_cli_args = ["-p", "no:tach"]  # tach's auto-loaded pytest plugin stalls forked mutant children
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = [".", "src", "tests"]
+addopts = ["--import-mode=importlib", "-ra", "--strict-markers", "-m", "not evaluation"]
+DJANGO_SETTINGS_MODULE = "support.django_conf.settings"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+filterwarnings = [
+    "ignore::DeprecationWarning:rdflib",
+]
+markers = [
+    "unit: single-stage tests with programmatic/inline inputs (auto-marked by directory)",
+    "integration: multi-stage tests composing real fixture inputs (auto-marked by directory)",
+    "e2e: full-pipeline golden tests (query.graphql + expected.json + expected.sparql) (auto-marked by directory)",
+    "evaluation: full-pipeline tests against a real triple store (GraphDB CE via testcontainers)",
+    "adapter: framework adapter HTTP-contract tests (auto-marked by directory)",
+]

@@ -1,0 +1,22 @@
+{
+  "data": {
+    "pets": [
+      {
+        "name": "Fido",
+        "owner": {
+          "name": "Alice"
+        }
+      },
+      {
+        "name": "Whiskers",
+        "owner": {
+          "name": "Bob"
+        }
+      },
+      {
+        "name": "Stray",
+        "owner": null
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+@prefix ex: <http://example.org/> .
+
+ex:alice a ex:Person ; ex:name "Alice" ; ex:hasPet ex:fido .
+ex:bob a ex:Person ; ex:name "Bob" ; ex:hasPet ex:whiskers .
+ex:carol a ex:Person ; ex:name "Carol" .
+
+ex:fido a ex:Pet ; ex:name "Fido" .
+ex:whiskers a ex:Pet ; ex:name "Whiskers" .
+ex:stray a ex:Pet ; ex:name "Stray" .
+
+ex:amsterdam a ex:City ; ex:name "Amsterdam" .
+ex:berlin a ex:City ; ex:name "Berlin" .
+
+ex:acme a ex:Company ; ex:name "Acme" ; ex:locatedIn ex:amsterdam .
+ex:globex a ex:Company ; ex:name "Globex" ; ex:locatedIn ex:berlin .
+
+ex:aliceEmployer a ex:EmployerCityPerson ; ex:name "Alice" ; ex:employer ex:acme .
+ex:bobEmployer a ex:EmployerCityPerson ; ex:name "Bob" ; ex:employer ex:globex .
+
+ex:dana a ex:ContactPerson ; ex:name "Dana" ; ex:spouse ex:carolContact .
+ex:carolContact a ex:ContactPerson ; ex:name "Carol" ; ex:partner ex:bobContact .
+ex:bobContact a ex:ContactPerson ; ex:name "Bob" .
+
+ex:acmeNamed a ex:CompanyEmployerName ; ex:name "Acme" ; ex:employer ex:aliceEmployer .
+
+# Family chain for path-modifier (transitive-closure) cases: kid -> dad -> grandpa
+ex:grandpa a ex:FamilyPerson ; ex:name "Grandpa" .
+ex:dad    a ex:FamilyPerson ; ex:name "Dad" ; ex:parent ex:grandpa .
+ex:kid    a ex:FamilyPerson ; ex:name "Kid" ; ex:parent ex:dad .

@@ -1,0 +1,7 @@
+query FilterLabel {
+  items(where: { label: { contains: "Industry" }, iriLength: { gt: 30 } }) {
+    iri
+    label
+    iriLength
+  }
+}

@@ -1,0 +1,9 @@
+SELECT ?iri ?allBooks_iri ?allBooks_title
+WHERE {
+  ?iri a <http://example.org/library/Member> .
+  OPTIONAL {
+    <http://example.org/library/Book> ^a ?allBooks_iri .
+    ?allBooks_iri a <http://example.org/library/Book> .
+    ?allBooks_iri <http://example.org/library/title> ?allBooks_title .
+  }
+}

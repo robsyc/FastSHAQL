@@ -1,0 +1,12 @@
+query CartesianThings {
+  things {
+    iri
+    tag
+    altLabel
+    hasChild {
+      iri
+      tag
+      altLabel
+    }
+  }
+}

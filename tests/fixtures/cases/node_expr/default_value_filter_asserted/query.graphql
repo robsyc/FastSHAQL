@@ -1,0 +1,5 @@
+query DefaultValueFilterMatchesAsserted {
+  genes(where: {assayVersion: {eq: "v2"}}) {
+    iri
+  }
+}

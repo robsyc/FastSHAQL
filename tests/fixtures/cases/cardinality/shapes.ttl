@@ -1,0 +1,21 @@
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix ex:  <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:ThingShape a sh:NodeShape ;
+    sh:codeIdentifier "Thing" ;
+    sh:targetClass ex:Thing ;
+    sh:property [ sh:path ex:label ;    sh:codeIdentifier "label" ;    sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ex:subtitle ; sh:codeIdentifier "subtitle" ; sh:datatype xsd:string ; sh:minCount 0 ; sh:maxCount 1 ] ;
+    sh:property [ sh:path ex:tag ;      sh:codeIdentifier "tag" ;      sh:datatype xsd:string ; sh:minCount 1 ] ;
+    sh:property [ sh:path ex:altLabel ; sh:codeIdentifier "altLabel" ; sh:datatype xsd:string ; sh:minCount 0 ] .
+
+ex:OptionalScalarShape a sh:NodeShape ;
+    sh:codeIdentifier "OptionalScalarThing" ;
+    sh:targetClass ex:OptionalScalarThing ;
+    sh:property [ sh:path ex:note ; sh:codeIdentifier "note" ; sh:datatype xsd:string ; sh:maxCount 1 ] .
+
+ex:OptionalListShape a sh:NodeShape ;
+    sh:codeIdentifier "OptionalListThing" ;
+    sh:targetClass ex:OptionalListThing ;
+    sh:property [ sh:path ex:tag ; sh:codeIdentifier "tag" ; sh:datatype xsd:string ] .

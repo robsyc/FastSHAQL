@@ -1,0 +1,9 @@
+SELECT ?iri ?name ?address_iri ?address_street
+WHERE {
+  ?iri a <http://example.org/Person> .
+  ?iri <http://example.org/name> ?name .
+  OPTIONAL {
+    ?iri <http://example.org/address> ?address_iri .
+    ?address_iri <http://example.org/street> ?address_street .
+  }
+}

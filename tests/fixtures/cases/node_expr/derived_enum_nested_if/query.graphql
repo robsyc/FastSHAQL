@@ -1,0 +1,7 @@
+query DerivedEnumNestedIf {
+  variants {
+    iri
+    refAllele
+    curationStatus
+  }
+}

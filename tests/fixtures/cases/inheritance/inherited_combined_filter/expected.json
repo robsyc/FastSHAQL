@@ -1,0 +1,14 @@
+{
+  "data": {
+    "managers": [
+      {
+        "managerName": "Alice",
+        "employeeId": "E-001",
+        "employmentStatus": "ACTIVE",
+        "workLocation": {
+          "locationName": "Headquarters"
+        }
+      }
+    ]
+  }
+}

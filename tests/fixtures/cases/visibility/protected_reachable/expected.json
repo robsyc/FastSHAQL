@@ -1,0 +1,12 @@
+{
+  "data": {
+    "persons": [
+      {
+        "name": "Alice",
+        "audit": {
+          "action": "login"
+        }
+      }
+    ]
+  }
+}

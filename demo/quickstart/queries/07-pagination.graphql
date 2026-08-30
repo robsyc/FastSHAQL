@@ -1,0 +1,8 @@
+# limit/offset paginate entities
+# and compose with filters.
+{
+  works(limit: 3, offset: 2, where: { pages: { gt: 100 } }) {
+    title
+    pages
+  }
+}

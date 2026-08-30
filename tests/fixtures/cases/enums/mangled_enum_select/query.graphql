@@ -1,0 +1,6 @@
+query MangledEnumSelect {
+  quantitys {
+    iri
+    comparator
+  }
+}

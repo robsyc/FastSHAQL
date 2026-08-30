@@ -1,0 +1,6 @@
+query OptionalDerived {
+  items {
+    iri
+    isFlagged
+  }
+}

@@ -1,0 +1,6 @@
+query PathCompositeScalar {
+  companyemployernames {
+    name
+    employeeName
+  }
+}

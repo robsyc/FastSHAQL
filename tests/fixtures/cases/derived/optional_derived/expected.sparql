@@ -1,0 +1,5 @@
+SELECT ?iri ?isFlagged
+WHERE {
+  ?iri a <http://example.org/Item> .
+  BIND(EXISTS { ?iri <http://example.org/hasFlag> ?f } AS ?isFlagged)
+}

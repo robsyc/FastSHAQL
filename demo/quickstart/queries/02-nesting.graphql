@@ -1,0 +1,23 @@
+# Nested relationships plus three path tricks:
+#   authorName  — a sequence path (author → displayName): a scalar two hops
+#                 away, exposed as one field
+#   stockedAt   — an inverse path: branches point at works via ex:stocks;
+#                 traverse it from the work side, no back-pointer needed
+#   isbn        — an alternative path (ex:isbn13 | ex:isbn): newer records
+#                 carry one predicate, older ones the other — one field
+#                 reads whichever is present
+{
+  works {
+    title
+    authorName
+    isbn
+    author {
+      displayName
+      born
+    }
+    stockedAt {
+      name
+      city
+    }
+  }
+}

@@ -1,0 +1,26 @@
+SELECT ?iri ?refAllele ?geneSymbol ?annotationStatus ?hasGene ?evidenceTags
+WHERE {
+  ?iri a <http://example.org/genomics/Variant> .
+  ?iri <http://example.org/genomics/refAllele> ?refAllele .
+  OPTIONAL {
+    ?iri <http://example.org/genomics/inGene>/<http://example.org/genomics/symbol> ?geneSymbol .
+  }
+  BIND(IF(EXISTS {
+    ?iri <http://example.org/genomics/inGene> ?_exists_annotationStatus .
+  }, "annotated", "novel") AS ?annotationStatus)
+  BIND(EXISTS {
+    ?iri <http://example.org/genomics/inGene> ?_exists_hasGene .
+  } AS ?hasGene)
+  OPTIONAL {
+    ?iri <http://example.org/genomics/reviewedTag> ?evidenceTags .
+    FILTER(EXISTS {
+      ?iri <http://example.org/genomics/review> ?_exists_evidenceTags .
+    })
+  }
+  OPTIONAL {
+    ?iri <http://example.org/genomics/provisionalTag> ?evidenceTags .
+    FILTER(!(EXISTS {
+      ?iri <http://example.org/genomics/review> ?_exists_evidenceTags .
+    }))
+  }
+}

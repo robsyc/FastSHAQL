@@ -1,0 +1,18 @@
+{
+  "data": {
+    "items": [
+      {
+        "iri": "http://example.org/widget",
+        "isFlagged": true
+      },
+      {
+        "iri": "http://example.org/gadget",
+        "isFlagged": false
+      },
+      {
+        "iri": "http://example.org/industrial-component",
+        "isFlagged": false
+      }
+    ]
+  }
+}

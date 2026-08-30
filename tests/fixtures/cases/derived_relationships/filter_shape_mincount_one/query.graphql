@@ -1,0 +1,9 @@
+query FilterShapeMinCountOne {
+  members {
+    iri
+    reviewedBooks {
+      iri
+      title
+    }
+  }
+}

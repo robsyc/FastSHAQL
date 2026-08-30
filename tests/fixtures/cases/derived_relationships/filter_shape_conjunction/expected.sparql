@@ -1,0 +1,13 @@
+SELECT ?iri ?authorOneAvailableBooks_iri ?authorOneAvailableBooks_title
+WHERE {
+  ?iri a <http://example.org/library/Member> .
+  OPTIONAL {
+    <http://example.org/library/author-1> ^<http://example.org/library/author> ?authorOneAvailableBooks_iri .
+    ?authorOneAvailableBooks_iri <http://example.org/library/status> ?authorOneAvailableBooks_iri_p0 .
+    FILTER(?authorOneAvailableBooks_iri_p0 = "available")
+    ?authorOneAvailableBooks_iri <http://example.org/library/title> ?authorOneAvailableBooks_iri_p1 .
+    FILTER(?authorOneAvailableBooks_iri_p1 = "SPARQL 101")
+    ?authorOneAvailableBooks_iri a <http://example.org/library/Book> .
+    ?authorOneAvailableBooks_iri <http://example.org/library/title> ?authorOneAvailableBooks_title .
+  }
+}

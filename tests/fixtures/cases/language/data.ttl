@@ -1,0 +1,53 @@
+# Resolution-grid entities (ADR-0012), conforming to shapes.ttl: A en with a
+# multi-language altLabel list, B en-US, C nl, E the sparse/untagged-union
+# entity (name en, untagged note, everything else absent), F minimal (name
+# only), G two same-step en altLabels (the row-multiplication / determinism
+# case).
+@prefix ex: <http://example.org/> .
+
+ex:personA a ex:Person ;
+    ex:name "Alice"@en ;
+    ex:bio "Bio en"@en ;
+    ex:altLabel "Alt-A-en"@en, "Alt-A-enUS"@en-US, "Alt-A-nl"@nl ;
+    ex:note "Note-A-en"@en ;
+    ex:plain "Plain-A" ;
+    ex:summarySource "Sum-A-en"@en ;
+    ex:employer ex:orgA .
+
+ex:personB a ex:Person ;
+    ex:name "Bob"@en-US ;
+    ex:bio "Bio-B"@en-US ;
+    ex:altLabel "Alt-B"@en-US ;
+    ex:note "Note-B"@en-US ;
+    ex:plain "Plain-B" ;
+    ex:summarySource "Sum-B"@en-US .
+
+ex:personC a ex:Person ;
+    ex:name "Cees"@nl ;
+    ex:bio "Bio-C"@nl ;
+    ex:altLabel "Alt-C"@nl ;
+    ex:note "Note-C"@nl ;
+    ex:plain "Plain-C" ;
+    ex:summarySource "Sum-C"@nl .
+
+# E: the sparse/untagged-union entity — bio/altLabel/summarySource absent so
+# the optional-scalar-null and union-terminal lanes fire on real data.
+ex:personE a ex:Person ;
+    ex:name "Eva"@en ;
+    ex:note "Note-E" ;
+    ex:plain "Plain-E" .
+
+# F: minimal — the minCount-1 name only; everything else absent/null.
+ex:personF a ex:Person ;
+    ex:name "Finn"@en .
+
+ex:personG a ex:Person ;
+    ex:name "Gail"@en ;
+    ex:bio "Bio-G"@en ;
+    ex:altLabel "Alt-G-1"@en, "Alt-G-2"@en ;
+    ex:note "Note-G"@en ;
+    ex:plain "Plain-G" ;
+    ex:summarySource "Sum-G"@en .
+
+ex:orgA a ex:Org ;
+    ex:label "Acme"@en .

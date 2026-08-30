@@ -1,0 +1,7 @@
+query PathValuesScalar {
+  variants {
+    iri
+    refAllele
+    geneSymbol
+  }
+}

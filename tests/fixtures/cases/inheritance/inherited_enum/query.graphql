@@ -1,0 +1,6 @@
+query InheritedEnum {
+  managers {
+    iri
+    employmentStatus
+  }
+}

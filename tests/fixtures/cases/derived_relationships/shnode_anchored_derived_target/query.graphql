@@ -1,0 +1,10 @@
+query ShnodeAnchoredDerivedTarget {
+  members {
+    iri
+    name
+    featuredEdition {
+      iri
+      title
+    }
+  }
+}

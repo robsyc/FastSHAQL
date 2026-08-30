@@ -1,0 +1,9 @@
+SELECT ?iri ?summary
+WHERE {
+  ?iri a <http://example.org/genomics/Gene> .
+  OPTIONAL {
+    ?iri <http://example.org/genomics/transcribes>/<http://example.org/genomics/description> ?_l0_summary .
+    FILTER(langMatches(LANG(?_l0_summary), "en"))
+  }
+  BIND(COALESCE(?_l0_summary) AS ?summary)
+}

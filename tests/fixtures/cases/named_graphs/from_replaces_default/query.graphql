@@ -1,0 +1,6 @@
+query FromReplacesDefault {
+  things {
+    iri
+    label
+  }
+}

@@ -1,0 +1,6 @@
+query ScopeSingle {
+  things {
+    iri
+    label
+  }
+}

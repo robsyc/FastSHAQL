@@ -1,0 +1,6 @@
+SELECT ?iri ?label
+WHERE {
+  <http://example.org/Change> (^<http://www.w3.org/2000/01/rdf-schema#subClassOf>)* ?iri .
+  FILTER(REGEX(STR(?iri), "^http://example\\.org/variant/"))
+  ?iri <http://example.org/label> ?label .
+}

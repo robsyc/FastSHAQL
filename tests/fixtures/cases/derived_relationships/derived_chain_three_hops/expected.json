@@ -1,0 +1,206 @@
+{
+  "data": {
+    "members": [
+      {
+        "iri": "http://example.org/library/m1",
+        "recommendedBooks": [
+          {
+            "iri": "http://example.org/library/b1",
+            "sameAuthorEditions": [
+              {
+                "iri": "http://example.org/library/b1"
+              },
+              {
+                "iri": "http://example.org/library/b2"
+              },
+              {
+                "iri": "http://example.org/library/b4"
+              },
+              {
+                "iri": "http://example.org/library/b5"
+              },
+              {
+                "iri": "http://example.org/library/b6"
+              }
+            ]
+          },
+          {
+            "iri": "http://example.org/library/b4",
+            "sameAuthorEditions": [
+              {
+                "iri": "http://example.org/library/b1"
+              },
+              {
+                "iri": "http://example.org/library/b2"
+              },
+              {
+                "iri": "http://example.org/library/b4"
+              },
+              {
+                "iri": "http://example.org/library/b5"
+              },
+              {
+                "iri": "http://example.org/library/b6"
+              }
+            ]
+          },
+          {
+            "iri": "http://example.org/library/b5",
+            "sameAuthorEditions": [
+              {
+                "iri": "http://example.org/library/b1"
+              },
+              {
+                "iri": "http://example.org/library/b2"
+              },
+              {
+                "iri": "http://example.org/library/b4"
+              },
+              {
+                "iri": "http://example.org/library/b3"
+              },
+              {
+                "iri": "http://example.org/library/b5"
+              },
+              {
+                "iri": "http://example.org/library/b6"
+              }
+            ]
+          },
+          {
+            "iri": "http://example.org/library/b6",
+            "sameAuthorEditions": [
+              {
+                "iri": "http://example.org/library/b1"
+              },
+              {
+                "iri": "http://example.org/library/b2"
+              },
+              {
+                "iri": "http://example.org/library/b4"
+              },
+              {
+                "iri": "http://example.org/library/b3"
+              },
+              {
+                "iri": "http://example.org/library/b5"
+              },
+              {
+                "iri": "http://example.org/library/b6"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/library/m2",
+        "recommendedBooks": []
+      },
+      {
+        "iri": "http://example.org/library/m3",
+        "recommendedBooks": [
+          {
+            "iri": "http://example.org/library/b1",
+            "sameAuthorEditions": [
+              {
+                "iri": "http://example.org/library/b1"
+              },
+              {
+                "iri": "http://example.org/library/b2"
+              },
+              {
+                "iri": "http://example.org/library/b4"
+              },
+              {
+                "iri": "http://example.org/library/b5"
+              },
+              {
+                "iri": "http://example.org/library/b6"
+              }
+            ]
+          },
+          {
+            "iri": "http://example.org/library/b4",
+            "sameAuthorEditions": [
+              {
+                "iri": "http://example.org/library/b1"
+              },
+              {
+                "iri": "http://example.org/library/b2"
+              },
+              {
+                "iri": "http://example.org/library/b4"
+              },
+              {
+                "iri": "http://example.org/library/b5"
+              },
+              {
+                "iri": "http://example.org/library/b6"
+              }
+            ]
+          },
+          {
+            "iri": "http://example.org/library/b3",
+            "sameAuthorEditions": [
+              {
+                "iri": "http://example.org/library/b3"
+              },
+              {
+                "iri": "http://example.org/library/b5"
+              },
+              {
+                "iri": "http://example.org/library/b6"
+              }
+            ]
+          },
+          {
+            "iri": "http://example.org/library/b5",
+            "sameAuthorEditions": [
+              {
+                "iri": "http://example.org/library/b1"
+              },
+              {
+                "iri": "http://example.org/library/b2"
+              },
+              {
+                "iri": "http://example.org/library/b4"
+              },
+              {
+                "iri": "http://example.org/library/b3"
+              },
+              {
+                "iri": "http://example.org/library/b5"
+              },
+              {
+                "iri": "http://example.org/library/b6"
+              }
+            ]
+          },
+          {
+            "iri": "http://example.org/library/b6",
+            "sameAuthorEditions": [
+              {
+                "iri": "http://example.org/library/b1"
+              },
+              {
+                "iri": "http://example.org/library/b2"
+              },
+              {
+                "iri": "http://example.org/library/b4"
+              },
+              {
+                "iri": "http://example.org/library/b3"
+              },
+              {
+                "iri": "http://example.org/library/b5"
+              },
+              {
+                "iri": "http://example.org/library/b6"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

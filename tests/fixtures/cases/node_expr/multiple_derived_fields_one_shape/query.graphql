@@ -1,0 +1,10 @@
+query MultipleDerivedFieldsOneShape {
+  variants {
+    iri
+    refAllele
+    geneSymbol
+    annotationStatus
+    hasGene
+    evidenceTags
+  }
+}

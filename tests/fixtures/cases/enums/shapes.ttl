@@ -1,0 +1,72 @@
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix ex:  <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:ObservationShape a sh:NodeShape ;
+    sh:codeIdentifier "Observation" ;
+    sh:targetClass ex:Observation ;
+    sh:property [
+        sh:path ex:status ;
+        sh:datatype xsd:string ;
+        sh:in ("active" "inactive" "entered-in-error") ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:ColorSampleShape a sh:NodeShape ;
+    sh:codeIdentifier "ColorSample" ;
+    sh:targetClass ex:ColorSample ;
+    sh:property [
+        sh:path ex:color ;
+        sh:in ( ex:Pink ex:Purple ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:RatingShape a sh:NodeShape ;
+    sh:codeIdentifier "Rating" ;
+    sh:targetClass ex:Rating ;
+    sh:property [
+        sh:path ex:level ;
+        sh:datatype xsd:integer ;
+        sh:in (1 2) ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:QuantityShape a sh:NodeShape ;
+    sh:codeIdentifier "Quantity" ;
+    sh:targetClass ex:Quantity ;
+    sh:property [
+        sh:path ex:comparator ;
+        sh:in ( "<" "<=" ">=" ">" ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:CompanyShape a sh:NodeShape ;
+    sh:codeIdentifier "Company" ;
+    sh:targetClass ex:Company ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:PersonShape a sh:NodeShape ;
+    sh:codeIdentifier "Person" ;
+    sh:targetClass ex:Person ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:employer ;
+        sh:class ex:Company ;
+        sh:in ( ex:acme ex:globex ) ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] .

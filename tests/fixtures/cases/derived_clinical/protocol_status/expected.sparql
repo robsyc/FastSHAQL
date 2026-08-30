@@ -1,0 +1,5 @@
+SELECT ?iri ?protocolStatus
+WHERE {
+  ?iri a <http://example.org/clinical/Patient> .
+  BIND(IF(EXISTS { ?iri <http://example.org/clinical/appliesProtocol> ?p }, "assigned", "unassigned") AS ?protocolStatus)
+}

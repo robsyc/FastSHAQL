@@ -1,0 +1,6 @@
+query SmokeThings {
+  things {
+    iri
+    label
+  }
+}

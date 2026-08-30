@@ -1,0 +1,9 @@
+{
+  "data": {
+    "patients": [
+      {
+        "iri": "http://example.org/clinical/patient-1"
+      }
+    ]
+  }
+}

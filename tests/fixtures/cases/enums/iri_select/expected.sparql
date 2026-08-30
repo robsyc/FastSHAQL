@@ -1,0 +1,5 @@
+SELECT ?iri ?color
+WHERE {
+  ?iri a <http://example.org/ColorSample> .
+  ?iri <http://example.org/color> ?color .
+}

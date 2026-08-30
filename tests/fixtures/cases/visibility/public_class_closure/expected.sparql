@@ -1,0 +1,5 @@
+SELECT ?iri ?name
+WHERE {
+  ?iri a <http://example.org/Dog> .
+  ?iri <http://example.org/name> ?name .
+}

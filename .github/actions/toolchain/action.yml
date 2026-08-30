@@ -1,0 +1,45 @@
+name: toolchain
+description: Install pinned just + uv (versions from .tool-versions) and sync the workspace.
+
+inputs:
+  just:
+    description: Install just (needed by recipe-running jobs)
+    default: "true"
+  sync:
+    description: Sync the workspace (uv sync --locked) after install
+    default: "true"
+  python-version:
+    description: Python version for uv (UV_PYTHON); empty = .python-version
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Read just version from .tool-versions
+      if: inputs.just == 'true'
+      id: just-version
+      shell: bash
+      run: |
+        just_version="$(grep '^just ' .tool-versions | cut -d' ' -f2)"
+        if [ -z "$just_version" ]; then
+          echo "No 'just' entry found in .tool-versions" >&2
+          exit 1
+        fi
+        echo "version=$just_version" >> "$GITHUB_OUTPUT"
+
+    - name: Install just
+      if: inputs.just == 'true'
+      uses: extractions/setup-just@53165ef7e734c5c07cb06b3c8e7b647c5aa16db3 # v4
+      with:
+        just-version: ${{ steps.just-version.outputs.version }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+      with:
+        version-file: .tool-versions
+        python-version: ${{ inputs.python-version }}
+
+    - name: Sync workspace
+      if: inputs.sync == 'true'
+      shell: bash
+      run: uv sync --locked --all-extras --all-groups --all-packages

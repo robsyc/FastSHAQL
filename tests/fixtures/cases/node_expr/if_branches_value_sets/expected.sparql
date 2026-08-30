@@ -1,0 +1,16 @@
+SELECT ?iri ?evidenceTags
+WHERE {
+  ?iri a <http://example.org/genomics/Variant> .
+  OPTIONAL {
+    ?iri <http://example.org/genomics/reviewedTag> ?evidenceTags .
+    FILTER(EXISTS {
+      ?iri <http://example.org/genomics/review> ?_exists_evidenceTags .
+    })
+  }
+  OPTIONAL {
+    ?iri <http://example.org/genomics/provisionalTag> ?evidenceTags .
+    FILTER(!(EXISTS {
+      ?iri <http://example.org/genomics/review> ?_exists_evidenceTags .
+    }))
+  }
+}

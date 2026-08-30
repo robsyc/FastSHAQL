@@ -1,0 +1,41 @@
+{
+  "data": {
+    "variants": [
+      {
+        "iri": "http://example.org/genomics/v1",
+        "refAllele": "A",
+        "annotationStatus": "annotated"
+      },
+      {
+        "iri": "http://example.org/genomics/v2",
+        "refAllele": "G",
+        "annotationStatus": "annotated"
+      },
+      {
+        "iri": "http://example.org/genomics/v3",
+        "refAllele": "T",
+        "annotationStatus": "annotated"
+      },
+      {
+        "iri": "http://example.org/genomics/v4",
+        "refAllele": "C",
+        "annotationStatus": "novel"
+      },
+      {
+        "iri": "http://example.org/genomics/v5",
+        "refAllele": "AG",
+        "annotationStatus": "annotated"
+      },
+      {
+        "iri": "http://example.org/genomics/v6",
+        "refAllele": "TT",
+        "annotationStatus": "novel"
+      },
+      {
+        "iri": "http://example.org/genomics/v7",
+        "refAllele": "GA",
+        "annotationStatus": "novel"
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+SELECT ?iri ?name
+WHERE {
+  {
+    SELECT DISTINCT ?iri
+    WHERE {
+      ?iri a <http://example.org/Person> .
+      ?iri <http://example.org/title> ?title .
+      FILTER(?title = "Engineer")
+    }
+    ORDER BY ?iri
+    LIMIT 2
+  }
+  ?iri <http://example.org/name> ?name .
+}

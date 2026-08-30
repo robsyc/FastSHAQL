@@ -1,0 +1,9 @@
+SELECT ?iri ?applicableProtocolTitles
+WHERE {
+  ?iri a <http://example.org/clinical/Patient> .
+  OPTIONAL {
+    ?iri <http://example.org/clinical/appliesProtocol> ?protocol .
+    ?protocol <http://example.org/clinical/title> ?title .
+    BIND(?title AS ?applicableProtocolTitles)
+  }
+}

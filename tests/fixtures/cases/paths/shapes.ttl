@@ -1,0 +1,135 @@
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix ex:  <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:PersonShape a sh:NodeShape ;
+    sh:codeIdentifier "Person" ;
+    sh:targetClass ex:Person ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:hasPet ;
+        sh:class ex:Pet ;
+        sh:minCount 0
+    ] .
+
+ex:PetShape a sh:NodeShape ;
+    sh:codeIdentifier "Pet" ;
+    sh:targetClass ex:Pet ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:codeIdentifier "owner" ;
+        sh:path [ sh:inversePath ex:hasPet ] ;
+        sh:class ex:Person ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] .
+
+ex:CityShape a sh:NodeShape ;
+    sh:codeIdentifier "City" ;
+    sh:targetClass ex:City ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:CompanyShape a sh:NodeShape ;
+    sh:codeIdentifier "Company" ;
+    sh:targetClass ex:Company ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:codeIdentifier "locatedIn" ;
+        sh:path ex:locatedIn ;
+        sh:class ex:City ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] .
+
+ex:EmployerCityPersonShape a sh:NodeShape ;
+    sh:codeIdentifier "EmployerCityPerson" ;
+    sh:targetClass ex:EmployerCityPerson ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:codeIdentifier "employerCity" ;
+        sh:path ( ex:employer ex:locatedIn ) ;
+        sh:class ex:City ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] .
+
+ex:ContactPersonShape a sh:NodeShape ;
+    sh:codeIdentifier "ContactPerson" ;
+    sh:targetClass ex:ContactPerson ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:codeIdentifier "contact" ;
+        sh:path [ sh:alternativePath ( ex:spouse ex:partner ) ] ;
+        sh:class ex:ContactPerson ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] .
+
+ex:CompanyEmployerNameShape a sh:NodeShape ;
+    sh:codeIdentifier "CompanyEmployerName" ;
+    sh:targetClass ex:CompanyEmployerName ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:codeIdentifier "employeeName" ;
+        sh:path ( ex:employer ex:name ) ;
+        sh:datatype xsd:string ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] .
+
+ex:FamilyPersonShape a sh:NodeShape ;
+    sh:codeIdentifier "FamilyPerson" ;
+    sh:targetClass ex:FamilyPerson ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:codeIdentifier "ancestors" ;
+        sh:path [ sh:oneOrMorePath ex:parent ] ;
+        sh:class ex:FamilyPerson ;
+        sh:minCount 0
+    ] ;
+    sh:property [
+        sh:codeIdentifier "selfAndAncestors" ;
+        sh:path [ sh:zeroOrMorePath ex:parent ] ;
+        sh:class ex:FamilyPerson ;
+        sh:minCount 0
+    ] .

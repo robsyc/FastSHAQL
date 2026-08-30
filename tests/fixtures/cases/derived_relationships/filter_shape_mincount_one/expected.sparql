@@ -1,0 +1,10 @@
+SELECT ?iri ?reviewedBooks_iri ?reviewedBooks_title
+WHERE {
+  ?iri a <http://example.org/library/Member> .
+  OPTIONAL {
+    <http://example.org/library/Book> ^a ?reviewedBooks_iri .
+    ?reviewedBooks_iri <http://example.org/library/review> ?reviewedBooks_iri_p0 .
+    ?reviewedBooks_iri a <http://example.org/library/Book> .
+    ?reviewedBooks_iri <http://example.org/library/title> ?reviewedBooks_title .
+  }
+}

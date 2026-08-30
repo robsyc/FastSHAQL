@@ -1,0 +1,10 @@
+SELECT ?iri ?name ?employer_iri ?employer_name
+WHERE {
+  ?iri a <http://example.org/Person> .
+  ?iri <http://example.org/name> ?name .
+  OPTIONAL {
+    ?iri <http://example.org/employer> ?employer_iri .
+    ?employer_iri a <http://example.org/Company> .
+    ?employer_iri <http://example.org/name> ?employer_name .
+  }
+}

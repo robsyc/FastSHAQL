@@ -1,0 +1,6 @@
+SELECT ?iri ?level
+WHERE {
+  ?iri a <http://example.org/Rating> .
+  ?iri <http://example.org/level> ?level .
+  FILTER(?level = "1"^^<http://www.w3.org/2001/XMLSchema#integer>)
+}

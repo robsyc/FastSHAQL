@@ -1,0 +1,5 @@
+SELECT ?iri ?level
+WHERE {
+  ?iri a <http://example.org/Rating> .
+  ?iri <http://example.org/level> ?level .
+}

@@ -1,0 +1,279 @@
+# fastshaql quickstart — the data graph (TriG: named graphs).
+#
+# <catalog>  the working world: class tree (TBox), topics, authors, works,
+#            branches, members — plus a few private audit entries
+# <loans>    the loan desk: current and just-closed loans
+# <archive>  withdrawn works, still typed and described
+#
+# Without an X-Default-Graph header the server queries the union of all
+# graphs; with one (or several) it merges exactly those.
+
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix ex:      <http://example.org/> .
+
+# --- class tree: leaves at the bottom, ex:Work at the top -------------------
+#
+# ex:Work
+# ├── ex:Fiction
+# │   ├── ex:Novel
+# │   └── ex:Manga
+# └── ex:Reference
+#     ├── ex:Atlas
+#     └── ex:PopularScience
+#     └── ex:PoliticalTheory
+
+<http://example.org/graphs/catalog> {
+
+    ex:Work            a rdfs:Class .
+    ex:Fiction         a rdfs:Class ; rdfs:subClassOf ex:Work .
+    ex:Novel           a rdfs:Class ; rdfs:subClassOf ex:Fiction .
+    ex:Manga           a rdfs:Class ; rdfs:subClassOf ex:Fiction .
+    ex:Reference       a rdfs:Class ; rdfs:subClassOf ex:Work .
+    ex:Atlas           a rdfs:Class ; rdfs:subClassOf ex:Reference .
+    ex:PopularScience  a rdfs:Class ; rdfs:subClassOf ex:Reference .
+    ex:PoliticalTheory a rdfs:Class ; rdfs:subClassOf ex:Reference .
+
+    # --- topics (SKOS broader/narrower, three levels deep) ------------------
+
+    ex:topic-genetics  a ex:Topic ; skos:prefLabel "Genetics"  ; skos:broader ex:topic-biology .
+    ex:topic-astronomy a ex:Topic ; skos:prefLabel "Astronomy" ; skos:broader ex:topic-science .
+    ex:topic-biology   a ex:Topic ; skos:prefLabel "Biology"   ; skos:broader ex:topic-science .
+    ex:topic-science   a ex:Topic ; skos:prefLabel "Science" .
+    ex:topic-socialism a ex:Topic ; skos:prefLabel "Socialism"  ; skos:broader ex:topic-politics .
+    ex:topic-politics  a ex:Topic ; skos:prefLabel "Politics" .
+    ex:topic-history   a ex:Topic ; skos:prefLabel "History" .
+    ex:topic-fantasy   a ex:Topic ; skos:prefLabel "Fantasy" .
+    ex:topic-ecology   a ex:Topic ; skos:prefLabel "Ecology" .
+
+    # --- authors -------------------------------------------------------------
+
+    ex:author-rowling a ex:Author ;
+        ex:displayName "J.K. Rowling" ;
+        ex:born "1965-07-31"^^xsd:date .
+    ex:author-orwell a ex:Author ;
+        ex:displayName "George Orwell" ;
+        ex:born "1903-06-25"^^xsd:date ;
+        ex:contactEmail "orwell@example.org" .
+    ex:author-tolkien a ex:Author ;
+        ex:displayName "J.R.R. Tolkien" ;
+        ex:born "1892-01-03"^^xsd:date .
+    ex:author-miyazaki a ex:Author ;
+        ex:displayName "Hayao Miyazaki" ;
+        ex:born "1941-01-05"^^xsd:date .
+    ex:author-harari a ex:Author ;
+        ex:displayName "Yuval Noah Harari" ;
+        ex:born "1976-02-24"^^xsd:date ;
+        ex:contactEmail "harari@example.org" .
+    ex:author-marx a ex:Author ;
+        ex:displayName "Karl Marx" ;
+        ex:born "1818-05-05"^^xsd:date .
+    ex:author-sagan a ex:Author ;
+        ex:displayName "Carl Sagan" ;
+        ex:born "1934-11-09"^^xsd:date .
+    ex:author-national-geographic a ex:Author ;
+        ex:displayName "National Geographic" .
+
+    # --- works (typed with leaves of the class tree) -------------------------
+    #
+    # Newer records carry ex:isbn13, older ones the legacy ex:isbn — the
+    # shapes read both through one alternative-path field.
+
+    ex:work-hp-philosopher a ex:Novel ;
+        ex:title "Harry Potter and the Philosopher's Stone"@en , "Harry Potter en de steen der wijzen"@nl ;
+        ex:pages 223 ;
+        ex:price "12.99"^^xsd:decimal ;
+        ex:published "1997-06-26"^^xsd:date ;
+        ex:author ex:author-rowling ;
+        ex:altTitles "Harry Potter and the Sorcerer's Stone" ;
+        ex:tags "wizardry" , "boarding school" ;
+        ex:isbn13 "978-0-7475-3269-9" ;
+        ex:about ex:topic-fantasy .
+    ex:work-1984 a ex:Novel ;
+        ex:title "1984"@en , "1984"@nl ;
+        ex:subtitle "Een klassieke dystopie"@nl ;
+        ex:pages 328 ;
+        ex:price "11.50"^^xsd:decimal ;
+        ex:published "1949-06-08"^^xsd:date ;
+        ex:author ex:author-orwell ;
+        ex:altTitles "Nineteen Eighty-Four" ;
+        ex:tags "dystopia" , "classic" ;
+        ex:isbn "0-14-118776-X" ;
+        ex:about ex:topic-politics .
+    ex:work-hobbit a ex:Novel ;
+        ex:title "The Hobbit"@en , "De hobbit"@nl ;
+        ex:pages 312 ;
+        ex:price "14.75"^^xsd:decimal ;
+        ex:published "1937-09-21"^^xsd:date ;
+        ex:author ex:author-tolkien ;
+        ex:altTitles "There and Back Again" ;
+        ex:isbn13 "978-0-261-10221-7" ;
+        ex:about ex:topic-fantasy .
+    ex:work-nausicaa a ex:Manga ;
+        ex:title "Nausicaä of the Valley of the Wind"@en , "Nausicaä van het dal der winden"@nl ;
+        ex:subtitle "The full series" ;
+        ex:pages 1104 ;
+        ex:price "39.99"^^xsd:decimal ;
+        ex:published "1982-02-10"^^xsd:date ;
+        ex:author ex:author-miyazaki ;
+        ex:about ex:topic-ecology .
+    ex:work-sapiens a ex:PopularScience ;
+        ex:title "Sapiens: A Brief History of Humankind"@en , "Sapiens: een kleine geschiedenis van de mensheid"@nl ;
+        ex:pages 464 ;
+        ex:price "22.50"^^xsd:decimal ;
+        ex:published "2014-09-04"^^xsd:date ;
+        ex:author ex:author-harari ;
+        ex:tags "bestseller" ;
+        ex:isbn13 "978-0-09-959008-8" ;
+        ex:about ex:topic-genetics , ex:topic-history .
+    ex:work-manifesto a ex:PoliticalTheory ;
+        ex:title "The Communist Manifesto"@en , "Het communistisch manifest"@nl ;
+        ex:pages 64 ;
+        ex:price "6.95"^^xsd:decimal ;
+        ex:published "1848-02-21"^^xsd:date ;
+        ex:author ex:author-marx ;
+        ex:isbn "0-14-044757-1" ;
+        ex:about ex:topic-socialism .
+    ex:work-cosmos a ex:PopularScience ;
+        ex:title "Cosmos"@en , "Cosmos"@nl ;
+        ex:pages 396 ;
+        ex:price "24.10"^^xsd:decimal ;
+        ex:published "1980-06-01"^^xsd:date ;
+        ex:author ex:author-sagan ;
+        ex:about ex:topic-astronomy , ex:topic-biology .
+    ex:work-atlas-world a ex:Atlas ;
+        ex:title "National Geographic Atlas of the World"@en ;
+        ex:pages 448 ;
+        ex:price "45.00"^^xsd:decimal ;
+        ex:published "2019-10-01"^^xsd:date ;
+        ex:author ex:author-national-geographic ;
+        ex:about ex:topic-science .
+
+    # --- branches ------------------------------------------------------------
+
+    ex:branch-krook a ex:Branch ;
+        ex:name "Bibliotheek De Krook" ;
+        ex:city "Ghent" ;
+        ex:address [
+            ex:street "Miriam Makebaplein 1" ;
+            ex:postalCode "9000" ;
+        ] ;
+        ex:stocks ex:work-hp-philosopher , ex:work-1984 , ex:work-hobbit ,
+            ex:work-sapiens , ex:work-cosmos .
+    ex:branch-permeke a ex:Branch ;
+        ex:name "Bib Permeke" ;
+        ex:city "Antwerp" ;
+        ex:address [
+            ex:street "De Coninckplein 25" ;
+            ex:postalCode "2060" ;
+        ] ;
+        ex:stocks ex:work-nausicaa , ex:work-manifesto , ex:work-atlas-world .
+
+    # --- members (displayName is language-tagged — the Member override) ------
+
+    ex:member-jane a ex:Member ;
+        ex:displayName "Jane Doe"@en , "Janne Doe"@nl ;
+        ex:contactEmail "jane@example.org" ;
+        ex:tier ex:Gold ;
+        ex:memberSince "2019-04-01"^^xsd:date ;
+        ex:knows ex:member-john , ex:member-emma ;
+        ex:homeBranch ex:branch-krook .
+    ex:member-john a ex:Member ;
+        ex:displayName "John Doe"@en , "Jan Doe"@nl ;
+        ex:tier ex:Plus ;
+        ex:memberSince "2020-09-15"^^xsd:date ;
+        ex:knows ex:member-jane ;
+        ex:homeBranch ex:branch-permeke .
+    ex:member-emma a ex:Member ;
+        ex:displayName "Emma Peeters"@en , "Emma Peeters"@nl ;
+        ex:contactEmail "emma@example.org" ;
+        ex:tier ex:Basic ;
+        ex:memberSince "2023-01-10"^^xsd:date ;
+        ex:knows ex:member-jane ;
+        ex:homeBranch ex:branch-krook .
+    ex:member-priya a ex:Member ;
+        ex:displayName "Priya Sharma"@en , "Priya Sharma"@nl ;
+        ex:tier ex:Plus ;
+        ex:memberSince "2021-06-20"^^xsd:date ;
+        ex:homeBranch ex:branch-permeke .
+
+    # --- audit entries: typed, present, and invisible in the API -------------
+
+    ex:audit-001 a ex:AuditEntry ;
+        ex:message "member record created" ;
+        ex:recordedOn "2019-04-01"^^xsd:date .
+    ex:audit-002 a ex:AuditEntry ;
+        ex:message "late fine waived" ;
+        ex:recordedOn "2023-07-14"^^xsd:date .
+}
+
+# --- current loans ------------------------------------------------------------
+
+<http://example.org/graphs/loans> {
+
+    ex:loan-1001 a ex:Loan ;
+        ex:status "active" ;
+        ex:borrowedOn "2026-08-02"^^xsd:date ;
+        ex:dueOn "2026-09-02"^^xsd:date ;
+        ex:work ex:work-hp-philosopher ;
+        ex:borrower ex:member-jane .
+    ex:loan-1002 a ex:Loan ;
+        ex:status "active" ;
+        ex:borrowedOn "2026-08-10"^^xsd:date ;
+        ex:work ex:work-1984 ;
+        ex:borrower ex:member-john .
+    ex:loan-1003 a ex:Loan ;
+        ex:status "active" ;
+        ex:borrowedOn "2026-08-18"^^xsd:date ;
+        ex:dueOn "2026-08-31"^^xsd:date ;
+        ex:work ex:work-sapiens ;
+        ex:borrower ex:member-emma .
+    ex:loan-1004 a ex:Loan ;
+        ex:status "active" ;
+        ex:borrowedOn "2026-08-20"^^xsd:date ;
+        ex:work ex:work-nausicaa ;
+        ex:borrower ex:member-priya .
+    ex:loan-1005 a ex:Loan ;
+        ex:status "active" ;
+        ex:borrowedOn "2026-08-25"^^xsd:date ;
+        ex:dueOn "2026-09-25"^^xsd:date ;
+        ex:work ex:work-cosmos ;
+        ex:borrower ex:member-jane .
+    ex:loan-1006 a ex:Loan ;
+        ex:status "returned" ;
+        ex:borrowedOn "2026-07-06"^^xsd:date ;
+        ex:dueOn "2026-07-20"^^xsd:date ;
+        ex:fine "3.50"^^xsd:decimal ;
+        ex:work ex:work-cosmos ;
+        ex:borrower ex:member-emma .
+}
+
+# --- withdrawn works: typed, described, and outside <catalog> -----------------
+
+<http://example.org/graphs/archive> {
+
+    ex:work-frankenstein-1818 a ex:Novel ;
+        ex:title "Frankenstein; or, The Modern Prometheus"@en , "Frankenstein; of de moderne Prometheus"@nl ;
+        ex:pages 280 ;
+        ex:price "8.00"^^xsd:decimal ;
+        ex:published "1818-01-01"^^xsd:date ;
+        ex:author ex:author-shelley ;
+        ex:altTitles "Frankenstein" ;
+        ex:about ex:topic-science .
+    ex:author-shelley a ex:Author ;
+        ex:displayName "Mary Shelley" ;
+        ex:born "1797-08-30"^^xsd:date .
+
+    ex:work-origin-1859 a ex:PopularScience ;
+        ex:title "On the Origin of Species"@en , "De oorsprong der soorten"@nl ;
+        ex:pages 502 ;
+        ex:price "9.50"^^xsd:decimal ;
+        ex:published "1859-11-24"^^xsd:date ;
+        ex:author ex:author-darwin ;
+        ex:altTitles "The Origin of Species" ;
+        ex:about ex:topic-genetics .
+    ex:author-darwin a ex:Author ;
+        ex:displayName "Charles Darwin" ;
+        ex:born "1809-02-12"^^xsd:date .
+}

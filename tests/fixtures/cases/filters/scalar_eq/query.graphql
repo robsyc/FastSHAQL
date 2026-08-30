@@ -1,0 +1,5 @@
+query ScalarEq {
+  persons(where: { name: { eq: "Alice" } }) {
+    name
+  }
+}

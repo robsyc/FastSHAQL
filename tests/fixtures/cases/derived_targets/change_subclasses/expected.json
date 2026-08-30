@@ -1,0 +1,30 @@
+{
+  "data": {
+    "changetypes": [
+      {
+        "iri": "http://example.org/Change",
+        "label": "change"
+      },
+      {
+        "iri": "http://example.org/Variant",
+        "label": "variant"
+      },
+      {
+        "iri": "http://example.org/Substitution",
+        "label": "substitution"
+      },
+      {
+        "iri": "http://example.org/Deletion",
+        "label": "deletion"
+      },
+      {
+        "iri": "http://example.org/variant/StructuralVariant",
+        "label": "structural variant"
+      },
+      {
+        "iri": "http://example.org/variant/Inversion",
+        "label": "inversion"
+      }
+    ]
+  }
+}

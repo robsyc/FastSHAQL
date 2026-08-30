@@ -1,0 +1,24 @@
+{
+  "data": {
+    "members": [
+      {
+        "iri": "http://example.org/library/m1",
+        "name": "Alice",
+        "featuredEdition": {
+          "iri": "http://example.org/library/rb1",
+          "title": "First Edition SPARQL 101"
+        }
+      },
+      {
+        "iri": "http://example.org/library/m2",
+        "name": "Bob",
+        "featuredEdition": null
+      },
+      {
+        "iri": "http://example.org/library/m3",
+        "name": "Cara",
+        "featuredEdition": null
+      }
+    ]
+  }
+}

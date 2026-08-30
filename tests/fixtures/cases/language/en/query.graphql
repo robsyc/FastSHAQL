@@ -1,0 +1,15 @@
+query LanguagePreferenceChain {
+  persons {
+    iri
+    name
+    bio
+    altLabel
+    note
+    plain
+    summary
+    employer {
+      iri
+      label
+    }
+  }
+}

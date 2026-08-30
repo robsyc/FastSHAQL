@@ -1,0 +1,18 @@
+{
+  "data": {
+    "persons": [
+      {
+        "iri": "http://example.org/personB",
+        "name": "Bob",
+        "bio": "Bio-B",
+        "altLabel": [
+          "Alt-B"
+        ],
+        "note": "Note-B",
+        "plain": "Plain-B",
+        "summary": "Sum-B",
+        "employer": null
+      }
+    ]
+  }
+}

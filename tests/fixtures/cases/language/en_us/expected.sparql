@@ -1,0 +1,45 @@
+SELECT ?iri ?name ?bio ?altLabel ?note ?plain ?summary ?employer_iri ?employer_label
+WHERE {
+  ?iri a <http://example.org/Person> .
+  OPTIONAL {
+    ?iri <http://example.org/name> ?_l0_name .
+    FILTER(langMatches(LANG(?_l0_name), "en-us"))
+  }
+  BIND(COALESCE(?_l0_name) AS ?name)
+  FILTER(BOUND(?name))
+  OPTIONAL {
+    ?iri <http://example.org/bio> ?_l0_bio .
+    FILTER(langMatches(LANG(?_l0_bio), "en-us"))
+  }
+  BIND(COALESCE(?_l0_bio) AS ?bio)
+  OPTIONAL {
+    ?iri <http://example.org/altLabel> ?altLabel .
+    FILTER(langMatches(LANG(?altLabel), "en-us"))
+  }
+  OPTIONAL {
+    ?iri <http://example.org/note> ?_l0_note .
+    FILTER(langMatches(LANG(?_l0_note), "en-us"))
+  }
+  OPTIONAL {
+    ?iri <http://example.org/note> ?_l1_note .
+    FILTER(LANG(?_l1_note) = "")
+  }
+  BIND(COALESCE(?_l0_note, ?_l1_note) AS ?note)
+  OPTIONAL {
+    ?iri <http://example.org/plain> ?plain .
+  }
+  OPTIONAL {
+    ?iri <http://example.org/summarySource> ?_l0_summary .
+    FILTER(langMatches(LANG(?_l0_summary), "en-us"))
+  }
+  BIND(COALESCE(?_l0_summary) AS ?summary)
+  OPTIONAL {
+    ?iri <http://example.org/employer> ?employer_iri .
+    ?employer_iri a <http://example.org/Org> .
+    OPTIONAL {
+      ?employer_iri <http://example.org/label> ?_l0_employer_label .
+      FILTER(langMatches(LANG(?_l0_employer_label), "en-us"))
+    }
+    BIND(COALESCE(?_l0_employer_label) AS ?employer_label)
+  }
+}

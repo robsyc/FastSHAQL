@@ -1,0 +1,20 @@
+SELECT ?iri ?name ?recommendedBooks_iri ?recommendedBooks_title
+WHERE {
+  {
+    SELECT DISTINCT ?iri
+    WHERE {
+      ?iri a <http://example.org/library/Member> .
+    }
+    ORDER BY ?iri
+    LIMIT 1
+    OFFSET 1
+  }
+  ?iri <http://example.org/library/name> ?name .
+  OPTIONAL {
+    ?iri <http://example.org/library/borrowed>/<http://example.org/library/author>/^<http://example.org/library/author> ?recommendedBooks_iri .
+    ?recommendedBooks_iri <http://example.org/library/status> ?recommendedBooks_iri_p0 .
+    FILTER(?recommendedBooks_iri_p0 = "available")
+    ?recommendedBooks_iri a <http://example.org/library/Book> .
+    ?recommendedBooks_iri <http://example.org/library/title> ?recommendedBooks_title .
+  }
+}

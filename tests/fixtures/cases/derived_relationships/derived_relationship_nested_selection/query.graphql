@@ -1,0 +1,10 @@
+query DerivedRelationshipNestedSelection {
+  members {
+    iri
+    name
+    recommendedBooks {
+      iri
+      title
+    }
+  }
+}

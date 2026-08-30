@@ -1,0 +1,10 @@
+{
+  "data": {
+    "deletionvariants": [
+      {
+        "iri": "http://example.org/delA",
+        "label": "deletion A"
+      }
+    ]
+  }
+}

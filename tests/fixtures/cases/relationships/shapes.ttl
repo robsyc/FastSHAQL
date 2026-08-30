@@ -1,0 +1,72 @@
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix ex:  <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:CityShape a sh:NodeShape ;
+    sh:codeIdentifier "City" ;
+    sh:targetClass ex:City ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:CompanyShape a sh:NodeShape ;
+    sh:codeIdentifier "Company" ;
+    sh:targetClass ex:Company ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:locatedIn ;
+        sh:class ex:City ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] .
+
+ex:AddressShape a sh:NodeShape ;
+    sh:codeIdentifier "Address" ;
+    sh:targetClass ex:Address ;
+    sh:property [
+        sh:path ex:street ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:PersonShape a sh:NodeShape ;
+    sh:codeIdentifier "Person" ;
+    sh:targetClass ex:Person ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:employer ;
+        sh:class ex:Company ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:address ;
+        sh:node ex:AddressShape ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:department ;
+        sh:class ex:Department ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:knows ;
+        sh:class ex:Person ;
+        sh:minCount 0
+    ] .

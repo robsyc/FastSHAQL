@@ -1,0 +1,21 @@
+# Language selection is per request, via the standard Accept-Language
+# header. GraphiQL: open the Headers pane (below the query pane) and add
+#   {"Accept-Language": "nl"}
+# then try "en", "fr, en;q=0.8" (a fallback chain — weights order it), or
+# drop the header — titles come back in an arbitrary available language
+# when no preference is sent.
+# The chain is strict: a work with no title in any preferred language
+# drops out entirely — under "nl" the Atlas (English-only title)
+# disappears; under "nl, en" it returns via the English fallback.
+# title requires sh:datatype rdf:langString; subtitle is the string
+# union (xsd:string | rdf:langString) — its plain values are a built-in
+# last resort: under "nl" 1984's Dutch subtitle wins, while Nausicaä's
+# plain subtitle resolves with no matching tag at all.
+{
+  works {
+    title
+    subtitle
+    tags
+    altTitles
+  }
+}

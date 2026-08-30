@@ -1,0 +1,11 @@
+query RelationshipNested {
+  persons {
+    name
+    employer {
+      name
+      locatedIn {
+        name
+      }
+    }
+  }
+}

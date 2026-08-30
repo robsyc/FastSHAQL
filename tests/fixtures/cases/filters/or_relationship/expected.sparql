@@ -1,0 +1,15 @@
+SELECT ?iri ?name
+WHERE {
+  ?iri a <http://example.org/Person> .
+  ?iri <http://example.org/name> ?name .
+  ?iri <http://example.org/employer> ?employer_iri .
+  FILTER(EXISTS {
+    ?employer_iri a <http://example.org/Company> .
+    ?employer_iri <http://example.org/name> ?_rf_employer_name .
+    FILTER(?_rf_employer_name = "Acme")
+  } || EXISTS {
+    ?employer_iri a <http://example.org/Company> .
+    ?employer_iri <http://example.org/name> ?_rf_employer_name .
+    FILTER(?_rf_employer_name = "Globex")
+  })
+}

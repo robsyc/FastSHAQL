@@ -1,0 +1,6 @@
+SELECT ?iri ?source ?iriLength
+WHERE {
+  ?iri a <http://example.org/Item> .
+  BIND("Fastshaql" AS ?source)
+  BIND(STRLEN(STR(?iri)) AS ?iriLength)
+}

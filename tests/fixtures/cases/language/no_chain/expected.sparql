@@ -1,0 +1,10 @@
+SELECT ?iri ?altLabel ?plain
+WHERE {
+  ?iri a <http://example.org/Person> .
+  OPTIONAL {
+    ?iri <http://example.org/altLabel> ?altLabel .
+  }
+  OPTIONAL {
+    ?iri <http://example.org/plain> ?plain .
+  }
+}

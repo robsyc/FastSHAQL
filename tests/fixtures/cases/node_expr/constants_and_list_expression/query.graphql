@@ -1,0 +1,7 @@
+query ConstantsAndListExpression {
+  genes {
+    iri
+    registryCode
+    assayPanels
+  }
+}

@@ -1,0 +1,10 @@
+SELECT ?iri ?name ?knows_iri ?knows_name
+WHERE {
+  ?iri a <http://example.org/Person> .
+  ?iri <http://example.org/name> ?name .
+  OPTIONAL {
+    ?iri <http://example.org/knows> ?knows_iri .
+    ?knows_iri a <http://example.org/Person> .
+    ?knows_iri <http://example.org/name> ?knows_name .
+  }
+}

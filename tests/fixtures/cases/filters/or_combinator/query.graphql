@@ -1,0 +1,7 @@
+query OrCombinator {
+  persons(
+    where: { OR: [{ name: { eq: "Alice" } }, { name: { eq: "Bob" } }] }
+  ) {
+    name
+  }
+}

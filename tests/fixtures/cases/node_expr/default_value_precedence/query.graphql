@@ -1,0 +1,8 @@
+query DefaultValuePrecedence {
+  genes {
+    iri
+    symbol
+    assayVersion
+    supportScore
+  }
+}

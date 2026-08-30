@@ -1,0 +1,14 @@
+{
+  "data": {
+    "variants": [
+      {
+        "iri": "http://example.org/subA",
+        "label": " substitution A "
+      },
+      {
+        "iri": "http://example.org/delA",
+        "label": "deletion A"
+      }
+    ]
+  }
+}

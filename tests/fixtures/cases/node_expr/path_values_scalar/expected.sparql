@@ -1,0 +1,8 @@
+SELECT ?iri ?refAllele ?geneSymbol
+WHERE {
+  ?iri a <http://example.org/genomics/Variant> .
+  ?iri <http://example.org/genomics/refAllele> ?refAllele .
+  OPTIONAL {
+    ?iri <http://example.org/genomics/inGene>/<http://example.org/genomics/symbol> ?geneSymbol .
+  }
+}

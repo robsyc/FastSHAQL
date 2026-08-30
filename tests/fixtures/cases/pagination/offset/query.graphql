@@ -1,0 +1,5 @@
+query OffsetOnly {
+  persons(offset: 2) {
+    name
+  }
+}

@@ -1,0 +1,8 @@
+SELECT ?iri ?symbol ?variantIris
+WHERE {
+  ?iri a <http://example.org/genomics/Gene> .
+  ?iri <http://example.org/genomics/symbol> ?symbol .
+  OPTIONAL {
+    ?iri ^<http://example.org/genomics/inGene> ?variantIris .
+  }
+}

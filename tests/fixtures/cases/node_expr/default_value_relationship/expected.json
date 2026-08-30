@@ -1,0 +1,20 @@
+{
+  "data": {
+    "variants": [
+      {
+        "iri": "http://example.org/genomics/v3",
+        "inGene": {
+          "iri": "http://example.org/genomics/g2",
+          "assayVersion": "v1"
+        }
+      },
+      {
+        "iri": "http://example.org/genomics/v5",
+        "inGene": {
+          "iri": "http://example.org/genomics/g2",
+          "assayVersion": "v1"
+        }
+      }
+    ]
+  }
+}

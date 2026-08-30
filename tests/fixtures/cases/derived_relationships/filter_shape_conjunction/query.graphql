@@ -1,0 +1,9 @@
+query FilterShapeConjunction {
+  members {
+    iri
+    authorOneAvailableBooks {
+      iri
+      title
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "data": {
+    "managers": [
+      {
+        "iri": "http://example.org/alice",
+        "employmentStatus": "ACTIVE"
+      },
+      {
+        "iri": "http://example.org/bob",
+        "employmentStatus": "INACTIVE"
+      }
+    ]
+  }
+}

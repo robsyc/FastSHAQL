@@ -1,0 +1,9 @@
+query InheritedRelationship {
+  managers {
+    iri
+    managerName
+    workLocation {
+      locationName
+    }
+  }
+}

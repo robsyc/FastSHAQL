@@ -1,0 +1,8 @@
+query PathAlternative {
+  contactpersons {
+    name
+    contact {
+      name
+    }
+  }
+}

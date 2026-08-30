@@ -1,0 +1,76 @@
+@prefix gx: <http://example.org/genomics/> .
+
+gx:g1 a gx:Gene ;
+    gx:symbol "BRCA1" ;
+    gx:transcribes gx:t1 ;
+    gx:support gx:s1 ;
+    gx:assayVersion "v2" ;
+    gx:displayName "Breast cancer 1"@en .
+
+gx:g2 a gx:Gene ;
+    gx:symbol "TP53" ;
+    gx:transcribes gx:t2 ;
+    gx:displayName "Tumorprotein p53"@de .
+
+gx:g3 a gx:Gene ;
+    gx:symbol "KRAS" ;
+    gx:transcribes gx:t3 ;
+    gx:support gx:s3 .
+
+gx:s1 a gx:Support ;
+    gx:score 0.95 .
+
+# Deliberately scoreless: g3 reaches a Support but not a score, so a sequence
+# path can miss at its second hop as well as its first (g2 has no support).
+gx:s3 a gx:Support .
+
+gx:t1 a gx:Transcript ;
+    gx:description "Full-length transcript"@en , "Vollstaendiges Transkript"@de .
+
+gx:t2 a gx:Transcript ;
+    gx:description "Short variant"@en .
+
+gx:t3 a gx:Transcript ;
+    gx:description "Kurzvariante"@de .
+
+gx:v1 a gx:Variant ;
+    gx:refAllele "A" ;
+    gx:inGene gx:g1 ;
+    gx:review "confirmed" ;
+    gx:reviewedTag "clinvar" , "cosmic" .
+
+gx:v2 a gx:Variant ;
+    gx:refAllele "G" ;
+    gx:inGene gx:g1 ;
+    gx:provisionalTag "unreviewed" .
+
+gx:v3 a gx:Variant ;
+    gx:refAllele "T" ;
+    gx:inGene gx:g2 ;
+    gx:review "confirmed" ;
+    gx:reviewedTag "locus" .
+
+gx:v4 a gx:Variant ;
+    gx:refAllele "C" .
+
+# Reviewed *and* carrying a provisional tag: the then-arm guard must keep the
+# provisional tag out. Without it the else arm would also fire.
+gx:v5 a gx:Variant ;
+    gx:refAllele "AG" ;
+    gx:inGene gx:g2 ;
+    gx:review "confirmed" ;
+    gx:reviewedTag "clinvar" ;
+    gx:provisionalTag "unreviewed" .
+
+# Reviewed but with no reviewed tag: the then branch is the *empty* list, so
+# evidenceTags is empty — it must not fall back to the provisional tag.
+gx:v6 a gx:Variant ;
+    gx:refAllele "TT" ;
+    gx:review "confirmed" ;
+    gx:provisionalTag "draft" .
+
+# The review was retracted but its tag was never cleaned up: unreviewed, so the
+# then-arm guard must suppress the stale reviewed tag rather than emit it.
+gx:v7 a gx:Variant ;
+    gx:refAllele "GA" ;
+    gx:reviewedTag "withdrawn-curation" .

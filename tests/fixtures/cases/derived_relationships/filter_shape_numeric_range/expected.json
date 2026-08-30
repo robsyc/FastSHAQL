@@ -1,0 +1,66 @@
+{
+  "data": {
+    "members": [
+      {
+        "iri": "http://example.org/library/m1",
+        "recentBooks": [
+          {
+            "iri": "http://example.org/library/b1"
+          },
+          {
+            "iri": "http://example.org/library/b4"
+          },
+          {
+            "iri": "http://example.org/library/b3"
+          },
+          {
+            "iri": "http://example.org/library/b5"
+          },
+          {
+            "iri": "http://example.org/library/b6"
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/library/m2",
+        "recentBooks": [
+          {
+            "iri": "http://example.org/library/b1"
+          },
+          {
+            "iri": "http://example.org/library/b4"
+          },
+          {
+            "iri": "http://example.org/library/b3"
+          },
+          {
+            "iri": "http://example.org/library/b5"
+          },
+          {
+            "iri": "http://example.org/library/b6"
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/library/m3",
+        "recentBooks": [
+          {
+            "iri": "http://example.org/library/b1"
+          },
+          {
+            "iri": "http://example.org/library/b4"
+          },
+          {
+            "iri": "http://example.org/library/b3"
+          },
+          {
+            "iri": "http://example.org/library/b5"
+          },
+          {
+            "iri": "http://example.org/library/b6"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "data": {
+    "things": [
+      {
+        "iri": "http://example.org/cartesian/e5c7e3ef28cc",
+        "tag": [
+          "tag-e0-v0",
+          "tag-e0-v1"
+        ],
+        "altLabel": [
+          "alt-e0-v0",
+          "alt-e0-v1"
+        ],
+        "hasChild": [
+          {
+            "iri": "http://example.org/cartesian/861106f35cfd",
+            "tag": [
+              "ctag-e0-v0",
+              "ctag-e0-v1"
+            ],
+            "altLabel": [
+              "calt-e0-v0",
+              "calt-e0-v1"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

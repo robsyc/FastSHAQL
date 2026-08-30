@@ -1,0 +1,54 @@
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix ex:  <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:prefixes a sh:ShapesGraph ;
+    sh:declare [
+        sh:prefix "ex" ;
+        sh:namespace "http://example.org/" ;
+    ] .
+
+ex:ItemShape a sh:NodeShape ;
+    sh:codeIdentifier "Item" ;
+    sh:targetClass ex:Item ;
+    sh:property [
+        sh:path ex:source ;
+        sh:datatype xsd:string ;
+        sh:values "Fastshaql" ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:iriLength ;
+        sh:datatype xsd:integer ;
+        sh:values [ sh:sparqlExpr "STRLEN(STR($this))" ] ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:isFlagged ;
+        sh:datatype xsd:boolean ;
+        sh:values [
+            sh:prefixes ex:prefixes ;
+            sh:sparqlExpr "EXISTS { $this ex:hasFlag ?f }" ;
+        ] ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:label ;
+        sh:datatype xsd:string ;
+        sh:values [
+            sh:prefixes ex:prefixes ;
+            sh:select """
+                SELECT ?label
+                WHERE {
+                    $this ex:givenName ?given .
+                    $this ex:familyName ?family .
+                    BIND(CONCAT(?given, " ", ?family) AS ?label)
+                }
+            """ ;
+        ] ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .

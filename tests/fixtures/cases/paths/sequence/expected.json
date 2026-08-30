@@ -1,0 +1,18 @@
+{
+  "data": {
+    "employercitypersons": [
+      {
+        "name": "Alice",
+        "employerCity": {
+          "name": "Amsterdam"
+        }
+      },
+      {
+        "name": "Bob",
+        "employerCity": {
+          "name": "Berlin"
+        }
+      }
+    ]
+  }
+}

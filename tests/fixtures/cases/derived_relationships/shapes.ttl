@@ -1,0 +1,198 @@
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix shnex:   <http://www.w3.org/ns/shacl-node-expr#> .
+@prefix lib:     <http://example.org/library/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
+
+lib:ApiSchema a graphql:Schema ;
+    graphql:publicShape lib:MemberShape, lib:BookShape, lib:BranchShape ;
+    graphql:protectedShape lib:RareBookShape, lib:SpecialCollectionShape .
+
+lib:prefixes a sh:ShapesGraph ;
+    sh:declare [
+        sh:prefix "lib" ;
+        sh:namespace "http://example.org/library/" ;
+    ] .
+
+lib:MemberShape a sh:NodeShape ;
+    sh:codeIdentifier "Member" ;
+    sh:targetClass lib:Member ;
+    sh:property [
+        sh:path lib:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path lib:recommendedBooks ;
+        sh:class lib:Book ;
+        sh:values [
+            shnex:nodes [
+                shnex:pathValues ( lib:borrowed lib:author [ sh:inversePath lib:author ] ) ;
+            ] ;
+            shnex:filterShape [
+                sh:property [
+                    sh:path lib:status ;
+                    sh:hasValue "available" ;
+                ] ;
+            ] ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path lib:authorOneAvailableBooks ;
+        sh:class lib:Book ;
+        sh:values [
+            shnex:nodes [
+                shnex:pathValues [ sh:inversePath lib:author ] ;
+                shnex:focusNode lib:author-1 ;
+            ] ;
+            shnex:filterShape [
+                sh:property [
+                    sh:path lib:status ;
+                    sh:hasValue "available" ;
+                ] ;
+                sh:property [
+                    sh:path lib:title ;
+                    sh:hasValue "SPARQL 101" ;
+                ] ;
+            ] ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path lib:recentBooks ;
+        sh:class lib:Book ;
+        sh:values [
+            shnex:nodes [
+                shnex:pathValues [ sh:inversePath rdf:type ] ;
+                shnex:focusNode lib:Book ;
+            ] ;
+            shnex:filterShape [
+                sh:property [
+                    sh:path lib:publicationYear ;
+                    sh:minInclusive 2020 ;
+                ] ;
+            ] ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path lib:reviewedBooks ;
+        sh:class lib:Book ;
+        sh:values [
+            shnex:nodes [
+                shnex:pathValues [ sh:inversePath rdf:type ] ;
+                shnex:focusNode lib:Book ;
+            ] ;
+            shnex:filterShape [
+                sh:property [
+                    sh:path lib:review ;
+                    sh:minCount 1 ;
+                ] ;
+            ] ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path lib:allBooks ;
+        sh:class lib:Book ;
+        sh:values [
+            shnex:pathValues [ sh:inversePath rdf:type ] ;
+            shnex:focusNode lib:Book ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path lib:featuredEdition ;
+        sh:node lib:RareBookShape ;
+        sh:maxCount 1 ;
+        sh:values [
+            sh:prefixes lib:prefixes ;
+            sh:select """
+                SELECT ?edition
+                WHERE {
+                    $this lib:sponsors ?edition .
+                }
+            """ ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path lib:homeBranch ;
+        sh:class lib:Branch ;
+        sh:maxCount 1 ;
+        sh:values lib:central ;
+    ] ;
+    sh:property [
+        sh:path lib:friendBranches ;
+        sh:class lib:Branch ;
+        # lib:kiosk is not a lib:Branch — the sh:class anchor must drop it.
+        sh:values ( lib:central lib:east lib:kiosk ) ;
+    ] ;
+    sh:property [
+        sh:path lib:specialCollections ;
+        sh:class lib:SpecialCollection ;
+        # Union within one sh:class list (Core §7.1.1). lib:rb1 (a RareBook,
+        # sponsored by m1) is dropped by the sh:class anchor; lib:sc-plain (a
+        # SpecialCollection in neither union class) by the conjunct; lib:sc-both
+        # is in both union classes and must appear exactly once.
+        sh:values [
+            shnex:nodes [ shnex:pathValues lib:sponsors ] ;
+            shnex:filterShape [ sh:class ( lib:RareBook lib:Manuscript ) ] ;
+        ] ;
+    ] .
+
+lib:BranchShape a sh:NodeShape ;
+    sh:codeIdentifier "Branch" ;
+    sh:targetClass lib:Branch ;
+    sh:property [
+        sh:path lib:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] .
+
+lib:BookShape a sh:NodeShape ;
+    sh:codeIdentifier "Book" ;
+    sh:targetClass lib:Book ;
+    sh:property [
+        sh:path lib:title ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path lib:status ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path lib:publicationYear ;
+        sh:datatype xsd:integer ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path lib:sameAuthorEditions ;
+        sh:class lib:Book ;
+        sh:values [
+            shnex:pathValues ( lib:author [ sh:inversePath lib:author ] ) ;
+        ] ;
+    ] .
+
+lib:RareBookShape a sh:NodeShape ;
+    sh:codeIdentifier "RareBook" ;
+    sh:targetClass lib:RareBook ;
+    sh:property [
+        sh:path lib:title ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] .
+
+lib:SpecialCollectionShape a sh:NodeShape ;
+    sh:codeIdentifier "SpecialCollection" ;
+    sh:targetClass lib:SpecialCollection ;
+    sh:property [
+        sh:path lib:title ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] .

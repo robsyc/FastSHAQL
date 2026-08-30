@@ -1,0 +1,43 @@
+{
+  "data": {
+    "variants": [
+      {
+        "iri": "http://example.org/genomics/v1",
+        "evidenceTags": [
+          "clinvar",
+          "cosmic"
+        ]
+      },
+      {
+        "iri": "http://example.org/genomics/v2",
+        "evidenceTags": [
+          "unreviewed"
+        ]
+      },
+      {
+        "iri": "http://example.org/genomics/v3",
+        "evidenceTags": [
+          "locus"
+        ]
+      },
+      {
+        "iri": "http://example.org/genomics/v4",
+        "evidenceTags": []
+      },
+      {
+        "iri": "http://example.org/genomics/v5",
+        "evidenceTags": [
+          "clinvar"
+        ]
+      },
+      {
+        "iri": "http://example.org/genomics/v6",
+        "evidenceTags": []
+      },
+      {
+        "iri": "http://example.org/genomics/v7",
+        "evidenceTags": []
+      }
+    ]
+  }
+}

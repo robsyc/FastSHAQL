@@ -1,0 +1,11 @@
+query RelationshipSelectedAndFiltered {
+  persons(where: { employer: { locatedIn: { name: { eq: "Amsterdam" } } } }) {
+    name
+    employer {
+      name
+      locatedIn {
+        name
+      }
+    }
+  }
+}

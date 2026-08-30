@@ -1,0 +1,7 @@
+# The simplest thing that works: every work, two scalar fields.
+{
+  works {
+    pages
+    published
+  }
+}

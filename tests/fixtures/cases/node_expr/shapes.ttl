@@ -1,0 +1,162 @@
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
+@prefix gx:    <http://example.org/genomics/> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+gx:VariantShape a sh:NodeShape ;
+    sh:codeIdentifier "Variant" ;
+    sh:targetClass gx:Variant ;
+    sh:property [
+        sh:path gx:refAllele ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    # Relationship into the defaulted-field host: the nested selection walk
+    # and the relationship-filter EXISTS lane (with their differently-stemmed
+    # variables) must both re-emit the assayVersion COALESCE (default_value_
+    # relationship case).
+    sh:property [
+        sh:path gx:inGene ;
+        sh:class gx:Gene ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path gx:geneSymbol ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:values [
+            shnex:pathValues ( gx:inGene gx:symbol ) ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path gx:annotationStatus ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:values [
+            shnex:if [
+                shnex:exists [ shnex:pathValues gx:inGene ] ;
+            ] ;
+            shnex:then "annotated" ;
+            shnex:else "novel" ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path gx:hasGene ;
+        sh:datatype xsd:boolean ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:values [
+            shnex:exists [ shnex:pathValues gx:inGene ] ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path gx:evidenceTags ;
+        sh:datatype xsd:string ;
+        sh:values [
+            shnex:if [
+                shnex:exists [ shnex:pathValues gx:review ] ;
+            ] ;
+            shnex:then [ shnex:pathValues gx:reviewedTag ] ;
+            shnex:else [ shnex:pathValues gx:provisionalTag ] ;
+        ] ;
+    ] ;
+    sh:property [
+        # Derived enum (sh:values + sh:in, ADR-0004): the nested
+        # single-valued if lowers to one BIND — inside this OPTIONAL, the
+        # pre-bind form returned the wrong branch for v7 (unreviewed but
+        # carrying a stale reviewed tag) on rdflib 7.6.0.
+        sh:path gx:curationStatus ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:in ( "curated" "confirmed" "unreviewed" ) ;
+        sh:values [
+            shnex:if [
+                shnex:exists [ shnex:pathValues gx:review ] ;
+            ] ;
+            shnex:then [
+                shnex:if [
+                    shnex:exists [ shnex:pathValues gx:reviewedTag ] ;
+                ] ;
+                shnex:then "curated" ;
+                shnex:else "confirmed" ;
+            ] ;
+            shnex:else "unreviewed" ;
+        ] ;
+    ] .
+
+gx:GeneShape a sh:NodeShape ;
+    sh:codeIdentifier "Gene" ;
+    sh:targetClass gx:Gene ;
+    sh:property [
+        sh:path gx:symbol ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path gx:summary ;
+        sh:datatype rdf:langString ;
+        sh:maxCount 1 ;
+        sh:values [
+            shnex:pathValues ( gx:transcribes gx:description ) ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path gx:variantIris ;
+        sh:datatype xsd:string ;
+        sh:values [
+            shnex:pathValues [ sh:inversePath gx:inGene ] ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path gx:confidence ;
+        sh:datatype xsd:decimal ;
+        sh:maxCount 1 ;
+        sh:values [
+            shnex:pathValues ( gx:support gx:score ) ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path gx:registryCode ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:values "FSQ-REG" ;
+    ] ;
+    sh:property [
+        sh:path gx:assayPanels ;
+        sh:datatype xsd:string ;
+        sh:values ( "Onco500" "RareDx" ) ;
+    ] ;
+    # Asserted path + default (value-nodes step 3): g1 asserts "v2", the rest
+    # fall back to "v1". minCount 1 is deliberate — SD-6's "the path stays
+    # optional under minCount 1" needs an end-to-end witness (the default
+    # serves entities the path misses, so they must not be dropped).
+    sh:property [
+        sh:path gx:assayVersion ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:defaultValue "v1" ;
+    ] ;
+    # Derived values + default (steps 2 -> 3): g1's support carries a score;
+    # g2 has no support and g3's support is scoreless — both fall back to 0.0.
+    sh:property [
+        sh:path gx:supportScore ;
+        sh:datatype xsd:decimal ;
+        sh:maxCount 1 ;
+        sh:defaultValue 0.0 ;
+        sh:values [ shnex:pathValues ( gx:support gx:score ) ] ;
+    ] ;
+    # Language-typed asserted path + default: under lang_tags ("en",), g1's English
+    # label wins, g2's German-only label is filtered out inside the OPTIONAL
+    # (the COALESCE then falls back), and g3 has nothing at all.
+    sh:property [
+        sh:path gx:displayName ;
+        sh:datatype rdf:langString ;
+        sh:maxCount 1 ;
+        sh:defaultValue "unnamed" ;
+    ] .

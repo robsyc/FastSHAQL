@@ -1,0 +1,8 @@
+SELECT ?iri ?refAllele ?annotationStatus
+WHERE {
+  ?iri a <http://example.org/genomics/Variant> .
+  ?iri <http://example.org/genomics/refAllele> ?refAllele .
+  BIND(IF(EXISTS {
+    ?iri <http://example.org/genomics/inGene> ?_exists_annotationStatus .
+  }, "annotated", "novel") AS ?annotationStatus)
+}

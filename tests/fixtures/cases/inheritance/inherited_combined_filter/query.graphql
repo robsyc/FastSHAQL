@@ -1,0 +1,10 @@
+query InheritedCombinedFilter {
+  managers(where: { employeeId: { eq: "E-001" } }) {
+    managerName
+    employeeId
+    employmentStatus
+    workLocation {
+      locationName
+    }
+  }
+}

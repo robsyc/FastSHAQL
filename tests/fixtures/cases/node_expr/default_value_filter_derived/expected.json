@@ -1,0 +1,14 @@
+{
+  "data": {
+    "genes": [
+      {
+        "iri": "http://example.org/genomics/g2",
+        "supportScore": 0.0
+      },
+      {
+        "iri": "http://example.org/genomics/g3",
+        "supportScore": 0.0
+      }
+    ]
+  }
+}

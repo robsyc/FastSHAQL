@@ -1,0 +1,22 @@
+{
+  "data": {
+    "contactpersons": [
+      {
+        "name": "Dana",
+        "contact": {
+          "name": "Carol"
+        }
+      },
+      {
+        "name": "Carol",
+        "contact": {
+          "name": "Bob"
+        }
+      },
+      {
+        "name": "Bob",
+        "contact": null
+      }
+    ]
+  }
+}

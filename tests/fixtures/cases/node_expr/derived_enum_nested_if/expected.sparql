@@ -1,0 +1,10 @@
+SELECT ?iri ?refAllele ?curationStatus
+WHERE {
+  ?iri a <http://example.org/genomics/Variant> .
+  ?iri <http://example.org/genomics/refAllele> ?refAllele .
+  BIND(IF(EXISTS {
+    ?iri <http://example.org/genomics/review> ?_exists_curationStatus .
+  }, IF(EXISTS {
+    ?iri <http://example.org/genomics/reviewedTag> ?_exists__then_curationStatus .
+  }, "curated", "confirmed"), "unreviewed") AS ?curationStatus)
+}

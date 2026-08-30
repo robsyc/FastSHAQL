@@ -1,0 +1,54 @@
+# git-cliff configuration — Keep a Changelog style.
+# https://git-cliff.org/docs/configuration
+# Used by `just changelog` (--unreleased --tag v<version> --prepend CHANGELOG.md);
+# --prepend matches the [changelog] header byte-for-byte — keep CHANGELOG.md's
+# header identical to it.
+
+[changelog]
+header = """
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+"""
+body = """
+{% if version -%}
+    ## [{{ version | trim_start_matches(pat="v") }}]{% if previous.version %}(\
+https://github.com/robsyc/fastshaql/compare/{{ previous.version }}..{{ version }}){% endif %} - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else -%}
+    ## [Unreleased]
+{% endif -%}
+{% for group, commits in commits | group_by(attribute="group") %}
+    ### {{ group | striptags | trim | upper_first }}
+    {% for commit in commits %}
+        - {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message | upper_first | trim }}\
+    {% endfor %}
+{% endfor %}\n
+"""
+trim = true
+
+[git]
+conventional_commits = true
+# Non-conventional subjects are kept and land in "Other Changes" via the
+# catch-all parser below — nothing silently vanishes from the changelog.
+filter_unconventional = false
+# HTML-comment prefixes pin the group order (invisible in rendered Markdown).
+commit_parsers = [
+    { message = "^feat", group = "<!-- 0 -->Features" },
+    { message = "^fix", group = "<!-- 1 -->Bug Fixes" },
+    { message = "^perf", group = "<!-- 2 -->Performance" },
+    { message = "^refactor", group = "<!-- 3 -->Refactor" },
+    { message = "^doc", group = "<!-- 4 -->Documentation" },
+    { message = "^test", group = "<!-- 5 -->Testing" },
+    { message = "^style", group = "<!-- 6 -->Styling" },
+    { body = ".*security", group = "<!-- 7 -->Security" },
+    { message = "^deps", skip = true },      # dependabot prefix (uv ecosystem)
+    { message = "^ci: bump", skip = true },  # dependabot prefix (github-actions group)
+    { message = "^chore|^ci|^build", group = "<!-- 8 -->Miscellaneous Tasks" },
+    { message = ".*", group = "<!-- 9 -->Other Changes" },
+]
+filter_commits = false
+sort_commits = "oldest"

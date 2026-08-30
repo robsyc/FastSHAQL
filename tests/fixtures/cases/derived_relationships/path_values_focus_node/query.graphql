@@ -1,0 +1,9 @@
+query PathValuesFocusNode {
+  members {
+    iri
+    allBooks {
+      iri
+      title
+    }
+  }
+}

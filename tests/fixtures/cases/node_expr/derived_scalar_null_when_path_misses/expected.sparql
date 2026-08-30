@@ -1,0 +1,7 @@
+SELECT ?iri ?confidence
+WHERE {
+  ?iri a <http://example.org/genomics/Gene> .
+  OPTIONAL {
+    ?iri <http://example.org/genomics/support>/<http://example.org/genomics/score> ?confidence .
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "data": {
+    "things": [
+      {
+        "iri": "http://example.org/thing-1",
+        "label": "Alpha",
+        "subtitle": "The First",
+        "tag": ["red", "blue"],
+        "altLabel": ["A", "B"]
+      },
+      {
+        "iri": "http://example.org/thing-2",
+        "label": "Beta",
+        "subtitle": null,
+        "tag": ["green"],
+        "altLabel": []
+      },
+      {
+        "iri": "http://example.org/thing-3",
+        "label": "Gamma",
+        "subtitle": "The Third",
+        "tag": ["red", "green", "blue"],
+        "altLabel": []
+      }
+    ]
+  }
+}

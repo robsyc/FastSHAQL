@@ -1,0 +1,6 @@
+query ProtocolStatus {
+  patients {
+    iri
+    protocolStatus
+  }
+}

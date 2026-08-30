@@ -1,0 +1,16 @@
+{
+  "data": {
+    "persons": [
+      {
+        "iri": "http://example.org/alice",
+        "name": "Alice",
+        "employer": { "iri": "http://example.org/acme", "name": "Acme" }
+      },
+      {
+        "iri": "http://example.org/bob",
+        "name": "Bob",
+        "employer": { "iri": "http://example.org/globex", "name": "Globex" }
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+SELECT ?iri ?label
+WHERE {
+  {
+    SELECT DISTINCT ?iri
+    WHERE {
+      ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Variant> .
+      ?iri <http://example.org/score> ?score .
+      FILTER(?score >= "0.7"^^<http://www.w3.org/2001/XMLSchema#decimal>)
+    }
+    ORDER BY ?iri
+    LIMIT 2
+  }
+  ?iri <http://example.org/label> ?label .
+}

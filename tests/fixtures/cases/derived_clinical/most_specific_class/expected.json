@@ -1,0 +1,23 @@
+{
+  "data": {
+    "patients": [
+      {
+        "hasCondition": [
+          {
+            "mostSpecificClass": "http://example.org/clinical/NonAlcoholicSteatohepatitis"
+          }
+        ]
+      },
+      {
+        "hasCondition": [
+          {
+            "mostSpecificClass": "http://example.org/clinical/HepatitisB"
+          }
+        ]
+      },
+      {
+        "hasCondition": []
+      }
+    ]
+  }
+}

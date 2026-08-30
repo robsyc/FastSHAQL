@@ -1,0 +1,11 @@
+SELECT ?iri ?registryCode ?assayPanels
+WHERE {
+  ?iri a <http://example.org/genomics/Gene> .
+  BIND("FSQ-REG" AS ?registryCode)
+  OPTIONAL {
+    VALUES ?assayPanels {
+      "Onco500"
+      "RareDx"
+    }
+  }
+}

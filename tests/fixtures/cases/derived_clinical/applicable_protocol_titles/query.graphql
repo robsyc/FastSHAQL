@@ -1,0 +1,6 @@
+query ApplicableProtocolTitles {
+  patients {
+    iri
+    applicableProtocolTitles
+  }
+}

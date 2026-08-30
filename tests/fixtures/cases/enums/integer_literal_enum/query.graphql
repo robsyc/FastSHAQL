@@ -1,0 +1,6 @@
+query IntegerLiteralEnum {
+  ratings {
+    iri
+    level
+  }
+}

@@ -1,0 +1,13 @@
+SELECT ?iri ?managerName ?employeeId ?employmentStatus ?workLocation_iri ?workLocation_locationName
+WHERE {
+  ?iri a <http://example.org/Manager> .
+  ?iri <http://example.org/managerName> ?managerName .
+  ?iri <http://example.org/employeeId> ?employeeId .
+  ?iri <http://example.org/employmentStatus> ?employmentStatus .
+  OPTIONAL {
+    ?iri <http://example.org/workLocation> ?workLocation_iri .
+    ?workLocation_iri a <http://example.org/Location> .
+    ?workLocation_iri <http://example.org/locationName> ?workLocation_locationName .
+  }
+  FILTER(?employeeId = "E-001")
+}

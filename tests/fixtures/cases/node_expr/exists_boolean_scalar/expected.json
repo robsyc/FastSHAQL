@@ -1,0 +1,34 @@
+{
+  "data": {
+    "variants": [
+      {
+        "iri": "http://example.org/genomics/v1",
+        "hasGene": true
+      },
+      {
+        "iri": "http://example.org/genomics/v2",
+        "hasGene": true
+      },
+      {
+        "iri": "http://example.org/genomics/v3",
+        "hasGene": true
+      },
+      {
+        "iri": "http://example.org/genomics/v4",
+        "hasGene": false
+      },
+      {
+        "iri": "http://example.org/genomics/v5",
+        "hasGene": true
+      },
+      {
+        "iri": "http://example.org/genomics/v6",
+        "hasGene": false
+      },
+      {
+        "iri": "http://example.org/genomics/v7",
+        "hasGene": false
+      }
+    ]
+  }
+}

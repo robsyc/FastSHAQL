@@ -1,0 +1,9 @@
+SELECT ?iri ?name ?audit_iri ?audit_action
+WHERE {
+  ?iri a <http://example.org/Person> .
+  ?iri <http://example.org/name> ?name .
+  OPTIONAL {
+    ?iri <http://example.org/audit> ?audit_iri .
+    ?audit_iri <http://example.org/action> ?audit_action .
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "data": {
+    "genes": [
+      {
+        "iri": "http://example.org/genomics/g1",
+        "registryCode": "FSQ-REG",
+        "assayPanels": [
+          "Onco500",
+          "RareDx"
+        ]
+      },
+      {
+        "iri": "http://example.org/genomics/g2",
+        "registryCode": "FSQ-REG",
+        "assayPanels": [
+          "Onco500",
+          "RareDx"
+        ]
+      },
+      {
+        "iri": "http://example.org/genomics/g3",
+        "registryCode": "FSQ-REG",
+        "assayPanels": [
+          "Onco500",
+          "RareDx"
+        ]
+      }
+    ]
+  }
+}

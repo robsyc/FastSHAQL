@@ -1,0 +1,7 @@
+SELECT ?iri ?label
+FROM <urn:ex:g1>
+FROM <urn:ex:g2>
+WHERE {
+  ?iri a <http://example.org/Thing> .
+  ?iri <http://example.org/label> ?label .
+}

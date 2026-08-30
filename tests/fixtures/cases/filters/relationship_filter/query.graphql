@@ -1,0 +1,5 @@
+query RelationshipFilter {
+  persons(where: { employer: { name: { eq: "Acme" } } }) {
+    name
+  }
+}

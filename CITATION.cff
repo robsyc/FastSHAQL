@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use fastshaql in your research, please cite it as below."
+title: fastshaql
+abstract: >-
+  fastshaql operationalizes RDF knowledge graphs as GraphQL APIs. 
+  It turns SHACL shapes into GraphQL schemas and translates GraphQL queries into SPARQL.
+type: software
+authors:
+  - given-names: Robbe
+    family-names: Claeys
+    alias: robsyc
+    email: robbe@pointcare.be
+    orcid: "https://orcid.org/0009-0004-6091-1372"
+version: 0.1.0
+date-released: "2026-08-30"
+license: MIT
+repository-code: https://github.com/robsyc/fastshaql
+keywords:
+  - shacl
+  - graphql
+  - sparql
+  - rdf
+  - semantic-web

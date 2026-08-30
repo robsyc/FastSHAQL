@@ -1,0 +1,18 @@
+{
+  "data": {
+    "items": [
+      {
+        "iri": "http://example.org/gadget",
+        "label": "Plain Gadget"
+      },
+      {
+        "iri": "http://example.org/industrial-component",
+        "label": "Heavy Industry"
+      },
+      {
+        "iri": "http://example.org/widget",
+        "label": "Acme Widget"
+      }
+    ]
+  }
+}

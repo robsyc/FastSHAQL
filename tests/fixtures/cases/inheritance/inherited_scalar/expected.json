@@ -1,0 +1,16 @@
+{
+  "data": {
+    "managers": [
+      {
+        "iri": "http://example.org/alice",
+        "managerName": "Alice",
+        "employeeId": "E-001"
+      },
+      {
+        "iri": "http://example.org/bob",
+        "managerName": "Bob",
+        "employeeId": "E-002"
+      }
+    ]
+  }
+}

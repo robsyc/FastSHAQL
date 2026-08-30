@@ -1,0 +1,13 @@
+SELECT ?iri ?symbol ?assayVersion ?supportScore
+WHERE {
+  ?iri a <http://example.org/genomics/Gene> .
+  ?iri <http://example.org/genomics/symbol> ?symbol .
+  OPTIONAL {
+    ?iri <http://example.org/genomics/assayVersion> ?_dv_assayVersion .
+  }
+  BIND(COALESCE(?_dv_assayVersion, "v1") AS ?assayVersion)
+  OPTIONAL {
+    ?iri <http://example.org/genomics/support>/<http://example.org/genomics/score> ?_dv_supportScore .
+  }
+  BIND(COALESCE(?_dv_supportScore, "0.0"^^<http://www.w3.org/2001/XMLSchema#decimal>) AS ?supportScore)
+}

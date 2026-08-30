@@ -1,0 +1,12 @@
+@prefix ex: <http://example.org/> .
+
+ex:home a ex:Address ; ex:street "Main St" .
+
+ex:audit1 a ex:AuditLog ; ex:action "login" .
+
+ex:fido a ex:Dog ; ex:name "Fido" .
+
+ex:alice a ex:Person ;
+    ex:name "Alice" ;
+    ex:address ex:home ;
+    ex:audit ex:audit1 .

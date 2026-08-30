@@ -1,0 +1,19 @@
+# Three derivations, no extra triples:
+#   onLoan / availability — shnex:exists / shnex:if over the inverse of
+#                           ex:work (does any loan point at this work?)
+#   genrePath             — a raw sh:select walking rdf:type/rdfs:subClassOf+
+#                           up to the top-level genre below ex:Work
+#   fine                  — sh:defaultValue fills in loans without one;
+#                           the field is always non-null
+{
+  works {
+    title
+    onLoan
+    availability
+    genrePath
+  }
+  loans {
+    fine
+    dueOn
+  }
+}

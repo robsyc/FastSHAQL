@@ -1,0 +1,6 @@
+query LangFilter {
+  persons {
+    name
+    bio
+  }
+}

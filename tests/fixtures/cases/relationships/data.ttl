@@ -1,0 +1,20 @@
+@prefix ex: <http://example.org/> .
+
+ex:amsterdam a ex:City ; ex:name "Amsterdam" .
+ex:berlin a ex:City ; ex:name "Berlin" .
+
+ex:acme a ex:Company ; ex:name "Acme" ; ex:locatedIn ex:amsterdam .
+ex:globex a ex:Company ; ex:name "Globex" ; ex:locatedIn ex:berlin .
+
+ex:alice a ex:Person ;
+    ex:name "Alice" ;
+    ex:employer ex:acme ;
+    ex:knows ex:bob, ex:carol .
+
+ex:bob a ex:Person ;
+    ex:name "Bob" ;
+    ex:employer ex:globex ;
+    ex:knows ex:alice .
+
+ex:carol a ex:Person ;
+    ex:name "Carol" .

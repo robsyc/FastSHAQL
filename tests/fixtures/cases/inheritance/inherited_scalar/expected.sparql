@@ -1,0 +1,6 @@
+SELECT ?iri ?managerName ?employeeId
+WHERE {
+  ?iri a <http://example.org/Manager> .
+  ?iri <http://example.org/managerName> ?managerName .
+  ?iri <http://example.org/employeeId> ?employeeId .
+}

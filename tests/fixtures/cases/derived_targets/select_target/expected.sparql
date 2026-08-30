@@ -1,0 +1,6 @@
+SELECT ?iri ?label
+WHERE {
+  ?v a <http://example.org/Deletion>
+  BIND(?v AS ?iri)
+  ?iri <http://example.org/label> ?label .
+}

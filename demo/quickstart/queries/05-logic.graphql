@@ -1,0 +1,12 @@
+# Composable logic: OR over scalar branches, NOT around a relationship.
+{
+  works(where: { OR: [{ pages: { gt: 400 } }, { price: { lt: 12 } }] }) {
+    title
+    pages
+    price
+  }
+  members(where: { NOT: { homeBranch: { city: { eq: "Antwerp" } } } }) {
+    displayName
+    branchCity
+  }
+}

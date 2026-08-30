@@ -1,0 +1,7 @@
+{
+  "data": {
+    "ratings": [
+      { "iri": "http://example.org/rating1", "level": "_1" }
+    ]
+  }
+}

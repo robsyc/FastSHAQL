@@ -1,0 +1,9 @@
+query CardinalityThings {
+  things {
+    iri
+    label
+    subtitle
+    tag
+    altLabel
+  }
+}

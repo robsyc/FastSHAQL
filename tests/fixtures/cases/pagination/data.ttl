@@ -1,0 +1,29 @@
+@prefix ex: <http://example.org/> .
+
+ex:acme a ex:Company ; ex:name "Acme" .
+ex:globex a ex:Company ; ex:name "Globex" .
+ex:initech a ex:Company ; ex:name "Initech" .
+
+# Row multiplication: 2 employers × 2 knows → 4 SPARQL rows per entity.
+ex:alice a ex:Person ;
+    ex:name "Alice" ;
+    ex:employer ex:acme, ex:globex ;
+    ex:knows ex:bob, ex:carol ;
+    ex:title "Engineer" .
+
+ex:bob a ex:Person ;
+    ex:name "Bob" ;
+    ex:employer ex:acme, ex:globex ;
+    ex:knows ex:alice ;
+    ex:title "Engineer" .
+
+ex:carol a ex:Person ;
+    ex:name "Carol" ;
+    ex:employer ex:acme ;
+    ex:knows ex:alice, ex:bob ;
+    ex:title "Manager" .
+
+ex:dave a ex:Person ;
+    ex:name "Dave" ;
+    ex:employer ex:initech ;
+    ex:knows ex:carol .

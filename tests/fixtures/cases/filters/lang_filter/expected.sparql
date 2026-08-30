@@ -1,0 +1,9 @@
+SELECT ?iri ?name ?bio
+WHERE {
+  ?iri a <http://example.org/Person> .
+  ?iri <http://example.org/name> ?name .
+  OPTIONAL {
+    ?iri <http://example.org/bio> ?bio .
+    FILTER(langMatches(LANG(?bio), "en"))
+  }
+}

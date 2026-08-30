@@ -1,0 +1,40 @@
+# Fast pre-commit checks — staged files only, kept under a few seconds so it
+# is never worth skipping with --no-verify. ruff check --fix then format (one
+# command: no parallel write race; lint before format per ruff docs), fixes
+# re-staged, plus a complexipy diff of what's being committed. ty, pytest,
+# and the full complexity ratchet run in `just ci` / CI.
+#
+# Note: during execution, unstaged changes to staged files are stashed
+# ("lefthook auto backup") — commands see exactly the index content.
+#
+# Install once after clone (lefthook is pinned in the dev group):
+#   just sync && just hooks
+min_version: 2.0.0
+
+pre-commit:
+  parallel: true
+  commands:
+    ruff:
+      glob: "*.py"
+      run: uv run ruff check --fix --force-exclude {staged_files} && uv run ruff format --force-exclude {staged_files}
+      stage_fixed: true
+
+    # Cognitive complexity of what's about to be committed, vs HEAD.
+    # Blocks if a staged function exceeds max-complexity-allowed.
+    # Threshold/paths come from [tool.complexipy] in pyproject.toml.
+    complexipy:
+      glob: "*.py"
+      run: uv run complexipy --staged --diff HEAD --plain --failed
+
+    cff-validate:
+      glob: "CITATION.cff"
+      run: uv run cffconvert --validate
+
+pre-push:
+  commands:
+    typecheck:
+      # Delegates to the justfile recipe (SSOT for check commands).
+      run: just typecheck
+    architecture:
+      # Sub-second static gate; CI re-runs it on the pushed commit anyway.
+      run: just architecture

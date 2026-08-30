@@ -1,0 +1,11 @@
+query DerivedChainThreeHops {
+  members {
+    iri
+    recommendedBooks {
+      iri
+      sameAuthorEditions {
+        iri
+      }
+    }
+  }
+}

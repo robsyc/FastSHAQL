@@ -1,0 +1,6 @@
+query DerivedLangTags {
+  genes {
+    iri
+    summary
+  }
+}

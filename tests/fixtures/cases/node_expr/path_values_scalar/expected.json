@@ -1,0 +1,41 @@
+{
+  "data": {
+    "variants": [
+      {
+        "iri": "http://example.org/genomics/v1",
+        "refAllele": "A",
+        "geneSymbol": "BRCA1"
+      },
+      {
+        "iri": "http://example.org/genomics/v2",
+        "refAllele": "G",
+        "geneSymbol": "BRCA1"
+      },
+      {
+        "iri": "http://example.org/genomics/v3",
+        "refAllele": "T",
+        "geneSymbol": "TP53"
+      },
+      {
+        "iri": "http://example.org/genomics/v4",
+        "refAllele": "C",
+        "geneSymbol": null
+      },
+      {
+        "iri": "http://example.org/genomics/v5",
+        "refAllele": "AG",
+        "geneSymbol": "TP53"
+      },
+      {
+        "iri": "http://example.org/genomics/v6",
+        "refAllele": "TT",
+        "geneSymbol": null
+      },
+      {
+        "iri": "http://example.org/genomics/v7",
+        "refAllele": "GA",
+        "geneSymbol": null
+      }
+    ]
+  }
+}

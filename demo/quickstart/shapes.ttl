@@ -1,0 +1,467 @@
+# fastshaql quickstart — the shapes graph.
+#
+# One file, read top to bottom: visibility first, then one shape per entity.
+# Every construct below maps to exactly one library feature; the guided tour
+# in demo/README.md walks through them query by query.
+#
+# Classes and instances live in data.trig; the class tree (ex:Novel < ex:Fiction
+# < ex:Work, ...) is data too — the SPARQL engine walks it at query time.
+
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix shnex:   <http://www.w3.org/ns/shacl-node-expr#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
+@prefix ex:      <http://example.org/> .
+
+# --- API surface: which shapes become root fields, which stay nested ------
+#
+# public    -> root query field + object type
+# protected -> object type, reachable only through traversal
+# private   -> excluded from the schema entirely (see ex:AuditEntryShape)
+
+ex:LibraryApi a graphql:Schema ;
+    graphql:publicShape
+        ex:Work ,          # sh:ShapeClass below
+        ex:FictionShape ,
+        ex:MemberShape ,
+        ex:AuthorShape ,
+        ex:BranchShape ,
+        ex:LoanShape ,
+        ex:TopicShape ;
+    graphql:protectedShape ex:PersonShape , ex:AddressShape ;
+    graphql:privateShape ex:AuditEntryShape .
+
+# --- SPARQL prefixes for sh:select / sh:sparqlExpr escapes ----------------
+
+ex:Prefixes a sh:ShapesGraph ;
+    sh:declare [
+        sh:prefix "ex" ;
+        sh:namespace "http://example.org/" ;
+    ] , [
+        sh:prefix "rdf" ;
+        sh:namespace "http://www.w3.org/1999/02/22-rdf-syntax-ns#" ;
+    ] , [
+        sh:prefix "rdfs" ;
+        sh:namespace "http://www.w3.org/2000/01/rdf-schema#" ;
+    ] .
+
+# --- Work: a sh:ShapeClass (class = shape; targeting is subclass-closing) --
+#
+# ex:Work targets the SHACL instances of ex:Work *and every subclass*:
+# novels, manga, atlases, popular science and political theory all surface
+# under `works`.
+
+ex:Work a sh:ShapeClass ;
+    sh:name "Work" ;
+    sh:description "Anything catalogued by the library. The implicit class target is subclass-closing: leaf-typed instances (Novel, Manga, Atlas, PopularScience, ...) all appear here." ;
+
+    sh:property [
+        sh:path ex:title ;
+        sh:datatype rdf:langString ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:name "title" ;
+        sh:description "Language-tagged. Send an Accept-Language header to pick one." ;
+    ] ;
+
+    # Cardinality maps to GraphQL nullability and multiplicity:
+    # 1..1 required scalar, 0..1 optional scalar, 1..n required list, 0..n optional list.
+    sh:property [
+        sh:path ex:pages ;
+        sh:datatype xsd:integer ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:subtitle ;
+        sh:datatype ( xsd:string rdf:langString ) ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:altTitles ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path ex:tags ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        # Alternative path: newer records carry ex:isbn13, older ones the
+        # legacy ex:isbn — one field reads either, whichever is present.
+        sh:codeIdentifier "isbn" ;
+        sh:path [ sh:alternativePath ( ex:isbn13 ex:isbn ) ] ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:price ;
+        sh:datatype xsd:decimal ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:published ;
+        sh:datatype xsd:date ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+
+    # Relationships: sh:node points at a shape, sh:class anchors on a class.
+    sh:property [
+        sh:path ex:author ;
+        sh:node ex:AuthorShape ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        # sh:class anchors the relationship on a directly-typed class.
+        sh:path ex:about ;
+        sh:class ex:Topic ;
+    ] ;
+    sh:property [
+        # Inverse path: branches point at works via ex:stocks; read it from
+        # the work side without a triple pointing back. Branches stocking this work.
+        sh:codeIdentifier "stockedAt" ;
+        sh:path [ sh:inversePath ex:stocks ] ;
+        sh:node ex:BranchShape ;
+    ] ;
+
+    # Sequence path: a scalar two hops away, read as one field.
+    sh:property [
+        sh:codeIdentifier "authorName" ;
+        sh:path ( ex:author ex:displayName ) ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+
+    # Derived field, raw SPARQL tier: walk the class tree up to the top-level
+    # genre (the direct subclass of ex:Work above the instance's own type).
+    sh:property [
+        sh:path ex:genrePath ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:values [
+            sh:prefixes ex:Prefixes ;
+            sh:select """
+                SELECT ?value WHERE { 
+                    $this rdf:type/rdfs:subClassOf+ ?genre . 
+                    ?genre rdfs:subClassOf ex:Work . 
+                    BIND(STR(?genre) AS ?value) 
+                }
+            """ ;
+        ] ;
+    ] ;
+
+    # Derived boolean: does any loan point at this work? (shnex:exists over an
+    # inverse path.)
+    sh:property [
+        sh:path ex:onLoan ;
+        sh:datatype xsd:boolean ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:values [ shnex:exists [ shnex:pathValues [ sh:inversePath ex:work ] ] ] ;
+    ] ;
+
+    # Derived enum (sh:values + sh:in): a conditional computed per work.
+    sh:property [
+        sh:path ex:availability ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:in ( "available" "borrowed" ) ;
+        sh:values [
+            shnex:if [ shnex:exists [ shnex:pathValues [ sh:inversePath ex:work ] ] ] ;
+            shnex:then "borrowed" ;
+            shnex:else "available" ;
+        ] ;
+    ] ;
+
+    # Deactivated: schema-level exclusion — no field in the API.
+    sh:property [
+        sh:path ex:internalNotes ;
+        sh:datatype xsd:string ;
+        sh:deactivated true ;
+    ] .
+
+# --- Fiction: a derived target --------------------------------------------
+#
+# The root set is *computed*: every instance below ex:Fiction in the class
+# tree, no matter how deep. sh:targetClass alone cannot express this.
+
+ex:FictionShape a sh:NodeShape ;
+    sh:codeIdentifier "FictionWork" ;
+    sh:name "Fiction work" ;
+    sh:description "Root set computed by a node expression: all instances below ex:Fiction in the class hierarchy." ;
+    sh:targetNode [ shnex:instancesOf ex:Fiction ] ;
+    sh:property [
+        sh:path ex:title ;
+        sh:datatype rdf:langString ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:pages ;
+        sh:datatype xsd:integer ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:author ;
+        sh:node ex:AuthorShape ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] .
+
+# --- Person: protected inheritance base ------------------------------------
+#
+# Both Member and Author include its fields via sh:node — field-only reuse,
+# flattened at parse time. A child redefining an inherited field name wins.
+
+ex:PersonShape a sh:NodeShape ;
+    sh:codeIdentifier "Person" ;
+    sh:name "Person" ;
+    sh:description "Shared base for members and authors." ;
+    sh:property [
+        sh:path ex:displayName ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:contactEmail ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+    ] .
+
+# --- Member ----------------------------------------------------------------
+
+ex:MemberShape a sh:NodeShape ;
+    sh:codeIdentifier "Member" ;
+    sh:name "Member" ;
+    sh:description "A registered library user." ;
+    sh:targetClass ex:Member ;
+    sh:node ex:PersonShape ;  # inherit displayName + contactEmail
+
+    # Override: the inherited field, redefined as language-tagged — members
+    # localize, plain authors do not.
+    sh:property [
+        sh:path ex:displayName ;
+        sh:datatype rdf:langString ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+
+    # IRI enum: sh:in over IRIs becomes a GraphQL enum of local names.
+    sh:property [
+        sh:path ex:tier ;
+        sh:in ( ex:Basic ex:Plus ex:Gold ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+
+    sh:property [
+        sh:path ex:memberSince ;
+        sh:datatype xsd:date ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+
+    # Recursive relationship: members know members.
+    sh:property [
+        sh:path ex:knows ;
+        sh:node ex:MemberShape ;
+    ] ;
+    sh:property [
+        sh:path ex:homeBranch ;
+        sh:node ex:BranchShape ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+
+    # Derived scalar, flat tier: two hops through an asserted relationship.
+    sh:property [
+        sh:path ex:branchCity ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:values [ shnex:pathValues ( ex:homeBranch ex:city ) ] ;
+    ] ;
+
+    # Inverse path as the relationship itself: loans pointing at this member.
+    sh:property [
+        sh:codeIdentifier "loans" ;
+        sh:path [ sh:inversePath ex:borrower ] ;
+        sh:node ex:LoanShape ;
+    ] ;
+
+    # Derived relationship: works by the authors you have borrowed from,
+    # narrowed by a filter shape (price at most 20). Nested selection, row
+    # grouping, filters and pagination all behave like an asserted one.
+    sh:property [
+        sh:path ex:recommendedWorks ;
+        sh:node ex:Work ;
+        sh:values [
+            shnex:nodes [
+                shnex:pathValues ( [ sh:inversePath ex:borrower ] ex:work ex:author [ sh:inversePath ex:author ] ) ;
+            ] ;
+            shnex:filterShape [
+                sh:property [
+                    sh:path ex:price ;
+                    sh:maxInclusive 20 ;
+                ] ;
+            ] ;
+        ] ;
+    ] .
+
+# --- Author ----------------------------------------------------------------
+
+ex:AuthorShape a sh:NodeShape ;
+    sh:codeIdentifier "Author" ;
+    sh:name "Author" ;
+    sh:targetClass ex:Author ;
+    sh:node ex:PersonShape ;  # second child of Person — fields reused
+
+    sh:property [
+        sh:path ex:born ;
+        sh:datatype xsd:date ;
+        sh:maxCount 1 ;
+    ] ;
+
+    # Inverse relationship anchored on a class: everything this author wrote.
+    sh:property [
+        sh:codeIdentifier "wrote" ;
+        sh:path [ sh:inversePath ex:author ] ;
+        sh:node ex:Work ;
+    ] .
+
+# --- Branch ----------------------------------------------------------------
+
+ex:BranchShape a sh:NodeShape ;
+    sh:codeIdentifier "Branch" ;
+    sh:name "Branch" ;
+    sh:targetClass ex:Branch ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:city ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        # Protected target: no root field, reachable via traversal.
+        sh:path ex:address ;
+        sh:node ex:AddressShape ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:stocks ;
+        sh:class ex:Work ;
+    ] .
+
+# --- Loan ------------------------------------------------------------------
+
+ex:LoanShape a sh:NodeShape ;
+    sh:codeIdentifier "Loan" ;
+    sh:name "Loan" ;
+    sh:targetClass ex:Loan ;
+    sh:property [
+        # Literal enum.
+        sh:path ex:status ;
+        sh:in ( "active" "returned" ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:borrowedOn ;
+        sh:datatype xsd:date ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:dueOn ;
+        sh:datatype xsd:date ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        # Defaulted field: 0.0 whenever no triple exists — always non-null.
+        sh:path ex:fine ;
+        sh:datatype xsd:decimal ;
+        sh:maxCount 1 ;
+        sh:defaultValue 0 ;
+    ] ;
+    sh:property [
+        sh:path ex:work ;
+        sh:node ex:Work ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:borrower ;
+        sh:node ex:MemberShape ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] .
+
+# --- Topic (SKOS hierarchy) -------------------------------------------------
+
+ex:TopicShape a sh:NodeShape ;
+    sh:codeIdentifier "Topic" ;
+    sh:name "Topic" ;
+    sh:description "A SKOS-style subject with a broader/narrower hierarchy." ;
+    sh:targetClass ex:Topic ;
+    sh:property [
+        sh:path skos:prefLabel ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        # Transitive path: one or more skos:broader hops. A complex path has
+        # no IRI local name, so the field name comes from sh:codeIdentifier.
+        sh:path [ sh:oneOrMorePath skos:broader ] ;
+        sh:codeIdentifier "broaderTopics" ;
+        sh:node ex:TopicShape ;
+    ] .
+
+# --- Address: protected, targetless -----------------------------------------
+
+ex:AddressShape a sh:NodeShape ;
+    sh:codeIdentifier "Address" ;
+    sh:name "Address" ;
+    sh:property [
+        sh:path ex:street ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:postalCode ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+    ] .
+
+# --- Audit entry: private ----------------------------------------------------
+#
+# Typed instances exist in the data graph — and are absent from the API.
+
+ex:AuditEntryShape a sh:NodeShape ;
+    sh:codeIdentifier "AuditEntry" ;
+    sh:name "Audit entry" ;
+    sh:targetClass ex:AuditEntry ;
+    sh:property [
+        sh:path ex:message ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:recordedOn ;
+        sh:datatype xsd:date ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] .

@@ -1,0 +1,9 @@
+{
+  "data": {
+    "genes": [
+      {
+        "iri": "http://example.org/genomics/g1"
+      }
+    ]
+  }
+}
