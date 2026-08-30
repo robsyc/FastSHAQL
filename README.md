@@ -9,13 +9,13 @@
 
 # FastSHAQL
 
-`fastshaql` turns a SHACL shapes graph into a GraphQL schema and translates GraphQL queries into SPARQL -- it provides an operational, frontend-friendly interface over any RDF-based and SHACL-described knowledge graph. Point it at a shapes graph and a SPARQL store, get a typed GraphQL (read-only) endpoint. The Core is framework- and transport-neutral; the FastAPI and Django adapters and the async httpx SPARQL store ship as optional extras (`fastapi`, `django`, `httpx`).
+`fastshaql` turns a SHACL shapes graph into a GraphQL schema and translates GraphQL queries into SPARQL; it provides an operational, frontend-friendly interface over any RDF-based and SHACL-described knowledge graph. Point it at a shapes graph and a SPARQL store, get a typed GraphQL (read-only) endpoint. The Core is framework- and transport-neutral; the FastAPI and Django adapters and the async httpx SPARQL store ship as optional extras (`fastapi`, `django`, `httpx`).
 
 **Key features:**
 - Single- and multi-value properties
-- Literal objects and link traversal
+- Literal objects and relationship traversal
 - Rich filtering and pagination
-- Derived fields w/ SHACL 1.2 node-expressions
+- Derived fields relationships w/ SHACL 1.2 node-expressions
 - Language- and named graph-selection per request
 
 ```mermaid
