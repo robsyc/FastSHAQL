@@ -80,11 +80,11 @@ See [demo/README.md](demo/README.md) for the tour, reference wiring, and through
 Releases are published to PyPI from an annotated `vX.Y.Z` tag. The release workflow ([.github/workflows/release.yml](.github/workflows/release.yml)) builds the distribution, smoke-tests the wheel and sdist, publishes to PyPI via OIDC trusted publishing (attestations included), and opens a GitHub Release whose body is the tag's section of [CHANGELOG.md](CHANGELOG.md), extracted with `just release-notes <tag>` — the extraction runs in the build job, so a tag without a changelog section fails before anything is published. Pull requests into `main` run the same build and smoke in CI's `build` job. Full details: [ADR-0023](docs/adr/0023-package-release-and-ci.md).
 
 ```bash
-uv version --bump <part>
-just changelog        # git-cliff draft (cliff.toml) + CITATION.cff sync (version, date-released)
+uv version --bump <part>  # major, minor, patch
+just changelog            # git-cliff draft (cliff.toml) + CITATION.cff sync (version, date-released)
 # curate the new CHANGELOG.md section, then:
 git commit -am "Release <tag>"
-git tag -a "<tag>"
+git tag -a "<tag>" # vX.Y.Z
 git push && git push --tags
 # consumer:
 #   uv add "fastshaql[fastapi]"

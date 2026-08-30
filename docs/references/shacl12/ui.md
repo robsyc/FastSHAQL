@@ -1,4 +1,4 @@
-<!-- https://w3c.github.io/data-shapes/shacl12-ui/ — W3C editors' draft, fetched 2026-08-17 -->
+<!-- https://w3c.github.io/data-shapes/shacl12-ui/ — W3C editors' draft, fetched 2026-08-31 -->
 
 This specification describes Shapes Constraint Language (SHACL) User
 Interfaces.
@@ -17,20 +17,20 @@ The specifications are as follows:
 [SHACL 1.2 Core](https://www.w3.org/TR/shacl12-core/)
 :   defines the Core of SHACL
 
-[SHACL 1.2 SPARQL Extensions](https://www.w3.org/TR/shacl12-sparql/)
-:   defines SPARQL-related extensions of SHACL
+[SHACL 1.2 Inference Rules](https://www.w3.org/TR/shacl12-inference-rules/)
+:   defines SHACL's framework of rule-based inference
 
 [SHACL 1.2 Node Expressions](https://www.w3.org/TR/shacl12-node-expr/)
 :   defines expressions used to derive focus nodes and value nodes in SHACL
 
-[SHACL 1.2 Rules](https://www.w3.org/TR/shacl12-rules/)
-:   defines SHACL's methods of rule-based inference
+[SHACL 1.2 Profiling](https://w3c.github.io/data-shapes/shacl12-profiling/)
+:   defines the use of SHACL for profiling data, including SHACL data
+
+[SHACL 1.2 SPARQL Extensions](https://www.w3.org/TR/shacl12-sparql/)
+:   defines SPARQL-related extensions of SHACL
 
 [SHACL 1.2 UI](https://w3c.github.io/data-shapes/shacl12-ui/)
 :   defines SHACL's use for User Interface generation
-
-[SHACL 1.2 Profiling](https://w3c.github.io/data-shapes/shacl12-profiling/)
-:   defines the use of SHACL for profiling data, including SHACL data
 
 **Working Group Note Drafts:**
 
@@ -173,16 +173,22 @@ The SHACL & RDF terms include:
 [value](https://www.w3.org/TR/shacl/#dfn-value)
 ,
 [value node](https://www.w3.org/TR/shacl/#dfn-value-nodes)
+,
+[SHACL Global Configuration](#global-configuration)
 .
 
 Language Resolution is the process of determining and ordering the
 values associated with a given subject-predicate pair, prioritizing the preferred or most relevant language
 value for display.
 
+Label Property Resolution is the process of determining and ordering the
+label property IRIs for label resolution, prioritizing the preferred or most relevant property
+IRI for retrieval. It generates a default IRI when no suitable value exists.
+
 Label Resolution is the process of selecting the most appropriate
 display label for an RDF resource, or generating a fallback value when no suitable value exists. It
 applies to both value nodes and properties identified by `sh:path`, the latter of which is commonly used to label form elements.
-The process includes language resolution and considers labeling-related annotations from the
+The process includes label property resolution and language resolution, and considers labeling-related annotations from the
 shapes graph, data graph, application environment, and user preferences, to determine the best label for UI presentation.
 
 ### 1.3 Document Conventions
@@ -273,6 +279,13 @@ At the time of writing, RDF 1.2 is a Working Draft. This section will be reviewe
 
 SHACL Renderers implementing this specification MUST support RDF 1.1 and SHOULD support RDF 1.2. When RDF 1.2 is supported, and unless
 stated otherwise in this document, implementations SHOULD prefer RDF 1.2 syntax and data model features over their RDF 1.1 counterparts.
+
+When RDF 1.2 is supported, wherever this specification refers to `rdf:langString`, a SHACL Renderer also accepts an
+`rdf:dirLangString` value in its place. This acceptance is a SHACL UI convenience that applies to widget selection and form
+input only; it does not establish an RDF subtype relationship between the two datatypes, whose value spaces (and lexical spaces) are
+disjoint. Validation via `sh:datatype` remains strict: the value a widget writes back MUST conform to the datatype declared
+for the property, and a property shape that admits both datatypes for validation expresses this using a list of datatypes, for example
+`sh:datatype ( rdf:langString rdf:dirLangString )`.
 
 ## 2. Getting Started with SHACL UI
 
@@ -687,6 +700,33 @@ node shapes that apply to the focus node.
 
 A Property UI Component is a combination of constraints
 across multiple property shapes that share the same focus node and property path.
+
+### 3.4 SHACL Global Configuration
+
+A shapes graph may contain a SHACL instance of the class `shui:Configuration`
+to define global configuration properties for rendering the UI.
+`sh:Graph` is a SHACL subclass of `shui:Configuration`.
+The following properties can be defined for a `shui:Configuration` instance.
+
+Parameters:
+
+| Property | Summary and Syntax Rules |
+| --- | --- |
+| `shui:defaultNamespace` | The default namespace used to construct fresh user-added nodes. The value of `shui:defaultNamespace` is a Literal whose value is a valid IRI. |
+| `shui:languagePreference` | The language selection for displaying labels in widgets. The value of `shui:languagePreference` is a well-formed SHACL list where all members are language tags. The preferred language is determined according to the order of priority in the list from beginning (highest) to end (lowest). An empty literal (`""`) represents no language, i.e., a string literal with no language tag. |
+| `shui:timeZone` | The time zone used to construct new terms with datatype `xsd:dateTime`. The value of `shui:timeZone` is of datatype `xsd:string` and SHOULD be an IANA time-zone identifier. |
+| `shui:labelPreference` | The label properties used to determine the labels to display in widgets and labels to represent node values in the widgets. The value of `shui:labelPreference` is a well-formed SHACL list where all members are [SHACL Property Paths](../shacl12-core/#property-paths). The preferred label property is determined according to the order of priority in the list from beginning (highest) to end (lowest). |
+
+**Example: Sample Instance Data**
+
+```
+ex:config a shui:Configuration ;
+    shui:defaultNamespace "http://example.com/ns#" ;
+    shui:languagePreference ("" "en" "de") ;
+    shui:timeZone "Europe/Vienna" ;
+    shui:labelPreference (skos:prefLabel dcterms:title rdfs:label) .
+						
+```
 
 TODO: Describe the constraint collection/aggregation behaviour here for both Node and Property UI Component.
 
@@ -1345,7 +1385,7 @@ later ones:
 2. A list of languages selected in the application. How this language preference list is configured or
    expressed is up to the implementation. Possible approaches include but are not limited to:
    - A UI feature that allows the user to select a preferred display language or languages priorities.
-   - A predefined language configuration in the application settings.
+   - A global configuration using the property `shui:languagePreference`.
 3. The list of preferred languages declared in the user's browser, as expressed through the
    `Accept-Language` HTTP header or the `navigator.languages` Web API. These SHOULD be
    used as the default values when no application-level language preference has been configured.
@@ -1397,30 +1437,34 @@ Label resolution is applied in two contexts:
 - **Value node labels**: the label used to represent a value node (e.g.,
   an IRI or blank node) when it appears in a UI form or list.
 
-#### 8.2.1 Property Labels
+#### 8.2.1 Label Property Resolution
+
+Label property resolution (i.e., determining the label properties for retrieving label values) is done according to the preferred property IRIs listed in the global configuration property `shui:labelPreference`.
+Preferred labels default to `sh:name` for Property Labels and `rdfs:label` for Value Node Labels.
+
+#### 8.2.2 Property Labels
 
 To determine the label for a property UI component whose property shape has
 a `sh:path` pointing to a property path P, implementations MUST
 apply the following steps in order, stopping at the first step that yields a result:
 
 1. If the property shape has one or more values for the configured property path for
-   the property label resolution (defaulting to `sh:name`), select the best
-   matching value using language resolution. If a match is found, use that literal
-   as the label.
+   properties determined by label property resolution, select the best
+   matching value using language resolution.
+   If a match is found, use that literal as the label.
 2. If P is a predicate IRI and the data graph
-   contains one or more `rdfs:label` triples with subject P, select
-   the best matching value using language resolution. If a match is found, use
-   that literal as the label.
+   contains one or more triples with properties determined by label property resolution and with subject P, select
+   the best matching value using language resolution.
+   If a match is found, use that literal as the label.
 3. If P is a predicate IRI and the shapes graph
-   contains one or more `rdfs:label` triples with subject P, select
-   the best matching value using language resolution. If a match is found, use
-   that literal as the label.
-4. If P is a predicate IRI, use the
-   local name resolution of P as the label.
+   contains one or more triples with properties determined by label property resolution and with subject P, select
+   the best matching value using language resolution.
+   If a match is found, use that literal as the label.
+4. If P is a predicate IRI, use the local name resolution of P as the label.
 5. Otherwise, an implementation-specific translation algorithm should be applied to convert the complex property path
    P into a human-readable string representation.
 
-#### 8.2.2 Value Node Labels
+#### 8.2.3 Value Node Labels
 
 To determine the label for a single value node V, implementations MUST
 apply the following steps in order, stopping at the first step that yields a result:
@@ -1430,15 +1474,16 @@ apply the following steps in order, stopping at the first step that yields a res
    whose `sh:path` is annotated with
    `shui:propertyRole shui:LabelRole`, retrieve the values of that path from
    the data graph for subject V. Select the best matching value using
-   language resolution. If a match is found, use that literal as the label.
+   language resolution.
+   If a match is found, use that literal as the label.
 3. If the data graph contains one or more values for the configured property path for
-   the value node label resolution (defaulting to `rdfs:label`) for V,
-   select the best matching value using language resolution. If a match is found, use
-   that literal as the label.
+   the value node determined by label property resolution for V,
+   select the best matching value using language resolution.
+   If a match is found, use that literal as the label.
 4. If the shapes graph contains one or more values for the configured property path for
-   the value node label resolution (defaulting to `rdfs:label`) for V,
-   select the best matching value using language resolution. If a match is found, use
-   that literal as the label.
+   the value node determined by label property resolution for V,
+   select the best matching value using language resolution.
+   If a match is found, use that literal as the label.
 5. If V is an IRI, use the
    local name resolution of V as the
    label.
@@ -1446,7 +1491,7 @@ apply the following steps in order, stopping at the first step that yields a res
    (e.g., an empty string or an identifier derived from the blank node identifier) as
    the label.
 
-#### 8.2.3 Local Name Resolution
+#### 8.2.4 Local Name Resolution
 
 To determine the label for an IRI, the local name L of the IRI SHOULD be
 used; this process is called local name resolution. Implementations SHOULD transform
@@ -2032,13 +2077,14 @@ expressed with a `shui:WidgetAcceptMatcher`.
 **Score:**
 
 - `40` if the property indicates its preference for `shui:TextAreaWithLangEditor` using a `shui:editor` statement.
-- `30` if the value is an `rdf:langString` literal and the property has a `sh:singleLine false` constraint.
-- `20` if the value is an `rdf:langString` literal.
-- `5` if the property has `rdf:langString` among the permissible datatypes.
+- `30` if the value is an `rdf:langString` or `rdf:dirLangString` literal and the property has a `sh:singleLine false` constraint.
+- `20` if the value is an `rdf:langString` or `rdf:dirLangString` literal.
+- `5` if the property has `rdf:langString` or `rdf:dirLangString` among the permissible datatypes.
 - `0` if the property has `xsd:string` among the permissible datatypes.
 
 **Rendering:**
 A multi-line text area to enter the value of a literal and a drop-down to select a language.
+For an `rdf:dirLangString` value, it also provides a base-direction selector.
 
 ![Example of a rendered TextAreaWithLangEditor](images/editors/TextAreaWithLangEditor.png)
 
@@ -2084,13 +2130,14 @@ expressed with a `shui:WidgetAcceptMatcher`.
 **Score:**
 
 - `40` if the property indicates its preference for `shui:TextFieldWithLangEditor` using a `shui:editor` statement.
-- `30` if the value is an `rdf:langString` literal.
-- `10` if the property has `rdf:langString` among the permissible datatypes.
+- `30` if the value is an `rdf:langString` or `rdf:dirLangString` literal.
+- `10` if the property has `rdf:langString` or `rdf:dirLangString` among the permissible datatypes.
 - `1` if the property has `xsd:string` among the permissible datatypes.
 
 **Rendering:**
 A single-line input field to enter the value of a literal and a drop-down to select language,
 which is mandatory unless `xsd:string` is among the permissible datatypes.
+For an `rdf:dirLangString` value, it also provides a base-direction selector.
 
 ![Example of a rendered TextFieldWithLangEditor](images/editors/TextFieldWithLangEditor.png)
 
@@ -2200,10 +2247,11 @@ Also includes other ways of interacting with the URI, such as opening a nested s
 **Score:**
 
 - `40` if the property indicates its preference for `shui:LangStringViewer` using a `shui:viewer` statement.
-- `20` if the value is an `rdf:langString` literal.
+- `20` if the value is an `rdf:langString` or `rdf:dirLangString` literal.
 
 **Rendering:**
 As the text plus a language indicator (flag or language tag).
+For an `rdf:dirLangString` value, the base direction is applied to the rendered text and indicated as well.
 
 #### 10.2.9 shui:LiteralViewer
 
@@ -2280,7 +2328,7 @@ ex:ConceptTableShape-altLabel
     sh:path skos:altLabel ;
     sh:description "The third column shows the alternative labels." ;
     sh:name "alt labels" ;
-    sh:or ( [ sh:datatype xsd:string ] [ sh:datatype rdf:langString ] ) ;
+    sh:datatype ( xsd:string rdf:langString ) ;
     sh:order "2"^^xsd:decimal .
 ```
 

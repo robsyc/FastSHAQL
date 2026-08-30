@@ -1,16 +1,14 @@
-<!-- https://w3c.github.io/data-shapes/shacl12-rules/ — W3C editors' draft, fetched 2026-08-17 -->
+<!-- https://w3c.github.io/data-shapes/sparql12-rl/ — W3C editors' draft, fetched 2026-08-31 -->
 
-This document defines *SHACL Rules*.
+This document defines *SPARQL-RL*, a datalog-style rules language for RDF.
 
-SHACL, the Shapes Constraint Language, is a language for describing the structure
-of RDF graphs.
-SHACL may be used for a variety of purposes such as validating, inferencing,
-modeling domains, generating ontologies to inform other agents, building user
-interfaces, generating code, and integrating data.
+SPARQL-RL provides inferencing with the generation of new RDF data from
+a combination of a set of rules and a base data RDF graph. It
+provides a SPARQL-like text syntax and defines how a set of
+rules is evaluated against an RDF graph.
 
-SHACL Rules provides inferencing with the generation of new RDF data from a
-combination of a set of rules and a base data graph. Rules can be expressed as RDF
-or in the Shape Rules Language (SRL).
+The SPARQL Rule Language can be referred to as simply *SRL* when
+the context is clear.
 
 This specification is published by the
 [Data Shapes Working Group](https://www.w3.org/groups/wg/data-shapes/).
@@ -26,20 +24,20 @@ The specifications are as follows:
 [SHACL 1.2 Core](https://www.w3.org/TR/shacl12-core/)
 :   defines the Core of SHACL
 
-[SHACL 1.2 SPARQL Extensions](https://www.w3.org/TR/shacl12-sparql/)
-:   defines SPARQL-related extensions of SHACL
+[SHACL 1.2 Inference Rules](https://www.w3.org/TR/shacl12-inference-rules/)
+:   defines SHACL's framework of rule-based inference
 
 [SHACL 1.2 Node Expressions](https://www.w3.org/TR/shacl12-node-expr/)
 :   defines expressions used to derive focus nodes and value nodes in SHACL
 
-[SHACL 1.2 Rules](https://www.w3.org/TR/shacl12-rules/)
-:   defines SHACL's methods of rule-based inference
+[SHACL 1.2 Profiling](https://w3c.github.io/data-shapes/shacl12-profiling/)
+:   defines the use of SHACL for profiling data, including SHACL data
+
+[SHACL 1.2 SPARQL Extensions](https://www.w3.org/TR/shacl12-sparql/)
+:   defines SPARQL-related extensions of SHACL
 
 [SHACL 1.2 UI](https://w3c.github.io/data-shapes/shacl12-ui/)
 :   defines SHACL's use for User Interface generation
-
-[SHACL 1.2 Profiling](https://w3c.github.io/data-shapes/shacl12-profiling/)
-:   defines the use of SHACL for profiling data, including SHACL data
 
 **Working Group Note Drafts:**
 
@@ -56,11 +54,11 @@ It only implies that the implementation conforms to the aspects tested by the te
 
 ## 1. Introduction
 
-This document introduces inference rules for SHACL 1.2, a mechanism for
+This document introduces SPARQL-RL. It is a mechanism for
 deriving new RDF triples from existing RDF data through declarative rules.
 The document defines the syntax and semantics of rule-based inference.
 
-Implementations of SHACL Rules provide two operations.
+Implementations of SPARQL-RL provide two operations.
 The *infer* operation that applies the rules to a given
 *base graph* and produces an *inference graph* containing the
 RDF triples derived by rule execution.
@@ -68,14 +66,15 @@ Combining the inference graph with the base graph is optional and
 left to users. The *query* operation determines whether a
 given goal pattern can be derived from the base graph using the rules.
 
-SHACL Rules allow the use of new RDF terms, including blank nodes,
+SPARQL-RL allows the use of new RDF terms, including blank nodes,
 that can be used in triple templates in the head of rules.
 
-SHACL Rules also support constructs, such as negation as failure,
-that could lead to different inferred graphs depending on the order in which
-rules are executed. To avoid this, rules are evaluated using the technique
-of *stratification*, which establishes a single, implicit ordering
-among rules, ensuring that the same inference graph is always produced.
+SPARQL-RL also supports negation as failure, that could lead to
+different inferred graphs depending on the order in which rules are
+executed. To avoid this, rules are evaluated using the technique
+of *stratification*, which establishes a single, implicit
+ordering among rules, ensuring that the same inference graph is always
+produced.
 
 ### 1.1 Terminology
 
@@ -87,7 +86,8 @@ that is used in this document:
 
 ### 1.2 Document Conventions
 
-Some examples in this document use RDF12-Turtle.
+Examples of RDF data in this document use
+RDF12-Turtle.
 
 Within this document, the following namespace prefix bindings are used:
 
@@ -95,7 +95,7 @@ Within this document, the following namespace prefix bindings are used:
 | --- | --- |
 | `rdf:` | `http://www.w3.org/1999/02/22-rdf-syntax-ns#` |
 | `rdfs:` | `http://www.w3.org/2000/01/rdf-schema#` |
-| `srl:` | `http://www.w3.org/ns/shacl-rules#` |
+| `srl:` | `http://www.w3.org/ns/sparql-rl#` |
 | `xsd:` | `http://www.w3.org/2001/XMLSchema#` |
 | `sparql:` | `http://www.w3.org/ns/sparql#` |
 | `ex:` | `http://example/` |
@@ -120,22 +120,21 @@ bindings given above.
 
 This specification defines conformance criteria for:
 
-- [SRL Rule Set evaluation](#rule-set-evaluation)
-- [Shape Rules language syntax](#shape-rules-syntax)
+- [SPARQL-RL Rule Set evaluation](#rule-set-evaluation)
+- [SPARQL-RL syntax](#sparql-rl-grammar)
 
 A conforming SRL document is an
 RDF string that
 conforms to the [grammar](#grammar) starting with the
 [`RuleSet`](#rRuleSet)
 production as defined in
-[7. Shape Rules Language Grammar](#shapes-rules-grammar).
+[7. SPARQL-RL Grammar](#sparql-rl-grammar).
 
-**Note:** This specification does not define how SPARQL-RL
-processors handle non-conforming rule sets.
+**Note:** This specification does not define how a SPARQL-RL processor handles non-conforming rule sets.
 
-## 3. SHACL Rules
+## 3. SPARQL-RL
 
-SHACL rules infer new triples given a base graph and a rule set.
+SPARQL-RL infers new triples given a base graph and a rule set.
 The output of evaluation is an inference graph containing the derived
 triples that do not appear in the base graph.
 
@@ -151,14 +150,13 @@ The rules are executed until no more triples are inferred,
 and rules may be executed more than once as new inferred triples
 become available.
 
-SHACL Rules execution is defined so that the order of rule execution
+SPARQL-RL execution is defined so that the order of rule execution
 does not lead to different outcomes when creating new RDF terms,
 including new blank nodes, nor when testing for the absence of a
 pattern. In other words, the same inference graph is produced
 regardless of the order of rule execution.
 
-SHACL Rules has both a RDF syntax, as well as a human-friendly syntax,
-inspired by SPARQL12-QUERY.
+SPARQL-RL has a human-friendly syntax inspired by SPARQL12-QUERY.
 Rule set evaluation contains elements similar to SPARQL, with differences
 in the details to ensure that the same inference graph is produced
 regardless of the order of rule execution.
@@ -294,7 +292,7 @@ set of variable bindings if the expression evaluates to true, and it discards th
 current set of variable bindings if the expression evaluates to false.
 This is the same as the
 `FILTER` operation of SPARQL
-and SHACL Rules provides many of the same functions and operators as SPARQL.
+and SPARQL-RL provides many of the same functions and operators as SPARQL.
 
 ### 3.4 Negation
 
@@ -370,7 +368,7 @@ then the current solution mapping is rejected by the assignment.
 
 ### 3.6 Importing Rule Sets
 
-A SHACL rule set can incorporate other rule sets by
+A SPARQL-QL rule set can incorporate other rule sets by
 including their URLs in the rule set imports of the rule set.
 This allows rules to be structured into libraries shared between rule sets.
 
@@ -490,62 +488,10 @@ Such rules then only rely on matching from the base graph.
             }
 ```
 
-### 3.10 SHACL Integration
+## 4. SPARQL-RL Abstract Syntax
 
-The `FOR ?v IN <shape>` re-introduces targeting on top of
-that model. It ties a single rule to a SHACL shape so the rule
-fires only for the shape's target focus nodes that conform to
-the shape, with a user-named "focus variable" pre-bound to each
-such node.
-
-[Full proposal](https://github.com/w3c/data-shapes/issues/1074)
-
-### 3.11 Relationship between SRL and SPARQL
-
-SRL and SPARQL have a close relationship. SRL is designed to be compatible
-with SPARQL, and many of the constructs in SRL are taken from or inspired by SPARQL.
-However, there are some differences:
-
-- Rules have additional well-formedness conditions that ensure
-  variables are always bound before use.
-- The syntax of a rule body is similar to a SPARQL `CONSTRUCT` query, but has
-  restrictions such as not having `UNION` or `OPTIONAL` syntax.
-  The effect of these can be achieved using well-formed rules
-  so that the rule set can be analysed.
-  These restrictions ensure that variables are always bound, whereas in a SPARQL
-  `CONSTRUCT` query template, triples involving an unbound variable
-  are omitted from results yet triples in the same template, with all
-  variables bound, still generate output.
-- The rule `SET` form and SPARQL `BIND` form have different error
-  handling behavior. An error encountered in `SET` causes the
-  current solution to be filtered out, whereas `BIND` does not
-  set the variable in the current solution.
-  `SET(?var := expr)` would be the same as
-  SPARQL with
-  `BIND(expr AS ?var)` followed by
-  `FILTER(BOUND(?var))`.
-- The syntax of `NOT` limits the inner body to triple
-  patterns and filters, and does not allow nested patterns,
-  unlike SPARQL `NOT EXISTS`.
-- Some functions are not included in the SRL syntax. There is no
-  `COALESCE`, nor `BOUND`. There are no hash functions. There
-  is no `RAND`, which has different results each time it is
-  called.
-
-  **Note:** `NOW()` is permitted and is defined to return the same
-  point in time throughout a rule set evaluation. This is the
-  same as `NOW()` in SPARQL.
-- Property path syntax only covers paths that can be expanded into triple patterns.
-  It does not allow arbitrary length operators `\*` and `+`.
-  Arbitrary length paths can be expressed in SHACL Rules
-  with recursion as a more general approach.
-
-## 4. Shape Rules Abstract Syntax
-
-The Shape Rules Abstract Syntax is the logical structure of SHACL Rules.
-It is used to define the execution algorithm of SHACL Rules.
-Each of the two concrete syntax forms of SHACL Rules, the Shape Rules Language (SRL)
-and the RDF syntax (SRL/RDF), provides a way to express the abstract syntax.
+The SPARQL-RL Abstract Syntax is the logical structure of SPARQL-RL.
+It is used to define the execution algorithm of SPARQL-RL.
 
 ### 4.1 Elements of the Abstract Syntax
 
@@ -559,8 +505,9 @@ Expression
     An expression is evaluated with respect to a solution mapping, giving
     an RDF term as the result.
     Expressions are compatible with
-    SHACL list parameter functions
-    and with SPARQL expressions.
+    SPARQL expressions
+    and
+    SHACL list parameter functions.
 
 Data block
 :   A data block is a set of triples.
@@ -665,7 +612,7 @@ Rule set evaluation
     or is a new inferred triple.
     During rule set evaluation, a rule may be evaluated more than once.
 
-The Shape Rules Language provides two operations, infer and query.
+SPARQL-RL provides two operations, infer and query.
 
 Infer
 :   Infer is the operation that applies a rule set to a given
@@ -680,8 +627,13 @@ Query
     rules that are necessary to answer the query goal.
 
     Query is equivalent to performing an infer operation
-    followed by matching the goal pattern to the combined base
-    graph and inference graph.
+    followed by matching the goal pattern to the combined
+    base graph and inference graph.
+
+SPARQL-RL processor
+:   A SPARQL-RL processor is a system that implements the SPARQL-RL
+    specification, can evaluate rule sets, and provides one or both
+    of the operations infer and query.
 
 In a triple pattern or a triple template,
 position 1 of the tuple is informally called the *subject*,
@@ -710,7 +662,7 @@ Component Notation
 
 ### 4.2 Well-formedness Conditions
 
-*Well-formedness* is a set of conditions on the abstract syntax of
+Well-formedness is a set of conditions on the abstract syntax of
 a rule set. Together, these conditions ensure
 that a variable in the
 head of a rule has a value defined in the body of the rule;
@@ -1144,297 +1096,53 @@ in the imports of that other rule set.
 
 An example algorithm is provided in [A. Example Imports Algorithm](#alg-imports).
 
-## 5. Concrete Syntax forms for the Shape Rules Language
+## 5. Relationship between SPARQL-RL and SPARQL
 
-There are two concrete syntaxes.
+SRL and SPARQL have a close relationship. SRL is designed to be compatible
+with SPARQL, and many of the constructs in SRL are taken from, or inspired by,
+SPARQL pattern matching. However, there are some differences.
 
-- [Shape Rules Language syntax](#shape-rules-syntax)
-- [RDF Rule syntax](#rdf-rules-syntax)
+In SRL, `RULE` variables are always bound before use, whether used in an
+expression of `FILTER` and `SET`, or used in triple templates of the
+rule head. SPARQL `CONSTRUCT` queries and `INSERT` updates will
+produce partial results if a variable occurs in the `CONSTRUCT` or
+`INSERT` template but is not given a value in the `WHERE` clause.
 
-The Shape Rules Language (SRL) syntax has an equivalent RDF syntax form.
-Well-formed RDF syntax can be translated to the Shape Rules Language syntax.
+- [Well-formedness conditions](#wellformed) that ensure
+  variables appear in at least one triple pattern element,
+  before use in a filter element or assignment element
+  within the rule body.
+- The SRL `SET` form and SPARQL `BIND` form have different error
+  handling behavior. An error encountered in `SET` causes the
+  current solution to be filtered out, whereas `BIND` does not
+  set the variable in the current solution but passes on the solution.
+  `SET(?var := expr)` would be the same as
+  SPARQL with
+  `BIND(expr AS ?var)` followed by
+  `FILTER(BOUND(?var))`.
+- The syntax of a rule body `WHERE` clause
+  does not include `UNION` or `OPTIONAL` syntax.
+  These SPARQL elements can lead to unbound variables.
+  The effect of `UNION` or `OPTIONAL` can be achieved using
+  well-formed rules so that the rule set can be analysed.
 
-Shape Rules Language:
+Other differences include:
 
-**Example: Example of SRL/text**
+- The syntax of `NOT` limits the inner body to triple
+  patterns and filters, and does not allow nested patterns,
+  unlike SPARQL `FILTER NOT EXISTS`.
+- Some functions are not included in the SRL syntax. There is no
+  `COALESCE`, nor `BOUND`. There are no hash functions. There
+  is no `RAND`, which has different results each time it is
+  called.
 
-```
-          PREFIX : <http://example/>
-
-          DATA { :x :p 1 ; :q 2 . }
-
-          RULE { ?x :bothPositive true . }
-          WHERE { ?x :p ?v1  FILTER ( ?v1 > 0 )  ?x :q ?v2  FILTER ( ?v2 > 0 )  }
-
-          RULE { ?x :oneIsZero true . }
-          WHERE { ?x :p ?v1 ;  :q ?v2  FILTER ( ( ?v1 = 0 ) || ( ?v2 = 0 ) )  }
-```
-
-RDF Rules syntax:
-
-**Example: SHACL Rules in RDF**
-
-```
-PREFIX :       <http://example/>
-PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX srl:    <http://www.w3.org/ns/shacl-rules#>
-PREFIX sparql: <http://www.w3.org/ns/sparql#>
-
-:ruleSet-1
-  rdf:type srl:RuleSet ;
-  srl:data (
-    [  srl:subject :x  ; srl:predicate :p  ; srl:object 1 ]
-    [  srl:subject :x  ; srl:predicate :q  ; srl:object 2 ]
-  ) ;
-  srl:rules (
-    [
-      rdf:type srl:Rule ;
-      srl:body (
-        [
-          srl:triplePattern [
-            srl:subject [ srl:varName "x" ] ;
-            srl:predicate :p ;
-            srl:object [ srl:varName "v1" ]
-          ]
-        ]
-        [
-          srl:filter [
-            sparql:greater-than ( [ srl:varName "v1" ] 0 )
-          ]
-        ]
-        [
-          srl:triplePattern [
-            srl:subject [ srl:varName "x" ] ;
-            srl:predicate :q ;
-            srl:object [ srl:varName "v2" ] ;
-          ]
-        ]
-        [
-          srl:filter [
-            sparql:greater-than ( [ srl:varName "v2" ] 0 )
-          ]
-        ]
-      ) ;
-      srl:head (
-        [
-          srl:tripleTemplate [
-            srl:subject [ srl:varName "x" ] ;
-            srl:predicate :bothPositive ;
-            srl:object true
-          ]
-        ]
-      )
-    ]
-    [
-      rdf:type srl:Rule ;
-      srl:body (
-        [
-          srl:triplePattern [
-            srl:subject [ srl:varName "x" ] ;
-            srl:predicate :p ;
-            srl:object [ srl:varName "v1" ] ;
-          ]
-        ]
-        [
-          srl:triplePattern [
-            srl:subject [ srl:varName "x" ] ;
-            srl:predicate :q ;
-            srl:object [ srl:varName "v2" ] ;
-          ]
-        ]
-        [
-          srl:filter [
-            sparql:logical-or (
-              [ sparql:equals ( [ srl:varName "v1" ] 0 ) ]
-              [ sparql:equals ( [ srl:varName "v2" ] 0 ) ]
-            )
-          ]
-        ]
-      ) ;
-      srl:head (
-        [
-          srl:tripleTemplate [
-            srl:subject [ srl:varName "x" ] ;
-            srl:predicate :oneIsZero ;
-            srl:object true ;
-          ]
-        ]
-      )
-    ]
-  ) .
-```
-
-### 5.1 Shape Rules Language syntax
-
-The [grammar](#shapes-rules-grammar) is given below.
-
-Mapping the AST to the abstract syntax.
-
-### 5.2 RDF Rules Syntax
-
-Vocabulary: [rdf-syntax-vocab.ttl](./rules-rdf-syntax/rdf-syntax-vocab.ttl)
-  
-SHACL shapes: [rdf-syntax-shapes.ttl](./rules-rdf-syntax/rdf-syntax-shapes.ttl)
-
-Well-formedness:
-
-- All RDF lists are well-formed
-- exactly one of subject - predicate - object, per body of head
-  element
-- Well-formed, single-valued,list-argument node expressions
-- well-formed abstract syntax
-
-Describe how the abstract model maps to triples.
-
-Process : accumulators, bottom up/ Walk the structure.
-
-- Collect data triples
-- Map expressions
-- Map triple-patterns
-- Map triple-templates
-- Map assignments
-- Map to rule
-- Rule set
-
-All triples not in the syntax are ignored.
-No other "srl:" predicates are allowed (??).
-
-@@ Illustration: SHACL rule set in text and RDF syntaxes: all features:
-
-```
-DATA { :s :p :o }
-RULE { ?x :q :o } WHERE { ?x :p :o }
-RULE { ?x :q ?o } WHERE { ?x :p :o . SET (?o := 18) }
-RULE { ?x :q ?o } WHERE { ?x :p :o . NOT { ?s :p ?o . FILTER(?o > 18) } }
-```
-
-```
-PREFIX :       <http://example/>
-PREFIX rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX sparql: <http://www.w3.org/ns/sparql#>
-PREFIX srl:    <http://www.w3.org/ns/shacl-rules#>
-
-:ruleSet-features
-  rdf:type srl:RuleSet ;
-  srl:data (
-    [
-      srl:subject :s ;
-      srl:predicate :p ;
-      srl:object :o
-    ]
-  ) ;
-  srl:rules (
-    [
-      rdf:type srl:Rule ;
-      srl:head (
-        [
-          srl:tripleTemplate [
-            srl:subject [ srl:varName "x" ] ;
-            srl:predicate :q ;
-            srl:object [ srl:varName "o" ]
-          ]
-        ]
-      )
-      srl:body (
-        [
-          srl:triplePattern [
-            srl:subject [ srl:varName "x" ] ;
-            srl:predicate :p ;
-            srl:object :o
-          ]
-        ]
-      ) ;
-      srl:head (
-        [
-          srl:tripleTemplate [
-            srl:subject [ srl:varName "x" ] ;
-            srl:predicate :q ;
-            srl:object :o
-          ]
-        ]
-      )
-    ]
-    [
-      rdf:type srl:Rule ;
-      srl:body (
-        [
-          srl:triplePattern [
-            srl:subject [ srl:varName "x" ] ;
-            srl:predicate :p ;
-            srl:object :o
-          ]
-        ]
-        [
-          srl:assign [
-            srl:assignValue 18 ;
-            srl:assignVar [ srl:varName "o" ]
-          ]
-        ]
-      ) ;
-    ]
-    [
-      rdf:type srl:Rule ;
-      srl:head (
-        [
-          srl:tripleTemplate [
-            srl:subject [ srl:varName "x" ] ;
-            srl:predicate :q ;
-            srl:object [ srl:varName "o" ]
-          ]
-        ]
-      )
-      srl:body (
-        [
-          srl:triplePattern [
-            srl:subject [ srl:varName "x" ] ;
-            srl:predicate :p ;
-            srl:object :o ;
-          ]
-        ]
-        [
-          srl:not (
-            [
-              srl:triplePattern [
-                srl:subject [ srl:varName "s" ] ;
-                srl:predicate :p ;
-                srl:object [ srl:varName "o" ]
-              ]
-            ]
-            [
-              srl:filter [
-                sparql:greater-than ( [ srl:varName "o" ] 18 )
-                )
-              ]
-            ]
-          )
-        ]
-      ) ;
-    ]
-  ) .
-```
-
-### 5.3 Version Announcement
-
-A version label is a string that identifies the syntax and semantics conformance
-for the Shape Rules Language.
-
-Version Labels
-
-| Version Label |
-| --- |
-| "1.2" |
-
-The version announcement SHOULD be made early in the document.
-
-Multiple [`VERSION`](#rVersionDecl) directives
-may appear in a SPARQL-RL Document.
-Each directive applies to the part of the document following the directive,
-until another directive is encountered or the end of the document is reached.
-
-Version labels can also be given by the `version` parameter of the
-[Media Type](#media-type). In the absence of a current
-[`VERSION`](#rVersionDecl) directive, the
-version specified as part of the Media Type is considered.
+  **Note:** `NOW()` is permitted and is defined to return the same
+  point in time throughout a rule set evaluation. This is the
+  same as `NOW()` in SPARQL.
+- Property path syntax only covers paths that can be expanded into triple patterns.
+  It does not allow the arbitrary length operators `\*` and `+`.
+  Arbitrary length paths can be expressed in SRL
+  with recursion as a more general approach.
 
 ## 6. Rule Set Evaluation
 
@@ -1599,27 +1307,14 @@ This is compatible with
 SPARQL graph pattern matching.
 
 ```
-let R be a well-formed rule
-
-let B be R.body 
-  where each blank node in a triple pattern in R.body
-  is replaced by a variable which is not used in the rule. 
-  The same variable is used for each occurrence of the
-  same blank node, and a different variable is used for 
-  different blank nodes.
-
-# Solution sequence of one solution that does not map any variables.
-let SEQ0: Solution sequence = { μ0 }
-
-let G = evaluation graph
-
 # Evaluate rule body
 # This function returns a sequence of solutions
+
 define evalRuleElements(B, SEQ, G, GD):
     where 
-      B is a sequence of rule elements
-      SEQ is a solution sequence 
-      G and GD are RDF graphs
+        B is a sequence of rule elements
+        SEQ is a solution sequence 
+        G and GD are RDF graphs
 
     for each rule element rElt in B:
 
@@ -1680,24 +1375,37 @@ define evalRuleElements(B, SEQ, G, GD):
     return SEQ
 enddefine
 
-if R.data:
-    ## Rule WHERE DATA
-    let SEQ = evalRuleElements(R, SEQ0, GD, GD)
-else
-    let SEQ = evalRuleElements(R, SEQ0, G, GD)
+define evalRule(R, G, GD):
+    where 
+        R is a well-formed rule
+        G and GD are RDF graphs
+    let B be R.body 
+        where each blank node in a triple pattern in R.body
+        is replaced by a variable which is not used in the rule. 
+        The same variable is used for each occurrence of the
+        same blank node, and a different variable is used for 
+       each different blank node.
 
-# Evaluate rule head
-let OUT = empty set
-for each μ in SEQ:
-    let S = {}
-    for each triple template TT in R.head:
-        let triple = subst(μ, TT)
-        Add triple to S
+    # Solution sequence of one solution that does not map any variables.
+    let SEQ0: Solution sequence = { μ0 }
+
+    if R.data:
+        let SEQ = evalRuleElements(B, SEQ0, GD, GD)
+    else
+        let SEQ = evalRuleElements(B, SEQ0, G, GD)
+    
+    # Evaluate rule head
+    let OUT = empty set
+    for each μ in SEQ:
+        let S = {}
+        for each triple template TT in R.head:
+            let triple = subst(μ, TT)
+            Add triple to S
+        endfor
+        OUT = OUT union S
     endfor
-    OUT = OUT union S
-endfor
-
-result evalRule(R, G, GD) is OUT
+    return OUT
+enddefine
 ```
 
 **Note:** `OUT` may contain triples that are also in the data graph.
@@ -1730,22 +1438,22 @@ let GE = GD
 
 for each stratum ST in LS:
     for each rule R in ST.once:
-        let X = evalRule(R, GE, GD)
+        let X = evalRule(R, GE, G0)
         let Y = { t ∈ X | t ∉ GE }
-        GI = Y ∪︀ GI
-        GE = Y ∪︀ GE
+        GI = GI ∪︀ Y
+        GE = GE ∪︀ Y
     endfor
 
     let finished = false
     while !finished:
         finished = true
         for each rule R in ST.general:
-            let X = evalRule(R, GE, GD)
+            let X = evalRule(R, GE, G0)
             let Y = { t ∈ X | t ∉ GE }
             if Y is not empty:
                 finished = false
-                GI = Y ∪︀ GI
-                GE = Y ∪︀ GE
+                GI = GI ∪︀ Y
+                GE = GE ∪︀ Y
             endif
         endfor
     endwhile
@@ -2069,14 +1777,14 @@ Deferring both to stratum 1 means they see the complete set of
 rules are evaluated within each stratum does not affect the
 final outcome.
 
-## 7. Shape Rules Language Grammar
+## 7. SPARQL-RL Grammar
 
 A SPARQL-RL Document
 is an RDF string
 encoded in UTF-8 RFC3629 and starting with the
 [`RuleSet`](#rRuleSet)
 production and conforming to the additional constraints defined in
-[7.5 Grammar](#grammar).
+[7.6 Grammar](#grammar).
 Only Unicode scalar values,
 in the ranges `U+0000` to `U+D7FF`
 and `U+E000` to `U+10FFFF`,
@@ -2084,19 +1792,42 @@ are allowed. This excludes
 surrogate code points,
 range `U+D800` to `U+DFFF`.
 
-### 7.1 White Space
+### 7.1 Version Announcement
+
+A version label is a string that identifies the syntax and semantics
+conformance for SPARQL-RL.
+
+Version Labels
+
+| Version Label |
+| --- |
+| "1.2" |
+
+The version announcement SHOULD be made early in the document.
+
+Multiple [`VERSION`](#rVersionDecl) directives
+may appear in a SPARQL-RL Document.
+Each directive applies to the part of the document following the directive,
+until another directive is encountered or the end of the document is reached.
+
+Version labels can also be given by the `version` parameter of the
+[Media Type](#media-type). In the absence of a current
+[`VERSION`](#rVersionDecl) directive, the
+version specified as part of the Media Type is considered.
+
+### 7.2 White Space
 
 White space
 (production [`WS`](#rWS)) is used
 to separate two terminals which would otherwise be (mis-)recognized as one
 terminal. Rule names below in capitals indicate where white space is
 significant; these form a possible choice of terminals for constructing a
-Shape Rules Language parser.
+SPARQL-RL parser.
 
 White space is significant in the production
 [`String`](#rString).
 
-### 7.2 Comments
+### 7.3 Comments
 
 Comments start with a [`#`](#cp-number-sign) outside an
 [`IRIREF`](#rIRIREF),
@@ -2110,7 +1841,7 @@ and continue to the end of line (marked by
 or end of file if there is no end of line after the comment marker.
 Comments are treated as white space.
 
-### 7.3 IRI References
+### 7.4 IRI References
 
 Relative IRI references are resolved with base IRIs
 as per RFC3986 using only the basic algorithm in section 5.2.
@@ -2135,7 +1866,7 @@ Base URI (section 5.1.4, "Default Base URI") is used.
 Each [`BASE`](#rBaseDecl) directive sets a new In-Scope Base URI,
 relative to the previous one.
 
-### 7.4 Escape Sequences
+### 7.5 Escape Sequences
 
 There are three forms of escapes used in
 [SRL documents](#dfn-srl-document):
@@ -2196,7 +1927,7 @@ A term written as `ex:%66oo-bar` with a prefix
 `PREFIX ex: <http://a.example/>`
 also designates the IRI `http://a.example/%66oo-bar`.
 
-### 7.5 Grammar
+### 7.6 Grammar
 
 The EBNF used here is defined in XML 1.0
 EBNF-NOTATION.
@@ -2212,8 +1943,8 @@ Notes:
    are case sensitive.
 4. Variables are not allowed in a [`DATA`](#rDataTriplesBlock) block.
 5. When tokenizing the input and choosing grammar rules, the longest match is chosen.
-6. The Shape Rules Language grammar is LL(1) and LALR(1) when the rules with uppercased names
-   are used as terminals.
+6. The SPARQL-RL grammar is LL(1) and LALR(1) when the rules with uppercased names are
+   used as terminals.
 
 |  |  |  |  |
 | --- | --- | --- | --- |
@@ -2227,162 +1958,159 @@ Notes:
 | `[8]` | `VersionDecl` | ::= | `'VERSION' VersionSpecifier` |
 | `[9]` | `VersionSpecifier` | ::= | `STRING_LITERAL1 | STRING_LITERAL2` |
 | `[10]` | `ImportsDecl` | ::= | `'IMPORTS' iri` |
-| `[11]` | `Rule` | ::= | `Rule1 | Rule2` |
-| `[12]` | `Rule1` | ::= | `'RULE' iri? HeadTemplate ForClause? 'WHERE' 'DATA'? BodyPattern` |
-| `[13]` | `Rule2` | ::= | `'IF' iri? ForClause? 'DATA'? BodyPattern 'THEN' HeadTemplate` |
-| `[14]` | `Data` | ::= | `'DATA' '{' DataTriplesBlock? '}'` |
-| `[15]` | `HeadTemplate` | ::= | `'{' HeadTemplateBlock? '}'` |
-| `[16]` | `ForClause` | ::= | `'FOR' Var 'IN' iri` |
-| `[17]` | `BodyPattern` | ::= | `'{' BodyTriplesBlock? ( BodyNotTriples '.'? BodyTriplesBlock? )* '}'` |
-| `[18]` | `BodyNotTriples` | ::= | `Filter | Negation | Assignment` |
-| `[19]` | `Filter` | ::= | `'FILTER' Constraint` |
-| `[20]` | `Constraint` | ::= | `BrackettedExpression | BuiltInCall | FunctionCall` |
-| `[21]` | `FunctionCall` | ::= | `iri ArgList` |
-| `[22]` | `ArgList` | ::= | `NIL | '(' Expression ( ',' Expression )* ')'` |
-| `[23]` | `ExpressionList` | ::= | `NIL | '(' Expression ( ',' Expression )* ')'` |
-| `[24]` | `Negation` | ::= | `'NOT' 'DATA'? '{' BodyBasic '}'` |
-| `[25]` | `BodyBasic` | ::= | `BodyTriplesBlock? ( BodyBasicNotTriples '.'? BodyTriplesBlock? )*` |
-| `[26]` | `BodyBasicNotTriples` | ::= | `Filter` |
-| `[27]` | `Assignment` | ::= | `'SET' '(' Var ':=' Expression ')'` |
-| `[28]` | `DataTriplesBlock` | ::= | `TriplesSameSubjectData ( '.' DataTriplesBlock? )?` |
-| `[29]` | `TriplesSameSubjectData` | ::= | `RDFTermData PropertyListNotEmptyData | TriplesNodeData PropertyListData | ReifiedTripleBlockData` |
-| `[30]` | `PropertyListData` | ::= | `PropertyListNotEmptyData?` |
-| `[31]` | `PropertyListNotEmptyData` | ::= | `VerbData ObjectListData ( ';' ( VerbData ObjectListData )? )*` |
-| `[32]` | `VerbData` | ::= | `iri | 'a'` |
-| `[33]` | `ObjectListData` | ::= | `ObjectData ( ',' ObjectData )*` |
-| `[34]` | `ObjectData` | ::= | `GraphNodeData AnnotationData` |
-| `[35]` | `GraphNodeData` | ::= | `RDFTermData | TriplesNodeData | ReifiedTripleData` |
-| `[36]` | `TriplesNodeData` | ::= | `CollectionData | BlankNodePropertyListData` |
-| `[37]` | `BlankNodePropertyListData` | ::= | `'[' PropertyListNotEmptyData ']'` |
-| `[38]` | `CollectionData` | ::= | `'(' GraphNodeData+ ')'` |
-| `[39]` | `AnnotationData` | ::= | `( ReifierData | AnnotationBlockData )*` |
-| `[40]` | `AnnotationBlockData` | ::= | `'{|' PropertyListNotEmptyData '|}'` |
-| `[41]` | `ReifierData` | ::= | `'~' ReifierIdData?` |
-| `[42]` | `ReifierIdData` | ::= | `iri | BlankNode` |
-| `[43]` | `ReifiedTripleBlockData` | ::= | `ReifiedTripleData PropertyListData` |
-| `[44]` | `ReifiedTripleData` | ::= | `'<<' ReifiedTripleSubjectData VerbData ReifiedTripleObjectData ReifierData? '>>'` |
-| `[45]` | `ReifiedTripleSubjectData` | ::= | `iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | ReifiedTripleData | TripleTermData` |
-| `[46]` | `ReifiedTripleObjectData` | ::= | `iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | ReifiedTripleData | TripleTermData` |
-| `[47]` | `TripleTermData` | ::= | `'<<(' TripleTermSubjectData VerbData TripleTermObjectData ')>>'` |
-| `[48]` | `TripleTermSubjectData` | ::= | `iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | TripleTermData` |
-| `[49]` | `TripleTermObjectData` | ::= | `iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | TripleTermData` |
-| `[50]` | `HeadTemplateBlock` | ::= | `TriplesBlockTemplate` |
-| `[51]` | `TriplesBlockTemplate` | ::= | `TriplesSameSubjectTemplate ( '.' TriplesBlockTemplate? )?` |
-| `[52]` | `TriplesSameSubjectTemplate` | ::= | `VarOrRDFTerm PropertyListNotEmptyTemplate | TriplesNodeTemplate PropertyListTemplate | ReifiedTripleBlockTemplate` |
-| `[53]` | `PropertyListTemplate` | ::= | `PropertyListNotEmptyTemplate?` |
-| `[54]` | `PropertyListNotEmptyTemplate` | ::= | `Verb ObjectListTemplate ( ';' ( Verb ObjectListTemplate )? )*` |
-| `[55]` | `ObjectListTemplate` | ::= | `ObjectTemplate ( ',' ObjectTemplate )*` |
-| `[56]` | `ObjectTemplate` | ::= | `GraphNodeTemplate AnnotationTemplate` |
-| `[57]` | `GraphNodeTemplate` | ::= | `VarOrRDFTerm | TriplesNodeTemplate | ReifiedTriple` |
-| `[58]` | `TriplesNodeTemplate` | ::= | `CollectionTemplate | BlankNodePropertyListTemplate` |
-| `[59]` | `BlankNodePropertyListTemplate` | ::= | `'[' PropertyListNotEmptyTemplate ']'` |
-| `[60]` | `CollectionTemplate` | ::= | `'(' GraphNodeTemplate+ ')'` |
-| `[61]` | `AnnotationTemplate` | ::= | `( Reifier | AnnotationBlockTemplate )*` |
-| `[62]` | `AnnotationBlockTemplate` | ::= | `'{|' PropertyListNotEmptyTemplate '|}'` |
-| `[63]` | `ReifiedTripleBlockTemplate` | ::= | `ReifiedTriple PropertyListTemplate` |
-| `[64]` | `BodyTriplesBlock` | ::= | `TriplesBlockPattern` |
-| `[65]` | `TriplesBlockPattern` | ::= | `TriplesSameSubjectPattern ( '.' TriplesBlockPattern? )?` |
-| `[66]` | `ReifiedTripleBlockPattern` | ::= | `ReifiedTriple PropertyListPattern` |
-| `[67]` | `TriplesSameSubjectPattern` | ::= | `VarOrRDFTerm PropertyListNotEmptyPattern | TriplesNodePattern PropertyListPattern | ReifiedTripleBlockPattern` |
-| `[68]` | `PropertyListPattern` | ::= | `PropertyListNotEmptyPattern?` |
-| `[69]` | `PropertyListNotEmptyPattern` | ::= | `( VerbPath | Var ) ObjectListPattern ( ';' ( ( VerbPath | Var ) ObjectListPattern )? )*` |
-| `[70]` | `ObjectListPattern` | ::= | `ObjectPattern ( ',' ObjectPattern )*` |
-| `[71]` | `ObjectPattern` | ::= | `GraphNodePattern AnnotationPattern` |
-| `[72]` | `TriplesNodePattern` | ::= | `CollectionPattern | BlankNodePropertyListPattern` |
-| `[73]` | `BlankNodePropertyListPattern` | ::= | `'[' PropertyListNotEmptyPattern ']'` |
-| `[74]` | `CollectionPattern` | ::= | `'(' GraphNodePattern+ ')'` |
-| `[75]` | `AnnotationPattern` | ::= | `( Reifier | AnnotationBlockPattern )*` |
-| `[76]` | `AnnotationBlockPattern` | ::= | `'{|' PropertyListNotEmptyPattern '|}'` |
-| `[77]` | `GraphNodePattern` | ::= | `VarOrRDFTerm | TriplesNodePattern | ReifiedTriple` |
-| `[78]` | `Reifier` | ::= | `'~' ReifierId?` |
-| `[79]` | `ReifierId` | ::= | `Var | iri | BlankNode` |
-| `[80]` | `ReifiedTriple` | ::= | `'<<' ReifiedTripleSubject Verb ReifiedTripleObject Reifier? '>>'` |
-| `[81]` | `ReifiedTripleSubject` | ::= | `Var | iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | ReifiedTriple | TripleTerm` |
-| `[82]` | `ReifiedTripleObject` | ::= | `Var | iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | ReifiedTriple | TripleTerm` |
-| `[83]` | `TripleTerm` | ::= | `'<<(' TripleTermSubject Verb TripleTermObject ')>>'` |
-| `[84]` | `TripleTermSubject` | ::= | `Var | iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | TripleTerm` |
-| `[85]` | `TripleTermObject` | ::= | `Var | iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | TripleTerm` |
-| `[86]` | `Verb` | ::= | `VarOrIri | 'a'` |
-| `[87]` | `VerbPath` | ::= | `Path` |
-| `[88]` | `Path` | ::= | `PathSequence` |
-| `[89]` | `PathSequence` | ::= | `PathEltOrInverse ( '/' PathEltOrInverse )*` |
-| `[90]` | `PathEltOrInverse` | ::= | `PathElt | '^' PathElt` |
-| `[91]` | `PathElt` | ::= | `( iri | 'a' | '(' Path ')' )` |
-| `[92]` | `RDFTermData` | ::= | `iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | NIL | TripleTermData` |
-| `[93]` | `VarOrRDFTerm` | ::= | `Var | iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | NIL | TripleTerm` |
-| `[94]` | `VarOrIri` | ::= | `Var | iri` |
-| `[95]` | `Var` | ::= | `VAR1 | VAR2` |
-| `[96]` | `RDFLiteral` | ::= | `String ( LANG_DIR | '^^' iri )?` |
-| `[97]` | `NumericLiteral` | ::= | `NumericLiteralUnsigned | NumericLiteralPositive | NumericLiteralNegative` |
-| `[98]` | `NumericLiteralUnsigned` | ::= | `INTEGER | DECIMAL | DOUBLE` |
-| `[99]` | `NumericLiteralPositive` | ::= | `INTEGER_POSITIVE | DECIMAL_POSITIVE | DOUBLE_POSITIVE` |
-| `[100]` | `NumericLiteralNegative` | ::= | `INTEGER_NEGATIVE | DECIMAL_NEGATIVE | DOUBLE_NEGATIVE` |
-| `[101]` | `BooleanLiteral` | ::= | `'true' | 'false'` |
-| `[102]` | `String` | ::= | `STRING_LITERAL1 | STRING_LITERAL2 | STRING_LITERAL_LONG1 | STRING_LITERAL_LONG2` |
-| `[103]` | `iri` | ::= | `IRIREF | PrefixedName` |
-| `[104]` | `PrefixedName` | ::= | `PNAME_LN | PNAME_NS` |
-| `[105]` | `BlankNode` | ::= | `BLANK_NODE_LABEL | ANON` |
-| `[106]` | `Expression` | ::= | `ConditionalOrExpression` |
-| `[107]` | `ConditionalOrExpression` | ::= | `ConditionalAndExpression ( '||' ConditionalAndExpression )*` |
-| `[108]` | `ConditionalAndExpression` | ::= | `ValueLogical ( '&&' ValueLogical )*` |
-| `[109]` | `ValueLogical` | ::= | `RelationalExpression` |
-| `[110]` | `RelationalExpression` | ::= | `NumericExpression ( '=' NumericExpression | '!=' NumericExpression | '<' NumericExpression | '>' NumericExpression | '<=' NumericExpression | '>=' NumericExpression | 'IN' ExpressionList | 'NOT' 'IN' ExpressionList )?` |
-| `[111]` | `NumericExpression` | ::= | `AdditiveExpression` |
-| `[112]` | `AdditiveExpression` | ::= | `MultiplicativeExpression ( '+' MultiplicativeExpression | '-' MultiplicativeExpression | ( NumericLiteralPositive | NumericLiteralNegative ) ( ( '*' UnaryExpression ) | ( '/' UnaryExpression ) )* )*` |
-| `[113]` | `MultiplicativeExpression` | ::= | `UnaryExpression ( '*' UnaryExpression | '/' UnaryExpression )*` |
-| `[114]` | `UnaryExpression` | ::= | `'!' PrimaryExpression  | '+' PrimaryExpression  | '-' PrimaryExpression  | PrimaryExpression` |
-| `[115]` | `PrimaryExpression` | ::= | `BrackettedExpression | BuiltInCall | iriOrFunction | RDFLiteral | NumericLiteral | BooleanLiteral | Var | ExprTripleTerm` |
-| `[116]` | `iriOrFunction` | ::= | `iri ArgList?` |
-| `[117]` | `ExprTripleTerm` | ::= | `'<<(' ExprTripleTermSubject Verb ExprTripleTermObject ')>>'` |
-| `[118]` | `ExprTripleTermSubject` | ::= | `iri | RDFLiteral | NumericLiteral | BooleanLiteral | Var` |
-| `[119]` | `ExprTripleTermObject` | ::= | `iri | RDFLiteral | NumericLiteral | BooleanLiteral | Var | ExprTripleTerm` |
-| `[120]` | `BrackettedExpression` | ::= | `'(' Expression ')'` |
-| `[121]` | `BuiltInCall` | ::= | `'STR' '(' Expression ')'  | 'LANG' '(' Expression ')'  | 'LANGMATCHES' '(' Expression ',' Expression ')'  | 'LANGDIR' '(' Expression ')'  | 'DATATYPE' '(' Expression ')'  | 'IRI' '(' Expression ')'  | 'URI' '(' Expression ')'  | 'BNODE' ( '(' Expression ')' | NIL )  | 'ABS' '(' Expression ')'  | 'CEIL' '(' Expression ')'  | 'FLOOR' '(' Expression ')'  | 'ROUND' '(' Expression ')'  | 'CONCAT' ExpressionList  | 'SUBSTR' '(' Expression ',' Expression ( ',' Expression )? ')'  | 'STRLEN' '(' Expression ')'  | 'REPLACE' '(' Expression ',' Expression ',' Expression ( ',' Expression )? ')'  | 'UCASE' '(' Expression ')'  | 'LCASE' '(' Expression ')'  | 'ENCODE_FOR_URI' '(' Expression ')'  | 'CONTAINS' '(' Expression ',' Expression ')'  | 'STRSTARTS' '(' Expression ',' Expression ')'  | 'STRENDS' '(' Expression ',' Expression ')'  | 'STRBEFORE' '(' Expression ',' Expression ')'  | 'STRAFTER' '(' Expression ',' Expression ')'  | 'YEAR' '(' Expression ')'  | 'MONTH' '(' Expression ')'  | 'DAY' '(' Expression ')'  | 'HOURS' '(' Expression ')'  | 'MINUTES' '(' Expression ')'  | 'SECONDS' '(' Expression ')'  | 'TIMEZONE' '(' Expression ')'  | 'TZ' '(' Expression ')'  | 'NOW' NIL  | 'UUID' NIL  | 'STRUUID' NIL  | 'IF' '(' Expression ',' Expression ',' Expression ')'  | 'STRLANG' '(' Expression ',' Expression ')'  | 'STRLANGDIR' '(' Expression ',' Expression ',' Expression ')'  | 'STRDT' '(' Expression ',' Expression ')'  | 'sameTerm' '(' Expression ',' Expression ')'  | 'isIRI' '(' Expression ')'  | 'isURI' '(' Expression ')'  | 'isBLANK' '(' Expression ')'  | 'isLITERAL' '(' Expression ')'  | 'isNUMERIC' '(' Expression ')'  | 'hasLANG' '(' Expression ')'  | 'hasLANGDIR' '(' Expression ')'  | 'REGEX' '(' Expression ',' Expression ( ',' Expression )? ')'  | 'isTRIPLE' '(' Expression ')'  | 'TRIPLE' '(' Expression ',' Expression ',' Expression ')'  | 'SUBJECT' '(' Expression ')'  | 'PREDICATE' '(' Expression ')'  | 'OBJECT' '(' Expression ')'` |
+| `[11]` | `Rule` | ::= | `'RULE' iri? HeadTemplate 'WHERE' 'DATA'? BodyPattern` |
+| `[12]` | `Data` | ::= | `'DATA' '{' DataTriplesBlock? '}'` |
+| `[13]` | `HeadTemplate` | ::= | `'{' HeadTemplateBlock? '}'` |
+| `[14]` | `BodyPattern` | ::= | `'{' BodyTriplesBlock? ( BodyNotTriples '.'? BodyTriplesBlock? )* '}'` |
+| `[15]` | `BodyNotTriples` | ::= | `Filter | Negation | Assignment` |
+| `[16]` | `Filter` | ::= | `'FILTER' Constraint` |
+| `[17]` | `Constraint` | ::= | `BrackettedExpression | BuiltInCall | FunctionCall` |
+| `[18]` | `FunctionCall` | ::= | `iri ArgList` |
+| `[19]` | `ArgList` | ::= | `NIL | '(' Expression ( ',' Expression )* ')'` |
+| `[20]` | `ExpressionList` | ::= | `NIL | '(' Expression ( ',' Expression )* ')'` |
+| `[21]` | `Negation` | ::= | `'NOT' 'DATA'? '{' BodyBasic '}'` |
+| `[22]` | `BodyBasic` | ::= | `BodyTriplesBlock? ( BodyBasicNotTriples '.'? BodyTriplesBlock? )*` |
+| `[23]` | `BodyBasicNotTriples` | ::= | `Filter` |
+| `[24]` | `Assignment` | ::= | `'SET' '(' Var ':=' Expression ')'` |
+| `[25]` | `DataTriplesBlock` | ::= | `TriplesSameSubjectData ( '.' DataTriplesBlock? )?` |
+| `[26]` | `TriplesSameSubjectData` | ::= | `RDFTermData PropertyListNotEmptyData | TriplesNodeData PropertyListData | ReifiedTripleBlockData` |
+| `[27]` | `PropertyListData` | ::= | `PropertyListNotEmptyData?` |
+| `[28]` | `PropertyListNotEmptyData` | ::= | `VerbData ObjectListData ( ';' ( VerbData ObjectListData )? )*` |
+| `[29]` | `VerbData` | ::= | `iri | 'a'` |
+| `[30]` | `ObjectListData` | ::= | `ObjectData ( ',' ObjectData )*` |
+| `[31]` | `ObjectData` | ::= | `GraphNodeData AnnotationData` |
+| `[32]` | `GraphNodeData` | ::= | `RDFTermData | TriplesNodeData | ReifiedTripleData` |
+| `[33]` | `TriplesNodeData` | ::= | `CollectionData | BlankNodePropertyListData` |
+| `[34]` | `BlankNodePropertyListData` | ::= | `'[' PropertyListNotEmptyData ']'` |
+| `[35]` | `CollectionData` | ::= | `'(' GraphNodeData+ ')'` |
+| `[36]` | `AnnotationData` | ::= | `( ReifierData | AnnotationBlockData )*` |
+| `[37]` | `AnnotationBlockData` | ::= | `'{|' PropertyListNotEmptyData '|}'` |
+| `[38]` | `ReifierData` | ::= | `'~' ReifierIdData?` |
+| `[39]` | `ReifierIdData` | ::= | `iri | BlankNode` |
+| `[40]` | `ReifiedTripleBlockData` | ::= | `ReifiedTripleData PropertyListData` |
+| `[41]` | `ReifiedTripleData` | ::= | `'<<' ReifiedTripleSubjectData VerbData ReifiedTripleObjectData ReifierData? '>>'` |
+| `[42]` | `ReifiedTripleSubjectData` | ::= | `iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | ReifiedTripleData | TripleTermData` |
+| `[43]` | `ReifiedTripleObjectData` | ::= | `iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | ReifiedTripleData | TripleTermData` |
+| `[44]` | `TripleTermData` | ::= | `'<<(' TripleTermSubjectData VerbData TripleTermObjectData ')>>'` |
+| `[45]` | `TripleTermSubjectData` | ::= | `iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | TripleTermData` |
+| `[46]` | `TripleTermObjectData` | ::= | `iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | TripleTermData` |
+| `[47]` | `HeadTemplateBlock` | ::= | `TriplesBlockTemplate` |
+| `[48]` | `TriplesBlockTemplate` | ::= | `TriplesSameSubjectTemplate ( '.' TriplesBlockTemplate? )?` |
+| `[49]` | `TriplesSameSubjectTemplate` | ::= | `VarOrRDFTerm PropertyListNotEmptyTemplate | TriplesNodeTemplate PropertyListTemplate | ReifiedTripleBlockTemplate` |
+| `[50]` | `PropertyListTemplate` | ::= | `PropertyListNotEmptyTemplate?` |
+| `[51]` | `PropertyListNotEmptyTemplate` | ::= | `Verb ObjectListTemplate ( ';' ( Verb ObjectListTemplate )? )*` |
+| `[52]` | `ObjectListTemplate` | ::= | `ObjectTemplate ( ',' ObjectTemplate )*` |
+| `[53]` | `ObjectTemplate` | ::= | `GraphNodeTemplate AnnotationTemplate` |
+| `[54]` | `GraphNodeTemplate` | ::= | `VarOrRDFTerm | TriplesNodeTemplate | ReifiedTriple` |
+| `[55]` | `TriplesNodeTemplate` | ::= | `CollectionTemplate | BlankNodePropertyListTemplate` |
+| `[56]` | `BlankNodePropertyListTemplate` | ::= | `'[' PropertyListNotEmptyTemplate ']'` |
+| `[57]` | `CollectionTemplate` | ::= | `'(' GraphNodeTemplate+ ')'` |
+| `[58]` | `AnnotationTemplate` | ::= | `( Reifier | AnnotationBlockTemplate )*` |
+| `[59]` | `AnnotationBlockTemplate` | ::= | `'{|' PropertyListNotEmptyTemplate '|}'` |
+| `[60]` | `ReifiedTripleBlockTemplate` | ::= | `ReifiedTriple PropertyListTemplate` |
+| `[61]` | `BodyTriplesBlock` | ::= | `TriplesBlockPattern` |
+| `[62]` | `TriplesBlockPattern` | ::= | `TriplesSameSubjectPattern ( '.' TriplesBlockPattern? )?` |
+| `[63]` | `ReifiedTripleBlockPattern` | ::= | `ReifiedTriple PropertyListPattern` |
+| `[64]` | `TriplesSameSubjectPattern` | ::= | `VarOrRDFTerm PropertyListNotEmptyPattern | TriplesNodePattern PropertyListPattern | ReifiedTripleBlockPattern` |
+| `[65]` | `PropertyListPattern` | ::= | `PropertyListNotEmptyPattern?` |
+| `[66]` | `PropertyListNotEmptyPattern` | ::= | `( VerbPath | Var ) ObjectListPattern ( ';' ( ( VerbPath | Var ) ObjectListPattern )? )*` |
+| `[67]` | `ObjectListPattern` | ::= | `ObjectPattern ( ',' ObjectPattern )*` |
+| `[68]` | `ObjectPattern` | ::= | `GraphNodePattern AnnotationPattern` |
+| `[69]` | `TriplesNodePattern` | ::= | `CollectionPattern | BlankNodePropertyListPattern` |
+| `[70]` | `BlankNodePropertyListPattern` | ::= | `'[' PropertyListNotEmptyPattern ']'` |
+| `[71]` | `CollectionPattern` | ::= | `'(' GraphNodePattern+ ')'` |
+| `[72]` | `AnnotationPattern` | ::= | `( Reifier | AnnotationBlockPattern )*` |
+| `[73]` | `AnnotationBlockPattern` | ::= | `'{|' PropertyListNotEmptyPattern '|}'` |
+| `[74]` | `GraphNodePattern` | ::= | `VarOrRDFTerm | TriplesNodePattern | ReifiedTriple` |
+| `[75]` | `Reifier` | ::= | `'~' ReifierId?` |
+| `[76]` | `ReifierId` | ::= | `Var | iri | BlankNode` |
+| `[77]` | `ReifiedTriple` | ::= | `'<<' ReifiedTripleSubject Verb ReifiedTripleObject Reifier? '>>'` |
+| `[78]` | `ReifiedTripleSubject` | ::= | `Var | iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | ReifiedTriple | TripleTerm` |
+| `[79]` | `ReifiedTripleObject` | ::= | `Var | iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | ReifiedTriple | TripleTerm` |
+| `[80]` | `TripleTerm` | ::= | `'<<(' TripleTermSubject Verb TripleTermObject ')>>'` |
+| `[81]` | `TripleTermSubject` | ::= | `Var | iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | TripleTerm` |
+| `[82]` | `TripleTermObject` | ::= | `Var | iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | TripleTerm` |
+| `[83]` | `Verb` | ::= | `VarOrIri | 'a'` |
+| `[84]` | `VerbPath` | ::= | `Path` |
+| `[85]` | `Path` | ::= | `PathSequence` |
+| `[86]` | `PathSequence` | ::= | `PathEltOrInverse ( '/' PathEltOrInverse )*` |
+| `[87]` | `PathEltOrInverse` | ::= | `PathElt | '^' PathElt` |
+| `[88]` | `PathElt` | ::= | `( iri | 'a' | '(' Path ')' )` |
+| `[89]` | `RDFTermData` | ::= | `iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | NIL | TripleTermData` |
+| `[90]` | `VarOrRDFTerm` | ::= | `Var | iri | RDFLiteral | NumericLiteral | BooleanLiteral | BlankNode | NIL | TripleTerm` |
+| `[91]` | `VarOrIri` | ::= | `Var | iri` |
+| `[92]` | `Var` | ::= | `VAR1 | VAR2` |
+| `[93]` | `RDFLiteral` | ::= | `String ( LANG_DIR | '^^' iri )?` |
+| `[94]` | `NumericLiteral` | ::= | `NumericLiteralUnsigned | NumericLiteralPositive | NumericLiteralNegative` |
+| `[95]` | `NumericLiteralUnsigned` | ::= | `INTEGER | DECIMAL | DOUBLE` |
+| `[96]` | `NumericLiteralPositive` | ::= | `INTEGER_POSITIVE | DECIMAL_POSITIVE | DOUBLE_POSITIVE` |
+| `[97]` | `NumericLiteralNegative` | ::= | `INTEGER_NEGATIVE | DECIMAL_NEGATIVE | DOUBLE_NEGATIVE` |
+| `[98]` | `BooleanLiteral` | ::= | `'true' | 'false'` |
+| `[99]` | `String` | ::= | `STRING_LITERAL1 | STRING_LITERAL2 | STRING_LITERAL_LONG1 | STRING_LITERAL_LONG2` |
+| `[100]` | `iri` | ::= | `IRIREF | PrefixedName` |
+| `[101]` | `PrefixedName` | ::= | `PNAME_LN | PNAME_NS` |
+| `[102]` | `BlankNode` | ::= | `BLANK_NODE_LABEL | ANON` |
+| `[103]` | `Expression` | ::= | `ConditionalOrExpression` |
+| `[104]` | `ConditionalOrExpression` | ::= | `ConditionalAndExpression ( '||' ConditionalAndExpression )*` |
+| `[105]` | `ConditionalAndExpression` | ::= | `ValueLogical ( '&&' ValueLogical )*` |
+| `[106]` | `ValueLogical` | ::= | `RelationalExpression` |
+| `[107]` | `RelationalExpression` | ::= | `NumericExpression ( '=' NumericExpression | '!=' NumericExpression | '<' NumericExpression | '>' NumericExpression | '<=' NumericExpression | '>=' NumericExpression | 'IN' ExpressionList | 'NOT' 'IN' ExpressionList )?` |
+| `[108]` | `NumericExpression` | ::= | `AdditiveExpression` |
+| `[109]` | `AdditiveExpression` | ::= | `MultiplicativeExpression ( '+' MultiplicativeExpression | '-' MultiplicativeExpression | ( NumericLiteralPositive | NumericLiteralNegative ) ( ( '*' UnaryExpression ) | ( '/' UnaryExpression ) )* )*` |
+| `[110]` | `MultiplicativeExpression` | ::= | `UnaryExpression ( '*' UnaryExpression | '/' UnaryExpression )*` |
+| `[111]` | `UnaryExpression` | ::= | `'!' PrimaryExpression  | '+' PrimaryExpression  | '-' PrimaryExpression  | PrimaryExpression` |
+| `[112]` | `PrimaryExpression` | ::= | `BrackettedExpression | BuiltInCall | iriOrFunction | RDFLiteral | NumericLiteral | BooleanLiteral | Var | ExprTripleTerm` |
+| `[113]` | `iriOrFunction` | ::= | `iri ArgList?` |
+| `[114]` | `ExprTripleTerm` | ::= | `'<<(' ExprTripleTermSubject Verb ExprTripleTermObject ')>>'` |
+| `[115]` | `ExprTripleTermSubject` | ::= | `iri | RDFLiteral | NumericLiteral | BooleanLiteral | Var` |
+| `[116]` | `ExprTripleTermObject` | ::= | `iri | RDFLiteral | NumericLiteral | BooleanLiteral | Var | ExprTripleTerm` |
+| `[117]` | `BrackettedExpression` | ::= | `'(' Expression ')'` |
+| `[118]` | `BuiltInCall` | ::= | `'STR' '(' Expression ')'  | 'LANG' '(' Expression ')'  | 'LANGMATCHES' '(' Expression ',' Expression ')'  | 'LANGDIR' '(' Expression ')'  | 'DATATYPE' '(' Expression ')'  | 'IRI' '(' Expression ')'  | 'URI' '(' Expression ')'  | 'BNODE' ( '(' Expression ')' | NIL )  | 'ABS' '(' Expression ')'  | 'CEIL' '(' Expression ')'  | 'FLOOR' '(' Expression ')'  | 'ROUND' '(' Expression ')'  | 'CONCAT' ExpressionList  | 'SUBSTR' '(' Expression ',' Expression ( ',' Expression )? ')'  | 'STRLEN' '(' Expression ')'  | 'REPLACE' '(' Expression ',' Expression ',' Expression ( ',' Expression )? ')'  | 'UCASE' '(' Expression ')'  | 'LCASE' '(' Expression ')'  | 'ENCODE_FOR_URI' '(' Expression ')'  | 'CONTAINS' '(' Expression ',' Expression ')'  | 'STRSTARTS' '(' Expression ',' Expression ')'  | 'STRENDS' '(' Expression ',' Expression ')'  | 'STRBEFORE' '(' Expression ',' Expression ')'  | 'STRAFTER' '(' Expression ',' Expression ')'  | 'YEAR' '(' Expression ')'  | 'MONTH' '(' Expression ')'  | 'DAY' '(' Expression ')'  | 'HOURS' '(' Expression ')'  | 'MINUTES' '(' Expression ')'  | 'SECONDS' '(' Expression ')'  | 'TIMEZONE' '(' Expression ')'  | 'TZ' '(' Expression ')'  | 'NOW' NIL  | 'UUID' NIL  | 'STRUUID' NIL  | 'IF' '(' Expression ',' Expression ',' Expression ')'  | 'STRLANG' '(' Expression ',' Expression ')'  | 'STRLANGDIR' '(' Expression ',' Expression ',' Expression ')'  | 'STRDT' '(' Expression ',' Expression ')'  | 'sameTerm' '(' Expression ',' Expression ')'  | 'isIRI' '(' Expression ')'  | 'isURI' '(' Expression ')'  | 'isBLANK' '(' Expression ')'  | 'isLITERAL' '(' Expression ')'  | 'isNUMERIC' '(' Expression ')'  | 'hasLANG' '(' Expression ')'  | 'hasLANGDIR' '(' Expression ')'  | 'REGEX' '(' Expression ',' Expression ( ',' Expression )? ')'  | 'isTRIPLE' '(' Expression ')'  | 'TRIPLE' '(' Expression ',' Expression ',' Expression ')'  | 'SUBJECT' '(' Expression ')'  | 'PREDICATE' '(' Expression ')'  | 'OBJECT' '(' Expression ')'` |
 
 Productions for terminals:
 
 |  |  |  |  |
 | --- | --- | --- | --- |
-| `[122]` | `IRIREF` | ::= | `` '<' ([^<>"{}|^`\]-[#x00-#x20] | UCHAR )* '>' `` |
-| `[123]` | `PNAME_NS` | ::= | `PN_PREFIX? ':'` |
-| `[124]` | `PNAME_LN` | ::= | `PNAME_NS PN_LOCAL` |
-| `[125]` | `BLANK_NODE_LABEL` | ::= | `'_:' ( PN_CHARS_U | [0-9] ) ((PN_CHARS|'.')* PN_CHARS)?` |
-| `[126]` | `VAR1` | ::= | `'?' VARNAME` |
-| `[127]` | `VAR2` | ::= | `'$' VARNAME` |
-| `[128]` | `LANG_DIR` | ::= | `'@' [a-zA-Z]+ ('-' [a-zA-Z0-9]+)* ('--' [a-zA-Z]+)?` |
-| `[129]` | `INTEGER` | ::= | `[0-9]+` |
-| `[130]` | `DECIMAL` | ::= | `[0-9]* '.' [0-9]+` |
-| `[131]` | `DOUBLE` | ::= | `( ([0-9]+ ('.'[0-9]*)? ) | ( '.' ([0-9])+ ) ) [eE][+-]?[0-9]+` |
-| `[132]` | `INTEGER_POSITIVE` | ::= | `'+' INTEGER` |
-| `[133]` | `DECIMAL_POSITIVE` | ::= | `'+' DECIMAL` |
-| `[134]` | `DOUBLE_POSITIVE` | ::= | `'+' DOUBLE` |
-| `[135]` | `INTEGER_NEGATIVE` | ::= | `'-' INTEGER` |
-| `[136]` | `DECIMAL_NEGATIVE` | ::= | `'-' DECIMAL` |
-| `[137]` | `DOUBLE_NEGATIVE` | ::= | `'-' DOUBLE` |
-| `[138]` | `STRING_LITERAL1` | ::= | `"'" ( ([^#x27#x5C#xA#xD]) | ECHAR | UCHAR )* "'"` |
-| `[139]` | `STRING_LITERAL2` | ::= | `'"' ( ([^#x22#x5C#xA#xD]) | ECHAR | UCHAR )* '"'` |
-| `[140]` | `STRING_LITERAL_LONG1` | ::= | `"'''" ( ( "'" | "''" )? ( [^'\] | ECHAR | UCHAR ) )* "'''"` |
-| `[141]` | `STRING_LITERAL_LONG2` | ::= | `'"""' ( ( '"' | '""' )? ( [^"\] | ECHAR | UCHAR ) )* '"""'` |
-| `[142]` | `ECHAR` | ::= | `'\' [tbnrf\"']` |
-| `[143]` | `UCHAR` | ::= | `('\u' HEX HEX HEX HEX) | ('\U' HEX HEX HEX HEX HEX HEX HEX HEX)` |
-| `[144]` | `NIL` | ::= | `'(' WS* ')'` |
-| `[145]` | `WS` | ::= | `#x20 | #x9 | #xD | #xA` |
-| `[146]` | `ANON` | ::= | `'[' WS* ']'` |
-| `[147]` | `PN_CHARS_BASE` | ::= | `[A-Z] | [a-z] | [#x00C0-#x00D6] | [#x00D8-#x00F6] | [#x00F8-#x02FF] | [#x0370-#x037D] | [#x037F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]` |
-| `[148]` | `PN_CHARS_U` | ::= | `PN_CHARS_BASE | '_'` |
-| `[149]` | `VARNAME` | ::= | `( PN_CHARS_U | [0-9] ) ( PN_CHARS_U | [0-9] | #x00B7 | [#x0300-#x036F] | [#x203F-#x2040] )*` |
-| `[150]` | `PN_CHARS` | ::= | `PN_CHARS_U | '-' | [0-9] | #x00B7 | [#x0300-#x036F] | [#x203F-#x2040]` |
-| `[151]` | `PN_PREFIX` | ::= | `PN_CHARS_BASE ((PN_CHARS|'.')* PN_CHARS)?` |
-| `[152]` | `PN_LOCAL` | ::= | `(PN_CHARS_U | ':' | [0-9] | PLX ) ((PN_CHARS | '.' | ':' | PLX)* (PN_CHARS | ':' | PLX) )?` |
-| `[153]` | `PLX` | ::= | `PERCENT | PN_LOCAL_ESC` |
-| `[154]` | `PERCENT` | ::= | `'%' HEX HEX` |
-| `[155]` | `HEX` | ::= | `[0-9] | [A-F] | [a-f]` |
-| `[156]` | `PN_LOCAL_ESC` | ::= | `'\' ( '_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(' | ')' | '*' | '+' | ',' | ';' | '=' | '/' | '?' | '#' | '@' | '%' )` |
+| `[119]` | `IRIREF` | ::= | `` '<' ([^<>"{}|^`\]-[#x00-#x20] | UCHAR )* '>' `` |
+| `[120]` | `PNAME_NS` | ::= | `PN_PREFIX? ':'` |
+| `[121]` | `PNAME_LN` | ::= | `PNAME_NS PN_LOCAL` |
+| `[122]` | `BLANK_NODE_LABEL` | ::= | `'_:' ( PN_CHARS_U | [0-9] ) ((PN_CHARS|'.')* PN_CHARS)?` |
+| `[123]` | `VAR1` | ::= | `'?' VARNAME` |
+| `[124]` | `VAR2` | ::= | `'$' VARNAME` |
+| `[125]` | `LANG_DIR` | ::= | `'@' [a-zA-Z]+ ('-' [a-zA-Z0-9]+)* ('--' [a-zA-Z]+)?` |
+| `[126]` | `INTEGER` | ::= | `[0-9]+` |
+| `[127]` | `DECIMAL` | ::= | `[0-9]* '.' [0-9]+` |
+| `[128]` | `DOUBLE` | ::= | `( ([0-9]+ ('.'[0-9]*)? ) | ( '.' ([0-9])+ ) ) [eE][+-]?[0-9]+` |
+| `[129]` | `INTEGER_POSITIVE` | ::= | `'+' INTEGER` |
+| `[130]` | `DECIMAL_POSITIVE` | ::= | `'+' DECIMAL` |
+| `[131]` | `DOUBLE_POSITIVE` | ::= | `'+' DOUBLE` |
+| `[132]` | `INTEGER_NEGATIVE` | ::= | `'-' INTEGER` |
+| `[133]` | `DECIMAL_NEGATIVE` | ::= | `'-' DECIMAL` |
+| `[134]` | `DOUBLE_NEGATIVE` | ::= | `'-' DOUBLE` |
+| `[135]` | `STRING_LITERAL1` | ::= | `"'" ( ([^#x27#x5C#xA#xD]) | ECHAR | UCHAR )* "'"` |
+| `[136]` | `STRING_LITERAL2` | ::= | `'"' ( ([^#x22#x5C#xA#xD]) | ECHAR | UCHAR )* '"'` |
+| `[137]` | `STRING_LITERAL_LONG1` | ::= | `"'''" ( ( "'" | "''" )? ( [^'\] | ECHAR | UCHAR ) )* "'''"` |
+| `[138]` | `STRING_LITERAL_LONG2` | ::= | `'"""' ( ( '"' | '""' )? ( [^"\] | ECHAR | UCHAR ) )* '"""'` |
+| `[139]` | `ECHAR` | ::= | `'\' [tbnrf\"']` |
+| `[140]` | `UCHAR` | ::= | `('\u' HEX HEX HEX HEX) | ('\U' HEX HEX HEX HEX HEX HEX HEX HEX)` |
+| `[141]` | `NIL` | ::= | `'(' WS* ')'` |
+| `[142]` | `WS` | ::= | `#x20 | #x9 | #xD | #xA` |
+| `[143]` | `ANON` | ::= | `'[' WS* ']'` |
+| `[144]` | `PN_CHARS_BASE` | ::= | `[A-Z] | [a-z] | [#x00C0-#x00D6] | [#x00D8-#x00F6] | [#x00F8-#x02FF] | [#x0370-#x037D] | [#x037F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]` |
+| `[145]` | `PN_CHARS_U` | ::= | `PN_CHARS_BASE | '_'` |
+| `[146]` | `VARNAME` | ::= | `( PN_CHARS_U | [0-9] ) ( PN_CHARS_U | [0-9] | #x00B7 | [#x0300-#x036F] | [#x203F-#x2040] )*` |
+| `[147]` | `PN_CHARS` | ::= | `PN_CHARS_U | '-' | [0-9] | #x00B7 | [#x0300-#x036F] | [#x203F-#x2040]` |
+| `[148]` | `PN_PREFIX` | ::= | `PN_CHARS_BASE ((PN_CHARS|'.')* PN_CHARS)?` |
+| `[149]` | `PN_LOCAL` | ::= | `(PN_CHARS_U | ':' | [0-9] | PLX ) ((PN_CHARS | '.' | ':' | PLX)* (PN_CHARS | ':' | PLX) )?` |
+| `[150]` | `PLX` | ::= | `PERCENT | PN_LOCAL_ESC` |
+| `[151]` | `PERCENT` | ::= | `'%' HEX HEX` |
+| `[152]` | `HEX` | ::= | `[0-9] | [A-F] | [a-f]` |
+| `[153]` | `PN_LOCAL_ESC` | ::= | `'\' ( '_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(' | ')' | '*' | '+' | ',' | ';' | '=' | '/' | '?' | '#' | '@' | '%' )` |
 
 A text version of this grammar is available
-[here](shapes-rule-language.bnf).
+[here](sparql-rl-grammar.bnf).
 
-### 7.6 Selected Terminal Literal Strings
+### 7.7 Selected Terminal Literal Strings
 
 This document uses some specific terminal literal strings
 EBNF-NOTATION. To clarify the Unicode code points used for these
@@ -2438,9 +2166,8 @@ operation.
 
 ## B. Internet Media Type and File Extension
 
-The Internet Media Type (formerly known as MIME Type) for the
-Shape Rules Language is
-"`application/sparql-rl`".
+The Internet Media Type (formerly known as MIME Type) for
+SPARQL-RL is "`application/sparql-rl`".
 
 The information that follows has been submitted to the Internet Engineering
 Steering Group (IESG) for review, approval, and registration with IANA.
@@ -2469,7 +2196,7 @@ Optional parameters:
     For more information and background, please refer to RFC6906.
 
 Encoding considerations:
-:   The syntax of the Shape Rules Language is expressed over code points in Unicode
+:   The syntax of SPARQL-RL is expressed over code points in Unicode
     UNICODE. The encoding is always UTF-8 RFC3629.
 :   Unicode code points may also be expressed using an \uXXXX (U+0 to U+FFFF) or
     \UXXXXXXXX syntax (for U+10000 onwards) where X is a hexadecimal digit [0-9A-F]
@@ -2508,15 +2235,14 @@ Restrictions on usage:
 :   None
 
 Author/Change controller:
-:   The SHACL 1.2 Rules specification is a work product of the World
+:   The SPARQL-RL specification is a work product of the World
     Wide Web Consortium's Data Shapes Working Group. The W3C has change
     control over these specifications.
 
 ## C. Security Considerations
 
-TODO
-
-SRL documents can contain `IMPORTS` statements that reference other SRL documents.
+SPARQL-RL documents may contain `IMPORTS` statements that reference other
+SPARQL-RL documents and import their contents into the current document.
 If an imported document itself contains its own `IMPORTS` statements,
 those documents are also imported.
 
@@ -2527,18 +2253,47 @@ causing excessive computation, whether maliciously or accidental, while being ev
 and HTTP requests being intercepted and a different document being returned,
 including out-of-date copies.
 
-See [4.5 Processing Imports](#process-imports).
+Applying a SPARQL-RL rule set to a data graph can result in
+significant computation and memory usage, which may be exploited
+to cause denial of service.
+Applications should take care to limit the amount of computation and
+memory usage that can be caused by applying a SPARQL-RL rule set.
 
-Need input on the security considerations.
+The SPARQL-RL syntax is encoded in UTF-8 RFC3629 and allows
+the use of unescaped control characters in string data.
+Although this specification does not directly expose this content to an end user,
+it might be presented through a user agent, which may cause the presented text to
+be obfuscated due to presentation of such characters.
+
+SPARQL-RL can be used to process and create arbitrary application data;
+security considerations will vary by domain of use.
+Security tools and protocols applicable to text
+(for example, PGP encryption, checksum validation, password-protected compression)
+may also be used on SPARQL-RL document.
+Security/privacy protocols must be imposed which reflect the sensitivity of the
+information in the outcome of SPARQL-RL rule set evaluation.
+
+The security considerations of SPARQL-RL include those of
+RDF data and formats such as
+RDF Turtle.
 
 ## D. Privacy Considerations
 
-TODO
+A SPARQL-RL document can contain additional application data
+which may include the expression of personally identifiable information (PII)
+or other information which could be considered sensitive.
+Authors publishing rule sets with such information are advised to carefully
+consider the needs and use of publishing such information,
+as well as the applicable regulations for the regions where the data is
+expected to be consumed and potentially revealed (e.g.,
+[GDPR](https://gdpr.eu/),
+[CCPA](https://oag.ca.gov/privacy/ccpa),
+[others](https://termly.io/resources/infographics/privacy-laws-around-the-world/)),
+particularly whether authorization measures are needed for access to the data.
 
-## E. Internationalization Considerations
+## E. Acknowledgements
 
-TODO
+The following people contributed to the development of SPARQL-RL in the rule task force of the Data Shapes Working Group:
+Robert David, David Habgood, Livio Robaldo, Ognjen Savkovic, Simon Steyskal, Ted Thibodeau Jr, and Andy Seaborne.
 
-## F. Acknowledgements
-
-TODO
+Members of the Data Shapes Working Group included @@.

@@ -1,4 +1,4 @@
-<!-- https://w3c.github.io/sparql-update/spec/ — W3C editors' draft, fetched 2026-08-17 -->
+<!-- https://w3c.github.io/sparql-update/spec/ — W3C editors' draft, fetched 2026-08-31 -->
 
 ## Abstract
 

@@ -1,4 +1,4 @@
-<!-- https://w3c.github.io/data-shapes/shacl12-core/ — W3C editors' draft, fetched 2026-08-17 -->
+<!-- https://w3c.github.io/data-shapes/shacl12-core/ — W3C editors' draft, fetched 2026-08-31 -->
 
 This document defines the Core of SHACL.
 
@@ -24,20 +24,20 @@ The specifications are as follows:
 [SHACL 1.2 Core](https://www.w3.org/TR/shacl12-core/)
 :   defines the Core of SHACL
 
-[SHACL 1.2 SPARQL Extensions](https://www.w3.org/TR/shacl12-sparql/)
-:   defines SPARQL-related extensions of SHACL
+[SHACL 1.2 Inference Rules](https://www.w3.org/TR/shacl12-inference-rules/)
+:   defines SHACL's framework of rule-based inference
 
 [SHACL 1.2 Node Expressions](https://www.w3.org/TR/shacl12-node-expr/)
 :   defines expressions used to derive focus nodes and value nodes in SHACL
 
-[SHACL 1.2 Rules](https://www.w3.org/TR/shacl12-rules/)
-:   defines SHACL's methods of rule-based inference
+[SHACL 1.2 Profiling](https://w3c.github.io/data-shapes/shacl12-profiling/)
+:   defines the use of SHACL for profiling data, including SHACL data
+
+[SHACL 1.2 SPARQL Extensions](https://www.w3.org/TR/shacl12-sparql/)
+:   defines SPARQL-related extensions of SHACL
 
 [SHACL 1.2 UI](https://w3c.github.io/data-shapes/shacl12-ui/)
 :   defines SHACL's use for User Interface generation
-
-[SHACL 1.2 Profiling](https://w3c.github.io/data-shapes/shacl12-profiling/)
-:   defines the use of SHACL for profiling data, including SHACL data
 
 **Working Group Note Drafts:**
 
@@ -79,7 +79,7 @@ Throughout this document, the following terminology is used.
 Terminology that is linked to portions of RDF 1.2 Concepts and Abstract
 Syntax is used in SHACL as defined there. Terminology that is linked to
 portions of SPARQL 1.2 Query Language is used in SHACL as defined there. A
-single linkage is sufficient to provide a definition for all occurences of a
+single linkage is sufficient to provide a definition for all occurrences of a
 particular term in this document.
 
 Definitions are complete within this document, i.e., if there is no rule to

@@ -1,4 +1,4 @@
-<!-- https://w3c.github.io/sparql-query/spec/ — W3C editors' draft, fetched 2026-08-17 -->
+<!-- https://w3c.github.io/sparql-query/spec/ — W3C editors' draft, fetched 2026-08-31 -->
 
 ## Abstract
 
@@ -6319,10 +6319,11 @@ is defined recursively as follows:
   is an algebraic query expression if
   |exprlist| is a nonempty sequence of [expressions](#expressions) and
   |A| is an algebraic query expression.
-- [Aggregation](#defn_absAggregation)(|exprlist|, |func|, |scalarvals|, |grp|)
+- [Aggregation](#defn_absAggregation)(|exprlist|, |func|, |distinct|, |scalarvals|, |grp|)
   is an algebraic query expression if
   |exprlist| is a nonempty sequence of [expressions](#expressions) or the asterisk character (\*),
   |func| is a [set function](#setFunctions),
+  |distinct| is a boolean `true` or `false`,
   |scalarvals| is a partial function (which may be the empty function, i.e., with an empty domain), and
   |grp| is an algebraic query expression of the form [Group](#defn_absGroup)(exprlist', |A|) where
   exprlist' is a sequence of [expressions](#expressions) and
@@ -6336,7 +6337,7 @@ is defined recursively as follows:
   A1, ..., A|n| is
   a non-empty sequence of algebraic query expressions (i.e., |n| ≥ 1)
   such that every expression A|i| in this sequence
-  is of the form [Aggregation](#defn_absAggregation)(exprlist|i|, func|i|, scalarvals|i|, grp|i|)
+  is of the form [Aggregation](#defn_absAggregation)(exprlist|i|, func|i|, distinct|i|, scalarvals|i|, grp|i|)
   that is captured by [the previous point](#defn_absAggregation).
 - [OrderBy](#defn_absOrderBy)(|A|, |condition|)
   is an algebraic query expression if
@@ -6452,6 +6453,8 @@ Let **P**, **P1**, and **P2** be graph patterns, and **E**,
 | `SELECT \* { P }` | `v` is in-scope in `P` |
 | `VALUES v { values }` | `v` is in-scope |
 | `VALUES varlist { values }` | `v` is in-scope if `v` is in `varlist` |
+
+Variable occurrence within BGPs and paths includes variables that occur within nested triple patterns.
 
 The variable `v` must not be in-scope at the point of the
 `(expr AS v)` form. The scoping for `(expr AS v)`
@@ -6945,16 +6948,21 @@ For each (X AS Var) in SELECT, each HAVING(X), and each ORDER BY X in Q
   For each unaggregated variable V in X
       Replace V with SAMPLE(V)
       End
-  For each aggregate R(args ; scalarvals) now in X
+  For each aggregate R(args ; scalarvals) or R(DISTINCT args ; scalarvals) now in X
       # note: scalarvals may be omitted; if so, it is equivalent to the empty function
-      Ai := Aggregation(args, R, scalarvals, Grp)
+      If the aggregate contains DISTINCT
+          distinct = true
+      Else
+          distinct = false
+      End
+      Ai := Aggregation(args, R, distinct, scalarvals, Grp)
       Replace R(...) with aggi in Q
       i := i + 1
       End
   End
 
 For each variable V appearing outside of an aggregate
-   Ai := Aggregation(V, Sample, {}, Grp)
+   Ai := Aggregation(V, Sample, false, {}, Grp)
    E := E append (V, aggi)
    i := i + 1
    End
@@ -7846,6 +7854,7 @@ using set functions.
 **Definition: Aggregation**
 
 Let exprlist be a list of expressions or `\*`; func, a set function;
+distinct, a boolean (`true` or `false`);
 scalarvals, a partial function (possibly with an empty domain) passed from the aggregate
 in the query; and { key1→Ψ1, ...,
 keym→Ψm }, a partial function from keys to
@@ -7854,15 +7863,15 @@ solution sequences as produced by the grouping step.
 [Aggregation](#defn_algAggregation) applies the set function func to the given set and produces a
 single value for each key and a group of solutions for that key.
 
-[Aggregation](#defn_algAggregation)(exprlist, func, scalarvals, { key1→Ψ1, ...,
+[Aggregation](#defn_algAggregation)(exprlist, func, distinct, scalarvals, { key1→Ψ1, ...,
 keym→Ψm } )  
-   = { (key, F(Ψ)) | key → Ψ in { key1→Ψ1, ...,
+   = { (key, F(Ψ, distinct)) | key → Ψ in { key1→Ψ1, ...,
 keym→Ψm } }
 
 where  
   M(Ψ) = [ [ListEval](#defn_ListEval)(exprlist, μ) | μ in Ψ ]  
-  F(Ψ) = func(M(Ψ), scalarvals), for non-`DISTINCT`  
-  F(Ψ) = func(Dedup(M(Ψ)), scalarvals), for `DISTINCT`
+  F(Ψ, `false`) = func(M(Ψ), scalarvals)  
+  F(Ψ, `true`) = func(Dedup(M(Ψ)), scalarvals)
 
 with Dedup(M(Ψ)) being an order-preserving, duplicate-free version of the sequence M(Ψ); that is, Dedup(M(Ψ)) is a sequence of lists that has the following four properties
 (where each such list in this sequence may contain RDF terms and
@@ -7885,10 +7894,9 @@ errors, as it is produced by the [ListEval](#defn_ListEval) function).
    - j2 is the position of L2 in Dedup(M(Ψ)).
 
 **Special Case:** when `COUNT` is used with the expression
-`*`, then F(Ψ) is the cardinality of the group solution sequence,
-i.e., F(Ψ) = [Card](#defn_Card)(Ψ),
-or F(Ψ) = [Card](#defn_Card)([Distinct](#defn_algDistinct)(Ψ))
-if the `DISTINCT` keyword is present.
+`*`, then F(Ψ, distinct) is the cardinality of the group solution sequence,
+i.e., F(Ψ, `false`) = [Card](#defn_Card)(Ψ),
+and F(Ψ, `true`) = [Card](#defn_Card)([Distinct](#defn_algDistinct)(Ψ)).
 
 scalarvals are used to pass values to the underlying set function, bypassing
 the mechanics of the grouping. For example, the aggregate expression
@@ -7915,7 +7923,7 @@ And the query expression SELECT (ex:agg(?y, ?z) AS ?agg) WHERE { ?x ?y ?z } GROU
 We produce G = [Group](#defn_algGroup)((?x), Ψ) = { (1) → [μ1, μ2], (2) →
 [μ3] }
 
-And so [Aggregation](#defn_algAggregation)((?y, ?z), ex:agg, {}, G) =  
+So [Aggregation](#defn_algAggregation)((?y, ?z), ex:agg, `false`, {}, G) =  
 { ((1), eg:agg([(2, 3), (3, 4)], {})), ((2), eg:agg([(5, 6)], {})) }.
 
 **Definition: AggregateJoin**

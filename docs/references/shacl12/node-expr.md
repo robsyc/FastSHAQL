@@ -1,4 +1,4 @@
-<!-- https://w3c.github.io/data-shapes/shacl12-node-expr/ — W3C editors' draft, fetched 2026-08-17 -->
+<!-- https://w3c.github.io/data-shapes/shacl12-node-expr/ — W3C editors' draft, fetched 2026-08-31 -->
 
 This document defines SHACL 1.2 Node Expressions.
 
@@ -23,20 +23,20 @@ The specifications are as follows:
 [SHACL 1.2 Core](https://www.w3.org/TR/shacl12-core/)
 :   defines the Core of SHACL
 
-[SHACL 1.2 SPARQL Extensions](https://www.w3.org/TR/shacl12-sparql/)
-:   defines SPARQL-related extensions of SHACL
+[SHACL 1.2 Inference Rules](https://www.w3.org/TR/shacl12-inference-rules/)
+:   defines SHACL's framework of rule-based inference
 
 [SHACL 1.2 Node Expressions](https://www.w3.org/TR/shacl12-node-expr/)
 :   defines expressions used to derive focus nodes and value nodes in SHACL
 
-[SHACL 1.2 Rules](https://www.w3.org/TR/shacl12-rules/)
-:   defines SHACL's methods of rule-based inference
+[SHACL 1.2 Profiling](https://w3c.github.io/data-shapes/shacl12-profiling/)
+:   defines the use of SHACL for profiling data, including SHACL data
+
+[SHACL 1.2 SPARQL Extensions](https://www.w3.org/TR/shacl12-sparql/)
+:   defines SPARQL-related extensions of SHACL
 
 [SHACL 1.2 UI](https://w3c.github.io/data-shapes/shacl12-ui/)
 :   defines SHACL's use for User Interface generation
-
-[SHACL 1.2 Profiling](https://w3c.github.io/data-shapes/shacl12-profiling/)
-:   defines the use of SHACL for profiling data, including SHACL data
 
 **Working Group Note Drafts:**
 
@@ -732,7 +732,7 @@ is called a distinct expression with the function name `shnex:DistinctExpression
 Let `distinct` be the value of `shnex:distinct` in the distinct expression.
 Let `input` be the output nodes of `evalExpr(distinct, focusGraph, focusNode, scope)`.
 The output nodes of the distinct expression are the list of nodes in `input`
-in the same order but with duplicates eliminated (the first occurences of each node shall be kept, the others removed).
+in the same order but with duplicates eliminated (the first occurrences of each node shall be kept, the others removed).
 Nodes are compared using term equality, i.e. `"01"^^xsd:integer` is distinct from `"1"^^xsd:integer`.
 
 *The remainder of this section is non-normative.*
@@ -1125,7 +1125,7 @@ with the function name `shnex:FlatMapExpression`:
 | Property | Constraints | Description |
 | --- | --- | --- |
 | **`shnex:flatMap`** | A well-formed node expression. | The node expression that is applied to each input node. |
-| **`shnex:nodes`** | A well-formed node expression. | The input nodes. If omitted, defaults to the focus node. |
+| `shnex:nodes` | A well-formed node expression. | The input nodes. If omitted, defaults to the focus node. |
 
 Let `flatMap` be the value of `shnex:flatMap`
 and `nodes` be the value of `shnex:nodes` in a flat map expression.
@@ -1230,7 +1230,7 @@ with the function name `shnex:FindFirstExpression`:
 | Property | Constraints | Description |
 | --- | --- | --- |
 | **`shnex:findFirst`** | A well-formed shape. | The shape that the matching node must conform to. |
-| **`shnex:nodes`** | A well-formed node expression. | The input nodes. If omitted, defaults to the focus node. |
+| `shnex:nodes` | A well-formed node expression. | The input nodes. If omitted, defaults to the focus node. |
 
 Let `shape` be the value of `shnex:findFirst`
 and `nodes` be the value of `shnex:nodes` in a find first expression.
@@ -1288,7 +1288,7 @@ with the function name `shnex:MatchAllExpression`:
 | Property | Constraints | Description |
 | --- | --- | --- |
 | **`shnex:matchAll`** | A well-formed shape. | The shape that all input nodes must conform to. |
-| **`shnex:nodes`** | A well-formed node expression. | The input nodes. If omitted, defaults to the focus node. |
+| `shnex:nodes` | A well-formed node expression. | The input nodes. If omitted, defaults to the focus node. |
 
 Let `shape` be the value of `shnex:matchAll`
 and `nodes` be the value of `shnex:nodes` in the match all expression.
@@ -1400,7 +1400,7 @@ see SPARQL MIN.
 
 The following example illustrates the use of `shnex:min` to derive a property
 `ex:minStartDate` as the smallest value of the values that can be reached using the
-property path `ex:exployee/ex:startDate`.
+property path `ex:employee/ex:startDate`.
 In other words, it walks through all employees of the given company and returns the earliest
 date on which an employee started.
 
@@ -1548,7 +1548,7 @@ The interpretation of `shnex:instancesOf` is similar to `sh:targetClass` and `sh
 
 Users of this node expression function should be aware that the list of output nodes may be very large.
 
-The [Example for `shnex:intersection`](#IntersectionExpressionExample) uses `shnex:instanceOf`.
+The [Example for `shnex:intersection`](#IntersectionExpressionExample) uses `shnex:instancesOf`.
 
 #### 4.5.2 Nodes Matching Expressions
 
@@ -1557,7 +1557,7 @@ is called a nodes matching expression with the function name `shnex:NodesMatchin
 
 | Property | Constraints | Description |
 | --- | --- | --- |
-| **`shnex:nodesMatching`** | `sh:nodeKind sh:BlankNodeOrIRI`  Must be a well-formed shape. | The shape that the output nodes must conform to. |
+| **`shnex:nodesMatching`** | Must be a well-formed shape. | The shape that the output nodes must conform to. |
 
 Let `shape` be the value of `shnex:nodesMatching` in a nodes matching expression.
 The output nodes of the nodes matching expression are the nodes in the focus graph
@@ -2159,7 +2159,7 @@ ex:PresidentShape-age
                 [ shnex:pathValues ex:country ]
                 ex:USA
             )
-        ]
+        ] ;
         shnex:then 35 ;
         shnex:else 18 ;
     ] .
