@@ -276,5 +276,13 @@ A Property whose value is a named graph (`sh:class` resolving to `rdfg:Graph`); 
 A Node shape targeting an `rdfg:Graph` subclass — a type marker for a graph scope, not a field source. The linkage to shapes queryable inside the graph is an open design fork.
 
 **SHACL rule**:
-A SHACL 1.2 Rules-spec rule that materialises triples into the data graph. Distinct from a node expression, which derives values at query time — fastshaql may consumer rules' output but never runs them (yet).
-_Avoid_: inference rule; mixing with node expressions
+A rule from the SHACL 1.2 Inference Rules spec (`sh:rule`) that infers triples from the data graph. Distinct from a node expression, which derives values at query time.
+_Avoid_: inference rule (imprecise); mixing with node expressions; "SRL rule" for a `sh:rule` rule
+
+**Process contract**:
+A mutation whose effect crosses multiple nodes — minting entities, linking references, deriving values — as one governed unit; the writes era's differentiating use case (ADR-0024). Single-entity CRUD is its degenerate case.
+_Avoid_: write model, business logic
+
+**Dry-run**:
+The designed mutation mode returning the would-be triples (a CONSTRUCT result) without committing — the staged-transaction preview (ADR-0024).
+_Avoid_: preview query, plan

@@ -25,7 +25,8 @@ SPECS: dict[str, dict[str, str]] = {
         "core": "https://w3c.github.io/data-shapes/shacl12-core/",
         "sparql": "https://w3c.github.io/data-shapes/shacl12-sparql/",
         "node-expr": "https://w3c.github.io/data-shapes/shacl12-node-expr/",
-        "rules": "https://w3c.github.io/data-shapes/shacl12-rules/",
+        "rules": "https://w3c.github.io/data-shapes/sparql12-rl/",
+        "inference-rules": "https://w3c.github.io/data-shapes/shacl12-inference-rules/",
         "ui": "https://w3c.github.io/data-shapes/shacl12-ui/",
     },
     "sparql12": {

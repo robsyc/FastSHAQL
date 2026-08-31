@@ -35,5 +35,6 @@ Architecture decision records: the **why** — decision, trade-off, alternatives
 | [0021](0021-declarative-fixture-testing.md)      | Declarative fixture testing               | Five tiers as contracts; explicit registries + drift guards; cases vs scenarios             | Active               |
 | [0022](0022-evaluation-harness.md)               | Evaluation harness                        | Parity-first, order-independent comparison; `StoreSession`-pluggable; report-only perf      | Active               |
 | [0023](0023-package-release-and-ci.md)           | Package release and CI                    | Tag-triggered attested OIDC publish; release notes extracted from CHANGELOG.md              | Active               |
+| [0024](0024-mutations-via-shape-rules.md)        | Mutations via shape-attached rules / templates | Writes-era candidate: rule-named commands, SPARQLRule-first, translator-not-engine           | Proposed             |
 
 

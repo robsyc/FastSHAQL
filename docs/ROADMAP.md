@@ -46,6 +46,7 @@ The reserved `QueryContext.write_graph` slot (read scope and write target stay s
 - **SPARQL Update surface / Graph Store Protocol** — a write path addressing one graph per operation (`WITH` / GSP addressing), flowing through the reserved `write_graph` slot. The reversal lesson stands: a per-field eager-validation library cannot match the staged-transaction control model KG writes demand (ADR-0020) — any write interface must be built around explicit transactions, not per-field validation.
 - **SHACL Rules execution** — rules *materialise* triples into the data graph (recursive, stratified, with negation), upstream of reads; node expressions derive values at query time. Executing rules as part of a fastshaql write/materialisation path is a potential feature proper in this tier; today fastshaql consumes rules' output but never runs them.
 - **TopBraid-style limited write interface** — `create`, `addTo`, `update`, `delete` mirroring [TopBraid's GraphQL write model](https://docs.topquadrant.com/latest/graphql/index.html) as a compromise between full mutation freedom and staged-transaction control. Reconsider after query-type consolidation.
+- **NEW: [Dash SPARQL templates](https://www.datashapes.org/templates.html)** Which may be an easier path to a write surface than rules-based one, but as expressive.
 
 ## Bugs
 
@@ -124,6 +125,7 @@ Research before any structural change. We are currently **in the dark** on where
 - **Vision:** all SPARQL query forms — `SELECT`, `CONSTRUCT`, `ASK`, `DESCRIBE`, `INSERT`, `DELETE` — share one common WHERE/graph-pattern builder. Today `SelectQuery` is the only form (`core/sparql/queries.py`); the translation core already produces a form-agnostic `GroupPattern`, so the seam exists but is unexploited.
 - **Reference:** shape-to-query models its lowering output as a near-monoid (`emptyPatterns`/`flatten`/`union`) of `(where, template, children)` and lowers straight into an AST — a useful structural contrast.
 - A read-only shaped-CONSTRUCT *export* (an `Accept: text/turtle` RDF-out contract) is cheap *once* the shared builder exists — the `GroupPattern` is the reusable core, a CONSTRUCT template is synthesized from the `VariableMap`. **Important:** CONSTRUCT is a *new output contract*. It re-opens the ADR-0020 boundary and wants its own ADR. Not started until the shared builder exists.
+- **Writes-era consumption (ADR-0024):** the mutations epic needs only the `ConstructQuery` + INSERT-with-WHERE subset (or less) of this track.
 
 ### SPARQL AST transform passes
 
