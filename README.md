@@ -15,7 +15,7 @@
 - Single- and multi-value properties
 - Literal objects and relationship traversal
 - Rich filtering and pagination
-- Derived fields relationships w/ SHACL 1.2 node-expressions
+- Derived fields w/ SHACL 1.2 node-expressions
 - Language- and named graph-selection per request
 
 ```mermaid

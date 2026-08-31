@@ -98,7 +98,7 @@ Authoritative specifications relevant to fastshaql:
 
 - SHACL 1.2 core (draft): <https://www.w3.org/TR/shacl12-core/> · SPARQL extensions: <https://www.w3.org/TR/shacl12-sparql/> · node expressions: <https://www.w3.org/TR/shacl12-node-expr/>
 - SPARQL 1.2 query: <https://www.w3.org/TR/sparql12-query/> · update: <https://www.w3.org/TR/sparql12-update/>
-- GraphQL: <https://spec.graphql.org/October2021/>
-- TopQuadrant `graphql:` namespace and docs (origin of the visibility mechanism): <https://datashapes.org/graphql> · <https://docs.topquadrant.com/latest/graphql/>
+- GraphQL: <https://spec.graphql.org/October2021/> and blogs at https://magiroux.com/
+- TopQuadrant `graphql:` namespace and docs (origin of the visibility mechanism): <https://datashapes.org/graphql> · <https://datashapes.org/dash.ttl> · <https://docs.topquadrant.com/latest/graphql/>
 
 Markdown snapshots of the SHACL/SPARQL editors' drafts are committed under [`docs/references/`](docs/references/) and refreshed with `just fetch-specs`.
