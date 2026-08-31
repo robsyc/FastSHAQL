@@ -93,11 +93,15 @@ The shipped Flat tier (everything lowerable into the single merged query body) i
 
 ### Evaluation infrastructure & bottleneck location
 
-Research before any structural change. We are currently **in the dark** on where costs actually sit.
+Research before any structural change. We are currently **in the dark** on where costs actually sit. ADR-0022 records the decisions.
 
-- The evaluation tier (`tests/tiers/evaluation/`, ADR-0022) is store-agnostic via `StoreSession` with **GraphDB only** today. **Widen it:** add stores (QLever, rdflib, Jena, Oxigraph) and a profiling scenario set covering wide+deep cartesian selections, large result sets, derived-field-heavy shapes, and deeply-nested relationship trees (recursive converter grouping).
-- **Locate the bottleneck:** graphql-core execution vs. our translation vs. query-execution vs. result processing (`decode_sparql_results` vs. `convert_rows`). `ExecutionMetrics` already splits `translate_ms`/`store_ms`/`convert_ms` — extend the harness to aggregate and report across scenarios.
+- **Store matrix:** widen the evaluation tier beyond GraphDB Free (the proprietary free tier) with **Oxigraph, Fuseki (Jena), and QLever** behind `StoreSession`, selected by name (`EVAL_STORE`); nightly CI runs one job per store.
+- **Execution observability** — investigate integration points for telemetry and debugging of the executed SPARQL: surfacing the existing `ExecutionMetrics` phase timings and the generated query text (e.g. opt-in via GraphQL response `extensions`, or hooks for tracing/metrics collectors). No design work done yet; starts with a survey of what graphql-core result middleware can carry per operation.
+- **Scenario expansion:** alongside the shipped `cartesian` sweep, add deep-nested relationship trees (recursive converter grouping), derived-field-heavy shapes, language-multiplicity (feeds the item below), and wide large-result sets.
+- **Locate the bottleneck** across the whole query-time flow: total request wall time plus the translate / http / decode / convert split (graphql-core overhead = the residual); extend the harness to aggregate and report across scenarios and stores.
+- **Report v2:** per-store dimension and metadata, parity conformance matrix (case-set granularity in markdown, per-case detail in the JSON artifact), cross-store perf comparison, in-memory baseline rows.
 - **Language-chain lowering efficiency:** per-step `OPTIONAL`s re-scan the path once per chain entry; measure against single-pass alternatives (priority `BIND` over `LANG()`) on the evaluation harness, folding an `expected.sparql` pattern review into the same pass. The question is essentially whether we can serialize our SPARQL in a more triple-store efficient way.
+- **Later, not this epic:** trend charts over commits/releases — needs persisted per-commit reports once report v2 exists (the badges-branch commit pattern is the obvious mechanism).
 - **Gate:** no architectural change to the result pipeline (streaming store, `ResultUnpacker`, DataLoader/GROUP_CONCAT relationship strategy) lands until this evidence exists. The converter's O(rows × fields + rows × relationships × depth) and double-materialization are intrinsic to ADR-0014, not a converter bug.
 - **Rust core rewrite** is on the table *contingent on* the profiling results — not before.
 

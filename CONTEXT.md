@@ -252,6 +252,10 @@ _Avoid_: treating the matrix as authoritative over code or the specs; "feature l
 The level of the test pyramid a test belongs to — unit, integration, e2e, evaluation, or adapter — auto-stamped from its `tests/tiers/` directory. Persistent harness structure.
 _Avoid_: bare "tier" for node-expression lowering (Flat tier and Sub-SELECT tier own that sense)
 
+**Store matrix**:
+The set of triple stores the evaluation tier runs — one `StoreSession` adapter per store, selected by name (ADR-0022).
+_Avoid_: backend ("database, backend" is the retired Store synonym); store list
+
 **Envelope**:
 The GraphQL-over-HTTP shaping contract: POST-only, always-200 `{data, errors}` (ADR-0019).
 

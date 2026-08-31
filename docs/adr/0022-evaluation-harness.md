@@ -10,16 +10,13 @@ The outer query deliberately carries no `ORDER BY` (ADR-0010 documents why respo
 
 ## Decision
 
-- **Parity first.** The declarative e2e cases are reused verbatim against a real store: goldens stay in-memory-validated. Real-store runs compare **order-independently** — recursive canonicalization of all JSON lists, not just root entity lists
-- **Store-pluggable via `StoreSession`.** The harness consumes a minimal protocol (query endpoint, container image, graph loading, teardown); GraphDB CE via testcontainers is the first adapter, and the store under test is the shipped one (`httpx` extra, ADR-0018) — test what we ship. Adding a store is a sibling adapter
-- **Performance is report-only.** Generated scenarios (ADR-0021) probe Cartesian row explosion (ADR-0014) across a degradation sweep; per-phase latency and materialized row counts land in a report with no thresholds — numbers are environment-specific and not recorded in-tree
-- **Evaluation stays out of the PR path** — marker-excluded; nightly and manual runs only
-
-## Deferred: the second store
-
-The `StoreSession` seam exists to make the extension path obvious, not because a second store exists. QLever (the next likely contender) supports the Graph Store HTTP Protocol and Update, so live per-case replace works — the divergence is in specifics, not a fundamentally different model: a seed-index build before the endpoint is usable, an access token, a different URL shape, post-update triples in less-optimised structures (the perf sweep would likely want an index rebuild per scale point). Discover those empirically when QLever is attempted — the seam can grow a method then, rather than being designed against assumptions now.
+- **Parity first.** The declarative e2e cases are reused verbatim against every store: goldens stay in-memory-validated. Real-store runs compare **order-independently** — recursive canonicalization of all JSON lists, not just root entity lists. Store-specific behavioral deviations (literal canonicalization, numeric type normalization) become known divergences: recorded per case with a reason, never normalized away in comparison — the matrix exists to surface portability gaps, not to be green everywhere.
+- **Store matrix via `StoreSession`.** One adapter per store (query endpoint, container image, graph loading, teardown), selected by name at collection time; nightly CI runs one job per store. The store under test remains the shipped one (`httpx` extra, ADR-0018) — test what we ship. Adapters load graphs individually as Turtle (bulk TriG/N-Quads to a Graph Store Protocol target is rejected or silently lossy on some stores) and **configure stores toward SPARQL 1.1 semantics where a supported knob exists**; deviations without a knob — QLever's union default graph, its numeric datatype rewriting, zero-length-path behavior on absent terms — are known-divergence material.
+- **Whole-flow metrics, report-only.** Per sample: total request wall time plus the translate / http / decode / convert phase split (the http/decode split widens `SparqlStore.query` with an optional metrics argument — backward-compatible); graphql-core overhead is the residual of total minus measured phases (to validate). Generated scenarios (ADR-0021) probe degradation sweeps; latency and row counts land in the report.
+- **Report carries the store dimension.** Per-store metadata (image, license tier), a parity conformance matrix (per case set, with failures and known divergences named (if needed); per-case detail in the JSON artifact), cross-store perf comparison, and the in-memory store as baseline rows.
+- **Evaluation stays out of the PR path** — marker-excluded; nightly and manual runs only.
 
 ## Consequences
 
 - Translate-phase latency stays flat regardless of data scale (selection-driven, ADR-0013); store and convert grow with row explosion — which dominates is environment-specific, which is exactly what the report exists to locate
-- Docker is required for local evaluation runs
+- Docker is required for local evaluation runs; stores without a license secret (Oxigraph, Fuseki, QLever) run for any contributor with Docker, while GraphDB Free — the proprietary free tier, capped at two concurrent queries / one core / five repositories, none of which a serial harness feels — skips cleanly without its license
