@@ -1,6 +1,6 @@
 {
   "data": {
-    "items": [
+    "item": [
       {
         "iri": "http://example.org/gadget",
         "label": "Plain Gadget"

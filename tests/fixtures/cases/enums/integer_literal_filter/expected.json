@@ -1,6 +1,6 @@
 {
   "data": {
-    "ratings": [
+    "rating": [
       { "iri": "http://example.org/rating1", "level": "_1" }
     ]
   }

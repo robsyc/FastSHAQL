@@ -1,5 +1,5 @@
 query SelectArmDerivedRelationship {
-  patients {
+  patient {
     iri
     activeConditions {
       iri

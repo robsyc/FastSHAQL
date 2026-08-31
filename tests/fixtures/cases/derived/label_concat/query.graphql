@@ -1,5 +1,5 @@
 query LabelConcat {
-  items {
+  item {
     iri
     label
   }

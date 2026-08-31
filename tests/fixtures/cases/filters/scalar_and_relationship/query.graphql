@@ -1,5 +1,5 @@
 query ScalarAndRelationship {
-  persons(where: { name: { eq: "Alice" }, employer: { name: { eq: "Acme" } } }) {
+  person(where: { name: { eq: "Alice" }, employer: { name: { eq: "Acme" } } }) {
     name
   }
 }

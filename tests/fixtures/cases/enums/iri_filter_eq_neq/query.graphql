@@ -1,5 +1,5 @@
 query IriEnumFilterEqNeq {
-  colorsamples(where: { color: { eq: PINK, neq: PURPLE } }) {
+  colorSample(where: { color: { eq: PINK, neq: PURPLE } }) {
     iri
     color
   }

@@ -16,6 +16,7 @@ from fastshaql.core.ir.node_expr import ConstantNodeExpr
 from fastshaql.core.parser import parse_shapes
 from fastshaql.core.registry import ShapeRegistry
 from fastshaql.core.schema import build_schema
+from fastshaql.core.schema.build import DuplicateRootFieldError
 from support.builders import (
     EX,
     defaulted_property,
@@ -35,8 +36,8 @@ def test_build_schema_from_minimal_fixture(minimal_registry: ShapeRegistry) -> N
     query = schema.query_type
     assert query is not None
 
-    things = query.fields["things"]
-    required, is_list, base = field_shape(things.type)
+    thing = query.fields["thing"]
+    required, is_list, base = field_shape(thing.type)
     assert (required, is_list, base) == (True, True, "Thing")
 
     thing = object_type(schema, "Thing")
@@ -158,8 +159,18 @@ def test_build_schema_root_fields_skip_shapes_without_target_class() -> None:
     )
     query = schema.query_type
     assert query is not None
-    assert set(query.fields) == {"things", "persons"}
+    assert set(query.fields) == {"thing", "person"}
     assert schema.get_type("Orphan") is not None
+
+
+def test_build_schema_duplicate_root_field_names_raise() -> None:
+    """Two type names decapitalizing to one root field (``Foo``/``foo``)
+    collide loudly, not last-shape-wins."""
+    with pytest.raises(
+        DuplicateRootFieldError,
+        match=r"Duplicate root field 'foo': types 'Foo' and 'foo'",
+    ):
+        build_schema(ShapeRegistry([node_shape("Foo"), node_shape("foo")]))
 
 
 def test_build_schema_empty_registry() -> None:
@@ -227,9 +238,9 @@ def test_build_schema_synthetic_shape_iri_only(
 
     query = schema.query_type
     assert query is not None
-    assert "departments" not in query.fields
-    assert "persons" in query.fields
-    assert "companys" in query.fields
+    assert "department" not in query.fields
+    assert "person" in query.fields
+    assert "company" in query.fields
 
 
 def test_build_schema_recursive_relationship_type() -> None:
@@ -263,9 +274,9 @@ def test_build_schema_root_field_where_argument() -> None:
     query = schema.query_type
     assert query is not None
 
-    persons = query.fields["persons"]
-    assert "where" in persons.args
-    assert input_field_base(persons.args["where"].type) == "PersonFilter"
+    person = query.fields["person"]
+    assert "where" in person.args
+    assert input_field_base(person.args["where"].type) == "PersonFilter"
 
 
 def test_build_schema_root_field_pagination_arguments() -> None:
@@ -280,12 +291,12 @@ def test_build_schema_root_field_pagination_arguments() -> None:
     query = schema.query_type
     assert query is not None
 
-    persons = query.fields["persons"]
-    assert set(persons.args) >= {"where", "limit", "offset"}
-    assert persons.args["limit"].default_value is Undefined
-    assert persons.args["offset"].default_value is Undefined
-    assert persons.args["limit"].type.name == "Int"
-    assert persons.args["offset"].type.name == "Int"
+    person = query.fields["person"]
+    assert set(person.args) >= {"where", "limit", "offset"}
+    assert person.args["limit"].default_value is Undefined
+    assert person.args["offset"].default_value is Undefined
+    assert person.args["limit"].type.name == "Int"
+    assert person.args["offset"].type.name == "Int"
 
 
 # --- Default resolver ---
@@ -302,6 +313,6 @@ async def test_build_schema_default_resolver_returns_empty_list() -> None:
         },
     )
     schema = build_schema(ShapeRegistry([shape]))
-    result = await graphql(schema, "{ things { label } }")
+    result = await graphql(schema, "{ thing { label } }")
     assert result.errors is None
-    assert result.data == {"things": []}
+    assert result.data == {"thing": []}

@@ -79,7 +79,7 @@ def test_build_schema_root_field_description() -> None:
     schema = build_schema(parse_shapes(graph))
     query = schema.query_type
     assert query is not None
-    assert query.fields["things"].description == "A thing."
+    assert query.fields["thing"].description == "A thing."
 
 
 def test_build_schema_absent_description_is_none() -> None:
@@ -110,7 +110,7 @@ def test_build_schema_absent_description_is_none() -> None:
     assert thing.description is None
     assert thing.fields["label"].description is None
     assert thing.fields["iri"].description is None
-    assert query.fields["things"].description is None
+    assert query.fields["thing"].description is None
 
 
 def test_build_schema_description_end_to_end_with_language_tag() -> None:
@@ -143,7 +143,7 @@ def test_build_schema_description_end_to_end_with_language_tag() -> None:
 
     assert thing.description == "A thing."
     assert thing.fields["label"].description == "Label"
-    assert query.fields["things"].description == "A thing."
+    assert query.fields["thing"].description == "A thing."
 
 
 def test_build_schema_description_language_parameter_end_to_end() -> None:
@@ -168,4 +168,4 @@ def test_build_schema_description_language_parameter_end_to_end() -> None:
     assert query is not None
 
     assert thing.description == "Une chose."
-    assert query.fields["things"].description == "Une chose."
+    assert query.fields["thing"].description == "Une chose."

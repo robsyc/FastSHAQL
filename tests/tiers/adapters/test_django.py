@@ -61,7 +61,7 @@ def test_django_graphql_success(minimal_schema, minimal_store) -> None:
 
     response = client.post(
         "/graphql/",
-        data=json.dumps({"query": "query { things { iri label } }"}),
+        data=json.dumps({"query": "query { thing { iri label } }"}),
         content_type="application/json",
     )
 
@@ -69,7 +69,7 @@ def test_django_graphql_success(minimal_schema, minimal_store) -> None:
     body = response.json()
     assert body == {
         "data": {
-            "things": [
+            "thing": [
                 {"iri": "http://example.org/thing-1", "label": "Alpha"},
                 {"iri": "http://example.org/thing-2", "label": "Beta"},
             ]
@@ -112,7 +112,7 @@ def test_django_graphql_wrong_content_type_returns_415(
 
     response = client.post(
         "/graphql/",
-        data=json.dumps({"query": "query { things { iri } }"}),
+        data=json.dumps({"query": "query { thing { iri } }"}),
         content_type="text/plain",
     )
 
@@ -124,8 +124,8 @@ def test_django_graphql_wrong_content_type_returns_415(
     [
         {"query": 123},
         {},
-        {"query": "{ things { iri } }", "variables": "nope"},
-        {"query": "{ things { iri } }", "operationName": 5},
+        {"query": "{ thing { iri } }", "variables": "nope"},
+        {"query": "{ thing { iri } }", "operationName": 5},
     ],
 )
 def test_django_malformed_body_returns_400(
@@ -148,7 +148,7 @@ def test_django_list_body_returns_400(minimal_schema, minimal_store) -> None:
 
     response = client.post(
         "/graphql/",
-        data=json.dumps([{"query": "{ things { iri } }"}]),
+        data=json.dumps([{"query": "{ thing { iri } }"}]),
         content_type="application/json",
     )
 
@@ -204,7 +204,7 @@ def test_django_get_context_reads_request_headers(minimal_schema) -> None:
 
     response = client.post(
         "/graphql/",
-        data=json.dumps({"query": "query { things { iri } }"}),
+        data=json.dumps({"query": "query { thing { iri } }"}),
         content_type="application/json",
         headers={"Accept-Language": "nl"},
     )
@@ -220,7 +220,7 @@ def test_django_missing_get_context_raises_not_implemented(minimal_schema) -> No
     with pytest.raises(NotImplementedError):
         client.post(
             "/graphql/",
-            data=json.dumps({"query": "{ things { iri } }"}),
+            data=json.dumps({"query": "{ thing { iri } }"}),
             content_type="application/json",
         )
 
@@ -236,9 +236,9 @@ def test_django_async_get_context_is_awaited(minimal_schema) -> None:
 
     response = client.post(
         "/graphql/",
-        data=json.dumps({"query": "{ things { iri label } }"}),
+        data=json.dumps({"query": "{ thing { iri label } }"}),
         content_type="application/json",
     )
 
     assert response.status_code == 200
-    assert response.json()["data"]["things"]
+    assert response.json()["data"]["thing"]

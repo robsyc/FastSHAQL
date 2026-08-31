@@ -1,5 +1,5 @@
 query OffsetPastEnd {
-  persons(offset: 10) {
+  person(offset: 10) {
     name
   }
 }

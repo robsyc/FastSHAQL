@@ -1,6 +1,6 @@
 {
   "data": {
-    "quantitys": [
+    "quantity": [
       { "iri": "http://example.org/quantity1", "comparator": "_" },
       { "iri": "http://example.org/quantity2", "comparator": "_2" },
       { "iri": "http://example.org/quantity3", "comparator": "_3" },

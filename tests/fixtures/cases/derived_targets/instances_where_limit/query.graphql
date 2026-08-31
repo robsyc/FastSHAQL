@@ -1,5 +1,5 @@
 query VariantsWhereLimit {
-  variants(where: { score: { gte: 0.7 } }, limit: 2) {
+  variant(where: { score: { gte: 0.7 } }, limit: 2) {
     iri
     label
   }

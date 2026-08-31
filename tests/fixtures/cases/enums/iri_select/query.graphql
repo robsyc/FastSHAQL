@@ -1,5 +1,5 @@
 query IriEnumSelect {
-  colorsamples {
+  colorSample {
     iri
     color
   }

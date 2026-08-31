@@ -1,6 +1,6 @@
 {
   "data": {
-    "genes": [
+    "gene": [
       {
         "iri": "http://example.org/genomics/g2",
         "assayVersion": "v1"

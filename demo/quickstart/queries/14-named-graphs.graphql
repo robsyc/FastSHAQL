@@ -8,10 +8,10 @@
 #   no header
 #     → the store's default: the union of every graph (10 works, 6 loans)
 {
-  works {
+  work {
     title
   }
-  loans {
+  loan {
     status
   }
 }

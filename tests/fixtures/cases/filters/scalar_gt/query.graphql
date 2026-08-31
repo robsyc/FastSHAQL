@@ -1,5 +1,5 @@
 query ScalarGt {
-  persons(where: { age: { gt: 28 } }) {
+  person(where: { age: { gt: 28 } }) {
     name
   }
 }

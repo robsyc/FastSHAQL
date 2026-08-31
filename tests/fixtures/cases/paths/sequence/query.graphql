@@ -1,5 +1,5 @@
 query PathSequence {
-  employercitypersons {
+  employerCityPerson {
     name
     employerCity {
       name

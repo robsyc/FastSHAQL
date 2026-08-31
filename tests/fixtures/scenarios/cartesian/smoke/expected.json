@@ -1,6 +1,6 @@
 {
   "data": {
-    "things": [
+    "thing": [
       {
         "iri": "http://example.org/cartesian/e5c7e3ef28cc",
         "tag": [

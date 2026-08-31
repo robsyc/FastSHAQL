@@ -1,5 +1,5 @@
 {
   "data": {
-    "persons": [{ "name": "Bob" }]
+    "person": [{ "name": "Bob" }]
   }
 }

@@ -1,6 +1,6 @@
 {
   "data": {
-    "deletionvariants": [
+    "deletionVariant": [
       {
         "iri": "http://example.org/delA",
         "label": "deletion A"

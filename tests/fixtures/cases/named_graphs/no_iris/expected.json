@@ -1,6 +1,6 @@
 {
   "data": {
-    "things": [
+    "thing": [
       {
         "iri": "http://example.org/thing-default",
         "label": "Default"

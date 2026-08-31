@@ -1,5 +1,5 @@
 query LabelReplace {
-  items(where: { iri: { eq: "http://example.org/widget" } }) {
+  item(where: { iri: { eq: "http://example.org/widget" } }) {
     iri
     label
   }

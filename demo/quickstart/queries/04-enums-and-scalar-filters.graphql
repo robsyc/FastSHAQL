@@ -2,11 +2,11 @@
 # filter like scalars. Scalar filters on one where-level compose with an
 # implicit AND.
 {
-  members(where: { tier: { eq: GOLD } }) {
+  member(where: { tier: { eq: GOLD } }) {
     displayName
     tier
   }
-  works(where: { pages: { gt: 300 }, price: { lte: 16 } }) {
+  work(where: { pages: { gt: 300 }, price: { lte: 16 } }) {
     title
     pages
     price

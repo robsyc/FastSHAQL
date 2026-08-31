@@ -1,5 +1,5 @@
 query InheritedScalar {
-  managers {
+  manager {
     iri
     managerName
     employeeId

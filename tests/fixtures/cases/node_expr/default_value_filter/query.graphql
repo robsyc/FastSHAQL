@@ -1,5 +1,5 @@
 query DefaultValueFilterMatchesDefaultFilled {
-  genes(where: {assayVersion: {eq: "v1"}}) {
+  gene(where: {assayVersion: {eq: "v1"}}) {
     iri
     assayVersion
   }

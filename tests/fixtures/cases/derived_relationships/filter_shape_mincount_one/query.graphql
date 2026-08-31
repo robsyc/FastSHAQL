@@ -1,5 +1,5 @@
 query FilterShapeMinCountOne {
-  members {
+  member {
     iri
     reviewedBooks {
       iri

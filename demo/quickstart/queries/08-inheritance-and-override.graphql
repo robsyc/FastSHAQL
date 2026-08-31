@@ -2,11 +2,11 @@
 # Member then redefines displayName as language-tagged — an override.
 # Send {"Accept-Language": "nl"}: only the members localize.
 {
-  authors {
+  author {
     displayName
     contactEmail
   }
-  members {
+  member {
     displayName
     contactEmail
   }

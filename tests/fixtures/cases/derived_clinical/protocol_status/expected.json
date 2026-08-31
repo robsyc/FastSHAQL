@@ -1,6 +1,6 @@
 {
   "data": {
-    "patients": [
+    "patient": [
       {
         "iri": "http://example.org/clinical/patient-1",
         "protocolStatus": "assigned"

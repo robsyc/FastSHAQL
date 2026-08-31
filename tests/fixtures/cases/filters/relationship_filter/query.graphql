@@ -1,5 +1,5 @@
 query RelationshipFilter {
-  persons(where: { employer: { name: { eq: "Acme" } } }) {
+  person(where: { employer: { name: { eq: "Acme" } } }) {
     name
   }
 }

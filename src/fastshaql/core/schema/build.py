@@ -43,9 +43,13 @@ def _introspection_resolver(
     return resolve
 
 
+class DuplicateRootFieldError(ValueError):
+    """Two public targeted shapes derive the same root query field name."""
+
+
 def root_field_name(graphql_type_name: str) -> str:
-    """Root query field name: ``graphql_type_name.lower() + 's'``."""
-    return graphql_type_name.lower() + "s"
+    """Root query field name: the type name decapitalized, singular (GraphDB convention)."""
+    return graphql_type_name[:1].lower() + graphql_type_name[1:]
 
 
 def build_schema(
@@ -57,9 +61,9 @@ def build_schema(
 
     Registers object types for shapes visible in the active ``graphql:Schema``
     (``PUBLIC`` and ``PROTECTED``). Root list fields are emitted only for
-    ``PUBLIC`` shapes with a ``sh:targetClass``. Defaults to a no-op resolver
-    for introspection-only use; pass :func:`~fastshaql.build_executable_schema`
-    for execution.
+    ``PUBLIC`` shapes with a supported target (``sh:targetClass`` or a derived
+    target, ADR-0016). Defaults to a no-op resolver for introspection-only use;
+    pass :func:`~fastshaql.build_executable_schema` for execution.
 
     Args:
         registry: Parsed shapes indexed for schema and translation.
@@ -89,8 +93,19 @@ def build_schema(
             registry,
             enum_filter_types=enum_filter_types,
         )
-    query_fields = {
-        root_field_name(shape.graphql_type_name): GraphQLField(
+    query_fields: dict[str, GraphQLField] = {}
+    root_field_shapes: dict[str, NodeShapeIR] = {}
+    for shape in public_root_shapes:
+        name = root_field_name(shape.graphql_type_name)
+        if name in root_field_shapes:
+            prior = root_field_shapes[name]
+            raise DuplicateRootFieldError(
+                f"Duplicate root field {name!r}: types "
+                f"{prior.graphql_type_name!r} and {shape.graphql_type_name!r} "
+                f"both decapitalize to it — disambiguate with sh:codeIdentifier"
+            )
+        root_field_shapes[name] = shape
+        query_fields[name] = GraphQLField(
             GraphQLNonNull(
                 GraphQLList(GraphQLNonNull(object_types[shape.graphql_type_name]))
             ),
@@ -104,8 +119,6 @@ def build_schema(
             resolve=resolver_factory(shape, registry),
             description=shape.description,
         )
-        for shape in public_root_shapes
-    }
     query_type = object_type("Query", query_fields)
     all_types = [
         *object_types.values(),

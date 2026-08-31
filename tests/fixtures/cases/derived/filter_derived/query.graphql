@@ -1,5 +1,5 @@
 query FilterDerived {
-  items(where: { iriLength: { gt: 30 } }) {
+  item(where: { iriLength: { gt: 30 } }) {
     iri
     iriLength
   }

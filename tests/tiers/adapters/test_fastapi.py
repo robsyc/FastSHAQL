@@ -65,7 +65,7 @@ async def test_fastapi_graphql_success(minimal_schema, minimal_store) -> None:
     async with _client(app) as client:
         response = await client.post(
             "/graphql",
-            json={"query": "query { things { iri label } }"},
+            json={"query": "query { thing { iri label } }"},
             headers={"Content-Type": "application/json"},
         )
 
@@ -73,7 +73,7 @@ async def test_fastapi_graphql_success(minimal_schema, minimal_store) -> None:
     body = response.json()
     assert body == {
         "data": {
-            "things": [
+            "thing": [
                 {"iri": "http://example.org/thing-1", "label": "Alpha"},
                 {"iri": "http://example.org/thing-2", "label": "Beta"},
             ]
@@ -124,7 +124,7 @@ async def test_fastapi_graphql_wrong_content_type_returns_415(
     async with _client(app) as client:
         response = await client.post(
             "/graphql",
-            content=json.dumps({"query": "query { things { iri } }"}),
+            content=json.dumps({"query": "query { thing { iri } }"}),
             headers={"Content-Type": "text/plain"},
         )
 
@@ -136,8 +136,8 @@ async def test_fastapi_graphql_wrong_content_type_returns_415(
     [
         {"query": 123},
         {},
-        {"query": "{ things { iri } }", "variables": "nope"},
-        {"query": "{ things { iri } }", "operationName": 5},
+        {"query": "{ thing { iri } }", "variables": "nope"},
+        {"query": "{ thing { iri } }", "operationName": 5},
     ],
 )
 async def test_fastapi_malformed_body_returns_400(
@@ -162,7 +162,7 @@ async def test_fastapi_list_body_returns_400(minimal_schema, minimal_store) -> N
     async with _client(app) as client:
         response = await client.post(
             "/graphql",
-            content=json.dumps([{"query": "{ things { iri } }"}]),
+            content=json.dumps([{"query": "{ thing { iri } }"}]),
             headers={"Content-Type": "application/json"},
         )
 
@@ -233,7 +233,7 @@ async def test_fastapi_context_getter_supports_header_dependency(
     async with _client(app) as client:
         response = await client.post(
             "/graphql",
-            json={"query": "query { things { iri } }"},
+            json={"query": "query { thing { iri } }"},
             headers={"Content-Type": "application/json", "Accept-Language": "nl"},
         )
 

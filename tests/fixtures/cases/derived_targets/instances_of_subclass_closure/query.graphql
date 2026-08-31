@@ -1,1 +1,1 @@
-{ variants { iri label } }
+{ variant { iri label } }

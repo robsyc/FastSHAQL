@@ -1,5 +1,5 @@
 query DefaultValuePrecedence {
-  genes {
+  gene {
     iri
     symbol
     assayVersion

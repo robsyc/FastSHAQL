@@ -47,8 +47,8 @@ async def _rows(schema, query: str, data: str) -> dict[str, dict[str, object]]:
     result = await graphql(schema, query, context_value=ResolverContext(store=store))
     assert result.errors is None, result.errors
     assert result.data is not None
-    things: list[dict[str, object]] = result.data["things"]
-    return {str(row["iri"]).rsplit("/", 1)[-1]: row for row in things}
+    thing: list[dict[str, object]] = result.data["thing"]
+    return {str(row["iri"]).rsplit("/", 1)[-1]: row for row in thing}
 
 
 async def test_optional_sparql_expr_derived_field_computes_values() -> None:
@@ -67,7 +67,7 @@ async def test_optional_sparql_expr_derived_field_computes_values() -> None:
     )
     rows = await _rows(
         schema,
-        "{ things { iri slug } }",
+        "{ thing { iri slug } }",
         "@prefix ex: <http://example.com/> .\nex:alpha a ex:Thing .\nex:beta a ex:Thing .",
     )
     assert rows["alpha"]["slug"] == "alpha"
@@ -94,7 +94,7 @@ async def test_optional_if_with_sparql_expr_condition_discriminates_rows() -> No
     )
     rows = await _rows(
         schema,
-        "{ things { iri band } }",
+        "{ thing { iri band } }",
         "@prefix ex: <http://example.com/> .\nex:num-odd-1 a ex:Thing .\nex:num-even-2 a ex:Thing .",
     )
     assert rows["num-odd-1"]["band"] == "oddish"
@@ -126,7 +126,7 @@ async def test_if_condition_error_routes_to_else_branch() -> None:
     )
     rows = await _rows(
         schema,
-        "{ things { iri band } }",
+        "{ thing { iri band } }",
         "@prefix ex: <http://example.com/> .\nex:num-2 a ex:Thing .\nex:num-0 a ex:Thing .\nex:bogus a ex:Thing .",
     )
     assert rows["num-2"]["band"] == "high"  # 1/2 = 0.5 > 0.4
@@ -155,7 +155,7 @@ async def test_defaulted_exists_default_computes_at_group_level() -> None:
     )
     rows = await _rows(
         schema,
-        "{ things { iri hasFlag } }",
+        "{ thing { iri hasFlag } }",
         '@prefix ex: <http://example.com/> .\nex:t1 a ex:Thing ; ex:flag "y" .\nex:t2 a ex:Thing .',
     )
     assert rows["t1"]["hasFlag"] is True
@@ -181,7 +181,7 @@ async def test_defaulted_filter_shape_passing_conjunct_binds_value() -> None:
     )
     rows = await _rows(
         schema,
-        "{ things { iri grade } }",
+        "{ thing { iri grade } }",
         "@prefix ex: <http://example.com/> .\nex:t1 a ex:Thing .",
     )
     assert rows["t1"]["grade"] == "raw"
@@ -192,7 +192,7 @@ async def test_defaulted_filter_shape_failing_conjunct_keeps_row() -> None:
     (node-expr §4.2.5) — the field falls to null on its non-null contract
     (SD-6): the entity row survives at the SPARQL layer, surfacing as a
     loud GraphQL error that nulls the query via non-null propagation —
-    not the pre-fix silent drop (``{"things": []}`` with no error)."""
+    not the pre-fix silent drop (``{"thing": []}`` with no error)."""
     schema = _schema(
         """sh:property [
             sh:path ex:grade ;
@@ -213,7 +213,7 @@ async def test_defaulted_filter_shape_failing_conjunct_keeps_row() -> None:
         )
     )
     result = await graphql(
-        schema, "{ things { iri grade } }", context_value=ResolverContext(store=store)
+        schema, "{ thing { iri grade } }", context_value=ResolverContext(store=store)
     )
     assert result.errors is not None
     assert any("grade" in e.message for e in result.errors)
@@ -242,7 +242,7 @@ async def test_defaulted_if_missing_else_true_condition_binds_default() -> None:
     )
     rows = await _rows(
         schema,
-        "{ things { iri grade } }",
+        "{ thing { iri grade } }",
         '@prefix ex: <http://example.com/> .\nex:t1 a ex:Thing ; ex:flag "y" .',
     )
     assert rows["t1"]["grade"] == "flagged"
@@ -273,7 +273,7 @@ async def test_defaulted_if_missing_else_false_condition_keeps_row() -> None:
         )
     )
     result = await graphql(
-        schema, "{ things { iri grade } }", context_value=ResolverContext(store=store)
+        schema, "{ thing { iri grade } }", context_value=ResolverContext(store=store)
     )
     assert result.errors is not None
     assert any("grade" in e.message for e in result.errors)
@@ -310,7 +310,7 @@ async def test_if_impure_branch_filter_stays_in_branch() -> None:
     )
     rows = await _rows(
         schema,
-        "{ things { iri band } }",
+        "{ thing { iri band } }",
         '@prefix ex: <http://example.com/> .\nex:t1 a ex:Thing ; ex:flag "y" .\nex:t2 a ex:Thing .',
     )
     assert rows["t1"]["band"] is None  # cond true, conjunct fails → empty output
@@ -342,7 +342,7 @@ async def test_if_impure_condition_failed_conjunct_routes_to_else() -> None:
     )
     rows = await _rows(
         schema,
-        "{ things { iri band } }",
+        "{ thing { iri band } }",
         "@prefix ex: <http://example.com/> .\nex:t1 a ex:Thing .",
     )
     assert rows["t1"]["band"] == "else-value"

@@ -1,5 +1,5 @@
 query PathValuesScalar {
-  variants {
+  variant {
     iri
     refAllele
     geneSymbol

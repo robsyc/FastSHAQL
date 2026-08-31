@@ -1,5 +1,5 @@
 query MergeMultiple {
-  things {
+  thing {
     iri
     label
   }

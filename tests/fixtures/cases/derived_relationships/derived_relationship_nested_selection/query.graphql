@@ -1,5 +1,5 @@
 query DerivedRelationshipNestedSelection {
-  members {
+  member {
     iri
     name
     recommendedBooks {

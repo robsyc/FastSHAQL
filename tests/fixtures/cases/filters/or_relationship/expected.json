@@ -1,6 +1,6 @@
 {
   "data": {
-    "persons": [
+    "person": [
       { "name": "Alice" },
       { "name": "Bob" }
     ]

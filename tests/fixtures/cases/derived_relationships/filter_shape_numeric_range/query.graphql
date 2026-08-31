@@ -1,5 +1,5 @@
 query FilterShapeNumericRange {
-  members {
+  member {
     iri
     recentBooks {
       iri

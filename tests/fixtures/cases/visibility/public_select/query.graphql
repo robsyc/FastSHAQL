@@ -1,5 +1,5 @@
 query PublicSelect {
-  persons {
+  person {
     name
     address {
       street

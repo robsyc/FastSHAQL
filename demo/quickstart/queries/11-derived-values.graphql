@@ -6,13 +6,13 @@
 #   fine                  — sh:defaultValue fills in loans without one;
 #                           the field is always non-null
 {
-  works {
+  work {
     title
     onLoan
     availability
     genrePath
   }
-  loans {
+  loan {
     fine
     dueOn
   }

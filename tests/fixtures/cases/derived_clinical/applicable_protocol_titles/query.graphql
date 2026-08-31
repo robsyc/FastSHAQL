@@ -1,5 +1,5 @@
 query ApplicableProtocolTitles {
-  patients {
+  patient {
     iri
     applicableProtocolTitles
   }

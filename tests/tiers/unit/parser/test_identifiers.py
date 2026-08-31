@@ -14,9 +14,16 @@ import pytest
 from rdflib import Graph, URIRef
 from rdflib.term import Literal, Node
 
+from fastshaql.core.ir.shacl_path import PredicatePath
 from fastshaql.core.kernel.identifiers import enum_member_names, local_name
 from fastshaql.core.parser.errors import UnsupportedShapeError
-from fastshaql.core.parser.util import InvalidCodeIdentifierError, read_code_identifier
+from fastshaql.core.parser.util import (
+    InvalidCodeIdentifierError,
+    ReservedGraphQLNameError,
+    graphql_type_name,
+    property_graphql_field_name,
+    read_code_identifier,
+)
 
 SUBJECT = URIRef("http://example.org/ThingShape")
 
@@ -110,3 +117,47 @@ def test_read_code_identifier_rejects_invalid(term: str, fragment: str) -> None:
     graph = _graph_with_code_identifier(term)
     with pytest.raises(InvalidCodeIdentifierError, match=fragment):
         read_code_identifier(graph, SUBJECT)
+
+
+# --- Reserved GraphQL names (derivation endpoints) ---
+
+
+@pytest.mark.parametrize(
+    ("code_identifier", "iri"),
+    [
+        ("__Foo", URIRef("http://example.org/ThingShape")),
+        (None, URIRef("http://example.org/__FooShape")),
+    ],
+    ids=["code_identifier", "iri_local_name"],
+)
+def test_graphql_type_name_rejects_reserved_dunder(
+    code_identifier: str | None, iri: URIRef
+) -> None:
+    """GraphQL reserves ``__``-prefixed names — both derivation paths reject."""
+    with pytest.raises(ReservedGraphQLNameError, match="__Foo"):
+        graphql_type_name(code_identifier=code_identifier, iri=iri)
+
+
+@pytest.mark.parametrize(
+    ("code_identifier", "predicate"),
+    [
+        ("__secret", URIRef("http://example.org/label")),
+        (None, URIRef("http://example.org/__secret")),
+    ],
+    ids=["code_identifier", "predicate_local_name"],
+)
+def test_property_field_name_rejects_reserved_dunder(
+    code_identifier: str | None, predicate: URIRef
+) -> None:
+    """Property field names get the same reserved-name rule as type names."""
+    with pytest.raises(ReservedGraphQLNameError, match="__secret"):
+        property_graphql_field_name(
+            path=PredicatePath(predicate),
+            code_identifier=code_identifier,
+            prop_shape=SUBJECT,
+        )
+
+
+def test_graphql_type_name_single_underscore_stays_legal() -> None:
+    """``_``-prefix is GraphQL-legal — only the reserved ``__`` prefix rejects."""
+    assert graphql_type_name(code_identifier="_Foo", iri=SUBJECT) == "_Foo"

@@ -26,7 +26,7 @@ EX = Namespace("http://example.org/")
 G1 = URIRef("urn:ex:g1")
 G2 = URIRef("urn:ex:g2")
 
-THINGS_QUERY = "{ things { iri label } }"
+THINGS_QUERY = "{ thing { iri label } }"
 
 
 async def execute(schema, query: str, store: InMemoryStore, *, query_context=None):
@@ -41,7 +41,7 @@ async def test_execute_empty_graph_returns_empty_list(
     store = InMemoryStore(Graph())
     result = await execute(schema, THINGS_QUERY, store)
     assert result.errors is None
-    assert result.data == {"things": []}
+    assert result.data == {"thing": []}
 
 
 async def test_execute_concurrent_sibling_fields_serialize_on_rdflib(
@@ -56,7 +56,7 @@ async def test_execute_concurrent_sibling_fields_serialize_on_rdflib(
     data = Graph()
     data.add((EX["thing-1"], RDF.type, EX["Thing"]))
     store = InMemoryStore(data)
-    query = "{ a: things { iri } b: things { iri } c: things { iri } }"
+    query = "{ a: thing { iri } b: thing { iri } c: thing { iri } }"
     expected = {letter: [{"iri": str(EX["thing-1"])}] for letter in "abc"}
     for _ in range(5):
         result = await execute(schema, query, store)
@@ -70,10 +70,10 @@ async def test_execute_strips_iri_when_not_selected(
 ) -> None:
     schema = build_executable_schema(minimal_registry)
     store = InMemoryStore(minimal_data_graph)
-    result = await execute(schema, "{ things { label } }", store)
+    result = await execute(schema, "{ thing { label } }", store)
     assert result.errors is None
     assert result.data == {
-        "things": [
+        "thing": [
             {"label": "Alpha"},
             {"label": "Beta"},
         ]
@@ -99,13 +99,13 @@ async def test_execute_query_context_lang_filters_multi_language_data(
     store = InMemoryStore(filters_data_graph)
     result = await execute(
         schema,
-        "{ persons { name bio } }",
+        "{ person { name bio } }",
         store,
         query_context=QueryContext(lang_tags=("en",)),
     )
 
     assert result.errors is None
-    alice_data = next(p for p in result.data["persons"] if p["name"] == "Alice")
+    alice_data = next(p for p in result.data["person"] if p["name"] == "Alice")
     assert alice_data["bio"] == ["Hello"]
 
 
@@ -117,7 +117,7 @@ async def test_execute_records_metrics_when_attached(
     from support.graphql_utils import root_field_node, shape_for_root_field
 
     store = InMemoryStore(minimal_data_graph)
-    field_node = root_field_node("{ things { label } }")
+    field_node = root_field_node("{ thing { label } }")
     shape = shape_for_root_field(minimal_registry, field_node.name.value)
     metrics = ExecutionMetrics()
     ctx = ResolverContext(store=store, metrics=metrics)
@@ -135,13 +135,13 @@ async def test_execute_query_context_lang_no_match_drops_field_keeps_entity(
     store = InMemoryStore(filters_data_graph)
     result = await execute(
         schema,
-        "{ persons { name bio } }",
+        "{ person { name bio } }",
         store,
         query_context=QueryContext(lang_tags=("de",)),
     )
 
     assert result.errors is None
-    alice_data = next(p for p in result.data["persons"] if p["name"] == "Alice")
+    alice_data = next(p for p in result.data["person"] if p["name"] == "Alice")
     assert alice_data["bio"] == []
 
 
@@ -175,7 +175,7 @@ async def test_execute_read_graphs_scopes_to_named_graph(
     )
 
     assert result.errors is None
-    assert result.data == {"things": [{"iri": str(EX["thing-1"]), "label": "Alpha"}]}
+    assert result.data == {"thing": [{"iri": str(EX["thing-1"]), "label": "Alpha"}]}
 
 
 async def test_execute_read_graphs_merge_multiple_graphs(
@@ -191,7 +191,7 @@ async def test_execute_read_graphs_merge_multiple_graphs(
     )
 
     assert result.errors is None
-    labels = {row["label"] for row in result.data["things"]}
+    labels = {row["label"] for row in result.data["thing"]}
     assert labels == {"Alpha", "Beta"}
 
 
@@ -204,7 +204,7 @@ async def test_execute_no_read_graphs_unnamed_only_when_default_union_false(
     result = await execute(schema, THINGS_QUERY, store)
 
     assert result.errors is None
-    assert result.data == {"things": []}
+    assert result.data == {"thing": []}
 
 
 async def test_execute_no_read_graphs_union_when_default_union_true(
@@ -222,5 +222,5 @@ async def test_execute_no_read_graphs_union_when_default_union_true(
     result = await execute(schema, THINGS_QUERY, store)
 
     assert result.errors is None
-    labels = {row["label"] for row in result.data["things"]}
+    labels = {row["label"] for row in result.data["thing"]}
     assert labels == {"Alpha", "Beta"}

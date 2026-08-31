@@ -12,7 +12,7 @@
 # last resort: under "nl" 1984's Dutch subtitle wins, while Nausicaä's
 # plain subtitle resolves with no matching tag at all.
 {
-  works {
+  work {
     title
     subtitle
     tags

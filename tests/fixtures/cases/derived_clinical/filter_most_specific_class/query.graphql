@@ -1,5 +1,5 @@
 query FilterMostSpecificClass {
-  patients(where: {
+  patient(where: {
     hasCondition: {
       mostSpecificClass: { eq: "http://example.org/clinical/NonAlcoholicSteatohepatitis" }
     }

@@ -1,6 +1,6 @@
 {
   "data": {
-    "persons": [
+    "person": [
       {
         "iri": "http://example.org/personB",
         "name": "Bob",

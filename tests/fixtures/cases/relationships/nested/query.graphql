@@ -1,5 +1,5 @@
 query RelationshipNested {
-  persons {
+  person {
     name
     employer {
       name

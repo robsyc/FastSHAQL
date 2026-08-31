@@ -1,5 +1,5 @@
 query MostSpecificClass {
-  patients {
+  patient {
     hasCondition {
       mostSpecificClass
     }

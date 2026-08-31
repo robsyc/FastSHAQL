@@ -1,5 +1,5 @@
 query NoIris {
-  things {
+  thing {
     iri
     label
   }

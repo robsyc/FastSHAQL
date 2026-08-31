@@ -26,8 +26,8 @@ def test_build_schema_protected_shape_no_root_field(
     query = schema.query_type
     assert query is not None
 
-    assert "auditlogs" not in query.fields
-    assert "persons" in query.fields
+    assert "auditLog" not in query.fields
+    assert "person" in query.fields
     assert schema.get_type("AuditLog") is not None
 
     person = object_type(schema, "Person")
@@ -45,8 +45,8 @@ def test_build_schema_public_class_closure_root_fields(
     query = schema.query_type
     assert query is not None
 
-    assert "dogs" in query.fields
-    assert "cats" not in query.fields
+    assert "dog" in query.fields
+    assert "cat" not in query.fields
     assert schema.get_type("Dog") is not None
     assert schema.get_type("Cat") is None
 
@@ -62,7 +62,7 @@ def test_build_schema_protected_class_closure_no_root_field(
     query = schema.query_type
     assert query is not None
 
-    assert "cars" not in query.fields
+    assert "car" not in query.fields
     assert schema.get_type("Car") is not None
 
 
@@ -77,5 +77,5 @@ def test_build_schema_private_shape_no_root_field(
     query = schema.query_type
     assert query is not None
 
-    assert "secrets" not in query.fields
+    assert "secret" not in query.fields
     assert schema.get_type("Secret") is None

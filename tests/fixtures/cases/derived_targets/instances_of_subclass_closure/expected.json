@@ -1,6 +1,6 @@
 {
   "data": {
-    "variants": [
+    "variant": [
       {
         "iri": "http://example.org/snv",
         "label": "reference snv"

@@ -1,5 +1,5 @@
 query ProtectedReachable {
-  persons {
+  person {
     name
     audit {
       action

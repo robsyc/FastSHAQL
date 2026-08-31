@@ -1,5 +1,5 @@
 query OverrideOwnField {
-  managerbadges {
+  managerBadge {
     iri
     badgeLevel
   }

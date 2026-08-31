@@ -2,7 +2,7 @@
 # narrowed by a filter shape (price <= 20). It traverses, filters, groups
 # and paginates like any asserted relationship.
 {
-  members {
+  member {
     displayName
     recommendedWorks {
       title

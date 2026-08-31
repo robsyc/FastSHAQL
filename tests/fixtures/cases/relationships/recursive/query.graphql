@@ -1,5 +1,5 @@
 query RelationshipRecursive {
-  persons {
+  person {
     name
     knows {
       name

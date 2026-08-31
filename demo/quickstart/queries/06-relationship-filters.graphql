@@ -2,11 +2,11 @@
 # through author, and through the inverse loans field with an enum value.
 # The selection nests three levels deep in the same single SPARQL query.
 {
-  works(where: { author: { displayName: { eq: "J.K. Rowling" } } }) {
+  work(where: { author: { displayName: { eq: "J.K. Rowling" } } }) {
     title
     authorName
   }
-  members(where: { loans: { status: { eq: ACTIVE } } }) {
+  member(where: { loans: { status: { eq: ACTIVE } } }) {
     displayName
     loans {
       status

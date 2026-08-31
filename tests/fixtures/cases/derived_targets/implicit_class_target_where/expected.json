@@ -1,6 +1,6 @@
 {
   "data": {
-    "changes": [
+    "change": [
       {
         "iri": "http://example.org/subA",
         "label": " substitution A "

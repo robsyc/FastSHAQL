@@ -1,5 +1,5 @@
 query OptionalSummaryNote {
-  patients {
+  patient {
     hasCondition {
       summaryNote
     }
