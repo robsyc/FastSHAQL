@@ -17,7 +17,7 @@ All tasks are [just](https://github.com/casey/just) recipes — **run `just` to 
 
 - `just eval` needs Docker **and a GraphDB license**; otherwise the tier is silently skipped (details in [tests/README.md](tests/README.md)).
 - `just complexity` ratchets cognitive complexity against the committed `complexipy-snapshot.json`; a *passing* run rewrites the snapshot (auto-shrink) — accept an intentional increase with `just complexity-update`.
-- `just mutate` gates on the committed mutation-score floor (`mutmut-floor.json`); the run is incremental from the cached `mutants/` directory.
+- `just mutate` gates on the committed mutation-score floor (`mutmut-floor.json`); the run is incremental from the cached `mutants/` directory. mutmut 3.x's copy step never deletes files removed from the source, so a stale `mutants/` tree can poison a fresh run — `just mutate-clean` is the complete reset.
 
 ## Code style
 
