@@ -1,5 +1,5 @@
 query OrRelationship {
-  persons(
+  person(
     where: {
       OR: [
         { employer: { name: { eq: "Acme" } } }

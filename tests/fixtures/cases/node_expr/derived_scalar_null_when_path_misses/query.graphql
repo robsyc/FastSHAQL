@@ -1,5 +1,5 @@
 query DerivedScalarNullWhenPathMisses {
-  genes {
+  gene {
     iri
     confidence
   }

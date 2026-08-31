@@ -1,5 +1,5 @@
 query ProtocolStatus {
-  patients {
+  patient {
     iri
     protocolStatus
   }

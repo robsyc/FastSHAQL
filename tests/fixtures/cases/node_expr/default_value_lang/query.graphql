@@ -1,5 +1,5 @@
 query DefaultValueLanguageFallback {
-  genes {
+  gene {
     iri
     displayName
   }

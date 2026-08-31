@@ -1,5 +1,5 @@
 query PublicClassClosure {
-  dogs {
+  dog {
     name
   }
 }

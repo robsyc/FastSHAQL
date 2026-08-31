@@ -10,11 +10,12 @@ from .graph_reads import (
 from .identifiers import (
     InvalidCodeIdentifierError,
     MissingCompositePathCodeIdentifierError,
+    ReservedGraphQLNameError,
+    finalize_graphql_name,
     graphql_field_name,
     graphql_type_name,
     property_graphql_field_name,
     read_code_identifier,
-    safe_python_identifier,
     synthesize_inline_shape_iri,
 )
 from .namespaces import (
@@ -45,6 +46,8 @@ __all__ = [
     "SH_VALUES",
     "InvalidCodeIdentifierError",
     "MissingCompositePathCodeIdentifierError",
+    "ReservedGraphQLNameError",
+    "finalize_graphql_name",
     "first_localized_str",
     "graphql_field_name",
     "graphql_type_name",
@@ -52,7 +55,6 @@ __all__ = [
     "object_int",
     "property_graphql_field_name",
     "read_code_identifier",
-    "safe_python_identifier",
     "sole_object",
     "strict_rdf_list",
     "synthesize_inline_shape_iri",

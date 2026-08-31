@@ -1,6 +1,6 @@
 {
   "data": {
-    "companyemployernames": [
+    "companyEmployerName": [
       {
         "name": "Acme",
         "employeeName": "Alice"

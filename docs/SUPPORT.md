@@ -89,7 +89,7 @@ Unknown or missing datatypes fall back to `String`/`StringFilter`; `rdf:dirLangS
 
 | Term | Disposition | Interpretation |
 |---|---|---|
-| `sh:codeIdentifier` (§8.4) | Supported | Field and type names (the spec names GraphQL as the use case); predicate-local-name fallback for predicate paths; validated at parse — an `xsd:string` literal matching `^[a-zA-Z_][a-zA-Z0-9_]*$`, else a named rejection (§8.4's grammar is the GraphQL name grammar); at most one value — multiples reject |
+| `sh:codeIdentifier` (§8.4) | Supported | Field and type names (the spec names GraphQL as the use case); predicate-local-name fallback for predicate paths; validated at parse — an `xsd:string` literal matching `^[a-zA-Z_][a-zA-Z0-9_]*$`, else a named rejection (§8.4's grammar is the GraphQL name grammar); at most one value — multiples reject; derived names carrying the GraphQL-reserved `__` prefix reject (both derivation paths) |
 | `sh:name` / `sh:description` (§8.1) | Supported | Field descriptions on property shapes (`sh:description` first, then `sh:name`); unread on node shapes, where the spec says not to use them |
 | `rdfs:label` / `rdfs:comment` | Supported | Node-shape descriptions (`rdfs:comment` first, then `rdfs:label`); per-predicate language selection at parse time — predicate priority beats language ([ADR-0007](adr/0007-description-language-selection.md)) |
 | `sh:order` (§8.6), `sh:group` (§8.7), `sh:intent` (§8.2), `sh:agentInstruction` (§8.3), `sh:unit` (§8.5) | Recognised-and-inert | Never read — no schema or query effect |

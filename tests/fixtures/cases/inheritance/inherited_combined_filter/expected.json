@@ -1,6 +1,6 @@
 {
   "data": {
-    "managers": [
+    "manager": [
       {
         "managerName": "Alice",
         "employeeId": "E-001",

@@ -1,5 +1,5 @@
 query IntegerLiteralEnum {
-  ratings {
+  rating {
     iri
     level
   }

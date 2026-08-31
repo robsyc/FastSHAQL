@@ -1,5 +1,5 @@
 query FilterExistsBoolean {
-  items(where: { isFlagged: { eq: true } }) {
+  item(where: { isFlagged: { eq: true } }) {
     iri
     isFlagged
   }

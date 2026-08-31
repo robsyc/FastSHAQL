@@ -76,14 +76,14 @@ async def test_example_server_accept_language_shapes_chain() -> None:
     ) as client:
         response = await client.post(
             "/graphql",
-            json={"query": "query { persons { name } }"},
+            json={"query": "query { person { name } }"},
             headers={"Accept-Language": "en, nl;q=0.8"},
         )
 
     assert response.status_code == 200
     body = response.json()
     assert body.get("errors") is None
-    names = {p["name"] for p in body["data"]["persons"]}
+    names = {p["name"] for p in body["data"]["person"]}
     assert names == {"Alice", "Bob", "Cees", "Eva", "Finn", "Gail"}
 
 
@@ -100,12 +100,12 @@ async def test_example_server_repeated_accept_language_lines_combine() -> None:
     ) as client:
         response = await client.post(
             "/graphql",
-            json={"query": "query { persons { name } }"},
+            json={"query": "query { person { name } }"},
             headers=[("Accept-Language", "en"), ("Accept-Language", "nl;q=0.8")],
         )
 
     assert response.status_code == 200
     body = response.json()
     assert body.get("errors") is None
-    names = {p["name"] for p in body["data"]["persons"]}
+    names = {p["name"] for p in body["data"]["person"]}
     assert names == {"Alice", "Bob", "Cees", "Eva", "Finn", "Gail"}

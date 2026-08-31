@@ -1,5 +1,5 @@
 query RowVsEntity {
-  persons(limit: 2) {
+  person(limit: 2) {
     name
     employer {
       name

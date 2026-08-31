@@ -1,5 +1,5 @@
 query LangFilter {
-  persons {
+  person {
     name
     bio
   }

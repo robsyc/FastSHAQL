@@ -1,6 +1,6 @@
 {
   "data": {
-    "unionvariants": [
+    "unionVariant": [
       {
         "iri": "http://example.org/subA",
         "label": " substitution A "

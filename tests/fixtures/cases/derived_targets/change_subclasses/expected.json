@@ -1,6 +1,6 @@
 {
   "data": {
-    "changetypes": [
+    "changeType": [
       {
         "iri": "http://example.org/Change",
         "label": "change"

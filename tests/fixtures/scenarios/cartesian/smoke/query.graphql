@@ -1,5 +1,5 @@
 query CartesianThings {
-  things {
+  thing {
     iri
     tag
     altLabel

@@ -1,5 +1,5 @@
 query ScalarFilterPlacement {
-  persons(where: { name: { eq: "Alice" } }, limit: 1) {
+  person(where: { name: { eq: "Alice" } }, limit: 1) {
     name
   }
 }

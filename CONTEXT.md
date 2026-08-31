@@ -47,8 +47,8 @@ _Avoid_: "path" without context — SHACL, SPARQL, and GraphQL paths are differe
 ### Names and descriptions
 
 **GraphQL type and field name**:
-Adapter-facing names resolved from `sh:codeIdentifier` or IRI local names (SHACL 1.2 §8.4).
-_Avoid_: type_name (ambiguous with GraphQL output types)
+Adapter-facing names resolved from `sh:codeIdentifier` or IRI local names (SHACL 1.2 §8.4). A Shape's root field is its GraphQL type name with the first letter lowercased — singular, never pluralized.
+_Avoid_: type_name (ambiguous with GraphQL output types); pluralized root field names
 
 **Description**:
 Human-readable text on a Shape, propagated to the generated schema; one preferred language selected at parse time (ADR-0007).

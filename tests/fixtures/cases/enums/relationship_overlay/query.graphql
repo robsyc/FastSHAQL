@@ -1,5 +1,5 @@
 query RelationshipOverlay {
-  persons {
+  person {
     iri
     name
     employer {

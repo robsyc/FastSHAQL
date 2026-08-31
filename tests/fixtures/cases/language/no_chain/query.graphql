@@ -3,7 +3,7 @@
 # deterministic fields (list lane, PLAIN control) and the no-machinery
 # SPARQL shape.
 query LanguageNoChain {
-  persons {
+  person {
     iri
     altLabel
     plain

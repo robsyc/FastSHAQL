@@ -1,5 +1,5 @@
 query SelectDerived {
-  items {
+  item {
     iri
     source
     iriLength

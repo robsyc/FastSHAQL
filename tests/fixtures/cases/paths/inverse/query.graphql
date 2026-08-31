@@ -1,5 +1,5 @@
 query PathInverse {
-  pets {
+  pet {
     name
     owner {
       name

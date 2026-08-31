@@ -1,6 +1,6 @@
 {
   "data": {
-    "compositevariants": [
+    "compositeVariant": [
       {
         "iri": "http://example.org/snv",
         "label": "reference snv"

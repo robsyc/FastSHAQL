@@ -1,5 +1,5 @@
 query CardinalityThings {
-  things {
+  thing {
     iri
     label
     subtitle

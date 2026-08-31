@@ -83,7 +83,7 @@ async def test_derived_enum_value_outside_sh_in_dies_at_serialization() -> None:
     schema = build_executable_schema(registry)
     store = InMemoryStore(Graph().parse(data=DATA, format="turtle"))
     ctx = ResolverContext(store=store)
-    result = await graphql(schema, "{ things { status } }", context_value=ctx)
+    result = await graphql(schema, "{ thing { status } }", context_value=ctx)
     assert result.errors is not None
     assert any("undefined-in-shacl-in" in e.message for e in result.errors)
 
@@ -97,7 +97,7 @@ async def test_defaulted_enum_value_outside_sh_in_dies_at_serialization() -> Non
     schema = build_executable_schema(registry)
     store = InMemoryStore(Graph().parse(data=DATA, format="turtle"))
     ctx = ResolverContext(store=store)
-    result = await graphql(schema, "{ things { grade } }", context_value=ctx)
+    result = await graphql(schema, "{ thing { grade } }", context_value=ctx)
     assert result.errors is not None
     assert any("unlisted" in e.message for e in result.errors)
 
@@ -115,6 +115,6 @@ async def test_derived_enum_in_sh_in_values_serialize() -> None:
         )
     )
     ctx = ResolverContext(store=store)
-    result = await graphql(schema, "{ things { status grade } }", context_value=ctx)
+    result = await graphql(schema, "{ thing { status grade } }", context_value=ctx)
     assert result.errors is None
-    assert result.data == {"things": [{"status": "OK", "grade": "A"}]}
+    assert result.data == {"thing": [{"status": "OK", "grade": "A"}]}

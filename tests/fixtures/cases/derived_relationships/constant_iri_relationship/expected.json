@@ -1,6 +1,6 @@
 {
   "data": {
-    "members": [
+    "member": [
       {
         "iri": "http://example.org/library/m1",
         "homeBranch": {

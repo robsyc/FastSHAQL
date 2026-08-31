@@ -1,5 +1,5 @@
 query ListExpressionRelationship {
-  members {
+  member {
     iri
     friendBranches {
       iri

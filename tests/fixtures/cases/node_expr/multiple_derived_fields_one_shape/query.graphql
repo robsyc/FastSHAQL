@@ -1,5 +1,5 @@
 query MultipleDerivedFieldsOneShape {
-  variants {
+  variant {
     iri
     refAllele
     geneSymbol

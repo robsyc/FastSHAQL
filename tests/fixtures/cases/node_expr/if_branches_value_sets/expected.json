@@ -1,6 +1,6 @@
 {
   "data": {
-    "variants": [
+    "variant": [
       {
         "iri": "http://example.org/genomics/v1",
         "evidenceTags": [

@@ -1,6 +1,6 @@
 {
   "data": {
-    "curatedvariants": [
+    "curatedVariant": [
       {
         "iri": "http://example.org/subA",
         "label": " substitution A "

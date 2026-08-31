@@ -30,16 +30,21 @@ if TYPE_CHECKING:
 __all__ = [
     "InvalidCodeIdentifierError",
     "MissingCompositePathCodeIdentifierError",
+    "ReservedGraphQLNameError",
+    "finalize_graphql_name",
     "graphql_type_name",
     "property_graphql_field_name",
     "read_code_identifier",
-    "safe_python_identifier",
     "synthesize_inline_shape_iri",
 ]
 
 
 class InvalidCodeIdentifierError(ValueError):
     """Raised when ``sh:codeIdentifier`` violates the SHACL 1.2 §8.4 syntax."""
+
+
+class ReservedGraphQLNameError(ValueError):
+    """Raised when a derived GraphQL name starts with the reserved ``__`` prefix."""
 
 
 class MissingCompositePathCodeIdentifierError(ValueError):
@@ -81,8 +86,14 @@ def read_code_identifier(graph: Graph, subject: Node) -> str | None:
     return value
 
 
-def safe_python_identifier(name: str) -> str:
-    """Escape Python keywords (e.g. ``class`` → ``class_``)."""
+def finalize_graphql_name(name: str) -> str:
+    """Finalize a GraphQL type/field name: reject the reserved ``__`` prefix
+    (GraphQL October2021 §Names), then escape Python keywords (``class`` → ``class_``)."""
+    if name.startswith("__"):
+        raise ReservedGraphQLNameError(
+            f"{name!r} starts with the GraphQL-reserved '__' prefix — choose a "
+            "different sh:codeIdentifier or IRI local name"
+        )
     return f"{name}_" if keyword.iskeyword(name) else name
 
 
@@ -93,8 +104,8 @@ def graphql_field_name(
 ) -> str:
     """GraphQL field name from ``sh:codeIdentifier`` or primary predicate local name."""
     if code_identifier:
-        return safe_python_identifier(code_identifier)
-    return safe_python_identifier(local_name(path_predicate))
+        return finalize_graphql_name(code_identifier)
+    return finalize_graphql_name(local_name(path_predicate))
 
 
 def property_graphql_field_name(
@@ -117,7 +128,7 @@ def property_graphql_field_name(
         raise MissingCompositePathCodeIdentifierError(
             f"Composite-path property shape {prop_shape} requires sh:codeIdentifier"
         )
-    return safe_python_identifier(code_identifier)
+    return finalize_graphql_name(code_identifier)
 
 
 def graphql_type_name(
@@ -127,8 +138,8 @@ def graphql_type_name(
 ) -> str:
     """GraphQL type name from ``sh:codeIdentifier`` or IRI local name."""
     if code_identifier:
-        return safe_python_identifier(code_identifier)
-    return safe_python_identifier(local_name(iri))
+        return finalize_graphql_name(code_identifier)
+    return finalize_graphql_name(local_name(iri))
 
 
 def synthesize_inline_shape_iri(

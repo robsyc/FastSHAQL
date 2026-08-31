@@ -1,5 +1,5 @@
 query DerivedEnumNestedIf {
-  variants {
+  variant {
     iri
     refAllele
     curationStatus

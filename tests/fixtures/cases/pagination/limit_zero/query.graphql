@@ -1,5 +1,5 @@
 query EmptyLimit {
-  persons(limit: 0) {
+  person(limit: 0) {
     name
   }
 }

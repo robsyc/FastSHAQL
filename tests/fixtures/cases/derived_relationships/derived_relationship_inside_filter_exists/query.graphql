@@ -1,5 +1,5 @@
 query DerivedRelationshipInsideFilterExists {
-  members(where: { recommendedBooks: { title: { eq: "SPARQL 101" } } }) {
+  member(where: { recommendedBooks: { title: { eq: "SPARQL 101" } } }) {
     iri
     name
   }

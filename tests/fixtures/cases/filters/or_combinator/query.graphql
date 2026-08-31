@@ -1,5 +1,5 @@
 query OrCombinator {
-  persons(
+  person(
     where: { OR: [{ name: { eq: "Alice" } }, { name: { eq: "Bob" } }] }
   ) {
     name

@@ -1,5 +1,5 @@
 query PathAlternative {
-  contactpersons {
+  contactPerson {
     name
     contact {
       name

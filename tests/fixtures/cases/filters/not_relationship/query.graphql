@@ -1,5 +1,5 @@
 query NotRelationship {
-  persons(where: { NOT: { employer: { name: { eq: "Acme" } } } }) {
+  person(where: { NOT: { employer: { name: { eq: "Acme" } } } }) {
     name
   }
 }

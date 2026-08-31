@@ -1,6 +1,6 @@
 {
   "data": {
-    "managers": [
+    "manager": [
       {
         "iri": "http://example.org/alice",
         "employmentStatus": "ACTIVE"
