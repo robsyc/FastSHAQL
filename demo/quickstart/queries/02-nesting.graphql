@@ -7,7 +7,7 @@
 #                 carry one predicate, older ones the other — one field
 #                 reads whichever is present
 {
-  works {
+  work {
     title
     authorName
     isbn

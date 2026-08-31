@@ -1,6 +1,6 @@
 # The simplest thing that works: every work, two scalar fields.
 {
-  works {
+  work {
     pages
     published
   }

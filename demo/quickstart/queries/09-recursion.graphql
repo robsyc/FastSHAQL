@@ -1,7 +1,7 @@
 # knows is a self-relationship: members know members.
 # Nest as deep as the data allows — here two levels.
 {
-  members {
+  member {
     displayName
     knows {
       displayName

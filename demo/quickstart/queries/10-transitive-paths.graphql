@@ -1,7 +1,7 @@
 # broaderTopics is a transitive path (sh:oneOrMorePath skos:broader):
 # Genetics walks up through Biology to Science in a single field.
 {
-  topics {
+  topic {
     prefLabel
     broaderTopics {
       prefLabel

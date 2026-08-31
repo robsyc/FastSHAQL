@@ -76,7 +76,7 @@ fix:
 
 # run all CI checks
 [group('checks')]
-ci: format lint typecheck complexity architecture import-guard test-cov
+ci: format lint typecheck complexity architecture import-guard test-cov smoke
 	actionlint
 
 # run the test suite (Docker-dependent evaluation tier excluded)

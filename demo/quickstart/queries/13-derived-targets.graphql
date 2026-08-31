@@ -5,10 +5,10 @@
 #   fictionworks — a derived target: shnex:instancesOf ex:Fiction computes
 #                  the root set from the class tree at query time
 {
-  works {
+  work {
     title
   }
-  fictionworks {
+  fictionWork {
     title
   }
 }

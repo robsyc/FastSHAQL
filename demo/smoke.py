@@ -46,36 +46,36 @@ class Stop:
 
 
 def _genetics_walks_up(data: dict[str, Any]) -> None:
-    genetics = next(t for t in data["topics"] if t["prefLabel"] == "Genetics")
+    genetics = next(t for t in data["topic"] if t["prefLabel"] == "Genetics")
     labels = [t["prefLabel"] for t in genetics["broaderTopics"]]
     assert labels == ["Biology", "Science"], labels
 
 
 def _availability_is_derived(data: dict[str, Any]) -> None:
-    works = data["works"]
+    works = data["work"]
     states = {w["availability"] for w in works}
     assert states <= {"AVAILABLE", "BORROWED"}, states
     assert "BORROWED" in states, "expected at least one borrowed work"
-    fines = [loan["fine"] for loan in data["loans"]]
+    fines = [loan["fine"] for loan in data["loan"]]
     assert fines, "expected loans in the default (union) dataset"
     assert min(fines) == 0, fines  # sh:defaultValue fills the fine-less loans
     assert any(fine > 0 for fine in fines), fines  # one closed loan carries a real fine
 
 
 def _recommendations_exist(data: dict[str, Any]) -> None:
-    jane = next(m for m in data["members"] if m["displayName"] == "Jane Doe")
+    jane = next(m for m in data["member"] if m["displayName"] == "Jane Doe")
     assert jane["recommendedWorks"], "expected recommendations for Jane"
 
 
 def _fiction_is_a_subset_of_works(data: dict[str, Any]) -> None:
-    assert len(data["works"]) == 10, len(data["works"])
-    assert len(data["fictionworks"]) == 5, len(data["fictionworks"])
+    assert len(data["work"]) == 10, len(data["work"])
+    assert len(data["fictionWork"]) == 5, len(data["fictionWork"])
 
 
 def _counts(works: int, loans: int) -> Check:
     def check(data: dict[str, Any]) -> None:
-        assert len(data["works"]) == works, data["works"]
-        assert len(data["loans"]) == loans, data["loans"]
+        assert len(data["work"]) == works, data["work"]
+        assert len(data["loan"]) == loans, data["loan"]
 
     return check
 
@@ -83,7 +83,7 @@ def _counts(works: int, loans: int) -> Check:
 def _strict_chain_drops_atlas(data: dict[str, Any]) -> None:
     """A strict ``("nl",)`` chain on a required langString title drops the
     English-only Atlas entirely (the S2 ``BOUND`` guard)."""
-    titles = {w["title"] for w in data["works"]}
+    titles = {w["title"] for w in data["work"]}
     atlas = "National Geographic Atlas of the World"
     assert atlas not in titles, titles
 
@@ -92,7 +92,7 @@ def _chain_falls_back_to_english_for_atlas(data: dict[str, Any]) -> None:
     """Under the header-derived chain ``("nl", "en")``: Dutch titles win
     where they exist, and the English-only Atlas reappears via fallback
     (under a strict ``("nl",)`` chain it drops out entirely)."""
-    titles = {w["title"] for w in data["works"]}
+    titles = {w["title"] for w in data["work"]}
     atlas = "National Geographic Atlas of the World"
     assert atlas in titles, titles
 
@@ -100,7 +100,7 @@ def _chain_falls_back_to_english_for_atlas(data: dict[str, Any]) -> None:
 def _union_subtitle_resolves(data: dict[str, Any]) -> None:
     """The string-union subtitle: the tagged lane wins for 1984, Nausicaä's
     plain value resolves via the union's built-in untagged last resort."""
-    subtitles = {w["title"]: w["subtitle"] for w in data["works"]}
+    subtitles = {w["title"]: w["subtitle"] for w in data["work"]}
     assert subtitles["1984"] == "Een klassieke dystopie", subtitles["1984"]
     assert subtitles["Nausicaä van het dal der winden"] == "The full series"
 
