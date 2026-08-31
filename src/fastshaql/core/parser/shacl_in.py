@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from rdflib import BNode, Literal, URIRef
 
-from .util import SH_IN, rdf_list
+from .util import SH_IN, strict_rdf_list
 
 if TYPE_CHECKING:
     from rdflib import Graph
@@ -35,6 +35,8 @@ def parse_shacl_in(
 
     Returns:
         Homogeneous tuple of terms when ``sh:in`` is present, else ``None``.
+        An empty list yields the empty tuple — no values are allowed (§7.9.3);
+        callers exclude such a property from the schema.
 
     Raises:
         UnsupportedShaclInError: On invalid lists (mixed kind, blank nodes,
@@ -55,7 +57,7 @@ def parse_shacl_in(
             f"Property shape {prop_shape} has more than one sh:in"
         )
 
-    members = rdf_list(graph, in_heads[0])
+    members = strict_rdf_list(graph, in_heads[0], what=f"sh:in list on {prop_shape}")
     terms: list[Node] = []
     first_kind: type[URIRef] | type[Literal] | None = None
     for term in members:
@@ -78,7 +80,7 @@ def parse_shacl_in(
         terms.append(term)
 
     if not terms:
-        return None
+        return ()
 
     result = tuple(terms)
     seen: set[Node] = set()

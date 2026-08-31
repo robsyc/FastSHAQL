@@ -13,6 +13,7 @@ import pytest
 from rdflib import Graph, Literal, URIRef
 
 from fastshaql.core.kernel.io import load_shapes
+from fastshaql.core.parser.errors import UnsupportedShapeError
 from fastshaql.core.parser.shacl_in import UnsupportedShaclInError, parse_shacl_in
 
 
@@ -57,6 +58,24 @@ def test_mixed_literal_and_iri_raises() -> None:
         """
     )
     with pytest.raises(UnsupportedShaclInError, match="mixes literals and IRIs"):
+        parse_shacl_in(graph, prop)
+
+
+def test_malformed_list_raises() -> None:
+    """A cons cell without ``rdf:rest`` is not a well-formed SHACL list —
+    the strict walk rejects it instead of silently truncating."""
+    graph, prop = _graph_with_in(
+        """
+        @prefix ex: <http://example.org/> .
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+        ex:prop a sh:PropertyShape ;
+            sh:in [ rdf:first "active" ] .
+        """
+    )
+    with pytest.raises(
+        UnsupportedShapeError, match="exactly one rdf:first and one rdf:rest"
+    ):
         parse_shacl_in(graph, prop)
 
 
@@ -149,8 +168,9 @@ def test_relationship_overlay_logs_warning(caplog: pytest.LogCaptureFixture) -> 
     assert "employer" in overlay[0].message
 
 
-def test_empty_sh_in_list_returns_none() -> None:
-    """An empty ``sh:in ()`` list is not an enum — returns ``None``."""
+def test_empty_sh_in_list_returns_empty_tuple() -> None:
+    """An empty ``sh:in ()`` is a present-but-empty value set — distinct from
+    no ``sh:in`` (``None``); the caller excludes such a field."""
     graph, prop = _graph_with_in(
         """
         @prefix ex: <http://example.org/> .
@@ -159,4 +179,4 @@ def test_empty_sh_in_list_returns_none() -> None:
             sh:in () .
         """
     )
-    assert parse_shacl_in(graph, prop) is None
+    assert parse_shacl_in(graph, prop) == ()

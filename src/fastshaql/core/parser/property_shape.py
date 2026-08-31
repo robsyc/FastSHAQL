@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from rdflib import RDF, SH, URIRef
+from rdflib import RDF, SH, Literal, URIRef
 
 from fastshaql.core.ir import PropertyShapeIR
 from fastshaql.core.ir.node_expr import is_multivalued_capable
@@ -26,12 +26,11 @@ from .shacl_in import parse_shacl_in
 from .shacl_path import parse_shacl_path
 from .util import (
     SH_CLASS,
-    SH_CODE_IDENTIFIER,
     first_localized_str,
     object_int,
-    object_str,
-    object_uri,
     property_graphql_field_name,
+    read_code_identifier,
+    sole_object,
     strict_rdf_list,
     synthesize_inline_shape_iri,
 )
@@ -261,13 +260,65 @@ def _sole_datatype_constraint(graph: Graph, member: Node) -> URIRef | None:
     return objects[0]
 
 
+def _sole_class_value(graph: Graph, prop_shape: Node) -> URIRef | None:
+    """The ``sh:class`` relationship anchor (SHACL Core §7.1.1).
+
+    A single IRI is the classic form. The 1.2 list form (union semantics)
+    and multiple values (the spec ANDs them) have no lowering — both
+    reject loudly rather than silently degrading the field to a scalar.
+
+    Raises:
+        UnsupportedShapeError: On a literal value (§7.1.1: IRIs or lists
+            of IRIs only), the list form, or multiple values.
+    """
+    value = sole_object(graph, prop_shape, SH_CLASS, what="sh:class")
+    if value is None:
+        return None
+    if isinstance(value, Literal):
+        raise UnsupportedShapeError(
+            f"sh:class value {value!r} on {prop_shape} is not an IRI "
+            "(SHACL §7.1.1: values are IRIs or lists of IRIs)"
+        )
+    if not isinstance(value, URIRef) or value == RDF.nil:
+        raise UnsupportedShapeError(
+            f"sh:class list form (union semantics, SHACL §7.1.1) on "
+            f"{prop_shape} is not supported"
+        )
+    return value
+
+
+def _sole_node_ref(graph: Graph, prop_shape: Node) -> URIRef | None:
+    """The ``sh:node`` value-shape anchor (SHACL Core §7.8.1).
+
+    Values must be well-formed node shapes. A blank node (an inline shape)
+    and multiple values (the spec conjoins them, §3.1.1) reject loudly —
+    silently dropping either would degrade the field to a scalar.
+
+    Raises:
+        UnsupportedShapeError: On a literal value, a blank-node value, or
+            multiple values.
+    """
+    value = sole_object(graph, prop_shape, SH.node, what="sh:node")
+    if value is None:
+        return None
+    if isinstance(value, Literal):
+        raise UnsupportedShapeError(
+            f"sh:node value {value!r} on {prop_shape} is not a node shape (SHACL §7.8.1)"
+        )
+    if not isinstance(value, URIRef):
+        raise UnsupportedShapeError(
+            f"Blank-node sh:node on {prop_shape} — inline node shapes are not supported"
+        )
+    return value
+
+
 def parse_property_shape(
     graph: Graph,
     prop_shape: Node,
     *,
     parent_graphql_type_name: str,
     description_language: str = "en",
-) -> PropertyShapeIR:
+) -> PropertyShapeIR | None:
     """Parse a single ``sh:PropertyShape`` into :class:`PropertyShapeIR`.
 
     Blank-node property shapes receive a synthesized ``urn:fastshaql:inline:…`` IRI.
@@ -280,28 +331,31 @@ def parse_property_shape(
         description_language: BCP 47 tag for selecting ``description`` text. Defaults to ``"en"``.
 
     Returns:
-        A parsed property shape.
+        The parsed property shape, or ``None`` when the property can never
+        hold values — empty ``sh:in`` (§7.9.3) or ``sh:maxCount`` below 1
+        (§7.2.2) — in which case no field is generated and a warning is
+        logged (the ``sh:deactivated`` reading, §3.1.6).
 
     Raises:
-        MissingShaclPathError: When ``sh:path`` is absent.
-        UnsupportedShaclPathError: When ``sh:path`` uses unsupported modifiers.
-        MissingCompositePathCodeIdentifierError: When a composite path lacks ``sh:codeIdentifier``.
-        UnsupportedShapeError: When ``sh:values`` violates the derived-field
-            boundary (ADR-0015) — composite path, missing ``sh:datatype`` on a
-            non-relationship, list cardinality on a single-valued arm, or an
-            unsupported node-expression form — when ``sh:defaultValue``
-            violates the scalar-only fallback boundary (composite path,
-            relationship anchor, missing ``sh:datatype``, list cardinality,
-            multi-valued arm), or when the ``sh:datatype``/datatype-only
-            ``sh:or`` declaration combines forms fastshaql cannot lower or
-            sits outside the recognized string-family universe for
-            multi-entry sets (:func:`_datatypes_from_shape`).
+        MissingShaclPathError / UnsupportedShaclPathError: ``sh:path`` absent
+            or ill-formed — multiple values (§3.3), unsupported modifiers,
+            empty or short lists (§4.2/§4.3), cycles (§4).
+        MissingCompositePathCodeIdentifierError: composite path without
+            ``sh:codeIdentifier``.
+        InvalidCodeIdentifierError: ``sh:codeIdentifier`` outside the §8.4 grammar.
+        UnsupportedShapeError: malformed ``sh:minCount``/``sh:maxCount``
+            (§7.2); derived-field and default-value boundary violations
+            (ADR-0015); datatype/``sh:or`` forms fastshaql cannot lower
+            (:func:`_datatypes_from_shape`); and the ``sh:class``/``sh:node``
+            forms with no lowering — the ``sh:class`` list form (§7.1.1),
+            multiple values (the spec conjoins them, §3.1.1), or a
+            blank-node ``sh:node`` (inline node shape).
     """
     path = parse_shacl_path(graph, prop_shape)
 
     field_name = property_graphql_field_name(
         path=path,
-        code_identifier=object_str(graph, prop_shape, SH_CODE_IDENTIFIER),
+        code_identifier=read_code_identifier(graph, prop_shape),
         prop_shape=prop_shape,
     )
     shape_iri = (
@@ -313,23 +367,16 @@ def parse_property_shape(
         )
     )
 
-    value_class = object_uri(graph, prop_shape, SH_CLASS)
-    if value_class is not None:
-        class_values = [
-            o for o in graph.objects(prop_shape, SH_CLASS) if isinstance(o, URIRef)
-        ]
-        if len(class_values) > 1:
-            raise NotImplementedError(
-                f"Multiple sh:class values on {prop_shape} — AND semantics (SHACL §7.1.1) not yet supported"
-            )
-
-    node_ref = object_uri(graph, prop_shape, SH.node)
-    if node_ref is not None and not isinstance(node_ref, URIRef):
-        raise NotImplementedError(
-            f"Blank-node sh:node on {prop_shape} — inline node shapes are not supported"
-        )
+    value_class = _sole_class_value(graph, prop_shape)
+    node_ref = _sole_node_ref(graph, prop_shape)
 
     in_values = parse_shacl_in(graph, prop_shape)
+    if in_values == ():
+        logger.warning(
+            "Empty sh:in on %s — the property can never hold values; no field is generated",
+            prop_shape,
+        )
+        return None
     values_expr = parse_node_expr(graph, prop_shape)
     default_expr = parse_default_value(graph, prop_shape)
 
@@ -344,8 +391,15 @@ def parse_property_shape(
     datatypes = _datatypes_from_shape(
         graph, prop_shape, shape_iri=shape_iri, field_name=field_name
     )
-    min_count = object_int(graph, prop_shape, SH.minCount)
-    max_count = object_int(graph, prop_shape, SH.maxCount)
+    min_count = object_int(graph, prop_shape, SH.minCount, what="sh:minCount")
+    max_count = object_int(graph, prop_shape, SH.maxCount, what="sh:maxCount")
+    if max_count is not None and max_count < 1:
+        logger.warning(
+            "sh:maxCount %d on %s — the property can never hold values; no field is generated",
+            max_count,
+            prop_shape,
+        )
+        return None
 
     if values_expr is not None:
         _check_derived_field_boundaries(

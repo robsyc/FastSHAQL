@@ -144,8 +144,8 @@ src/fastshaql/core/
 │   │   ├── select_scan.py  # sh:select body extraction, modifier + validation
 │   │   └── shacl_prefixes.py # sh:prefixes → prefix map; expand_sparql_prefixes
 │   └── util/               # Parser utilities
-│       ├── graph_reads.py  # typed RDFLib reads (object_str/int/uri, rdf_list, localized str)
-│       ├── identifiers.py  # graphql_type_name + graphql_field_name (sh:codeIdentifier)
+│       ├── graph_reads.py  # typed RDFLib reads
+│       ├── identifiers.py  # sh:codeIdentifier reads + GraphQL type/field names
 │       └── namespaces.py   # SH/SHNEX term constants absent from RDFLib's SH namespace
 │
 ├── schema/                 # Shape IR → graphql-core GraphQLSchema

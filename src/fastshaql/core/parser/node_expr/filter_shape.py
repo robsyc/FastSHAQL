@@ -33,7 +33,7 @@ from fastshaql.core.ir.filter_shape import (
 )
 
 from ..errors import UnsupportedShapeError
-from ..shacl_path import parse_shacl_path_node
+from ..shacl_path import parse_shacl_path
 from ..util import SH_CLASS, SH_ROOT_CLASS, strict_rdf_list
 
 if TYPE_CHECKING:
@@ -260,11 +260,10 @@ def _parse_property_conjunct(
         raise UnsupportedShapeError(
             f"shnex:filterShape sh:property must be a blank node (got {property_shape})"
         )
-    path_node = graph.value(property_shape, SH.path)
-    if path_node is None:
+    if graph.value(property_shape, SH.path) is None:
         raise UnsupportedShapeError(
             f"shnex:filterShape sh:property without sh:path on {property_shape}"
         )
-    path = parse_shacl_path_node(graph, path_node, property_shape)
+    path = parse_shacl_path(graph, property_shape)
     nested = _parse_shape(graph, property_shape, inside_property=True)
     return [FilterProperty(path=path, nested=nested)]

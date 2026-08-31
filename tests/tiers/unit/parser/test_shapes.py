@@ -2,9 +2,10 @@
 
 Tests parse SHACL Turtle into ``NodeShapeIR`` and ``PropertyShapeIR``,
 verify cardinality resolution (``FieldKind``), registry indexes, and
-relationship property resolution (``sh:class``, ``sh:node``).
+relationship property resolution (``sh:class``, ``sh:node``), unsupported
+forms, and zero-capacity field exclusion.
 
-Order: minimal fixture baseline → cardinality → registry indexes → relationships.
+Order: minimal fixture baseline → cardinality → registry indexes → relationships → unsupported forms.
 """
 
 from __future__ import annotations
@@ -21,6 +22,8 @@ from fastshaql.core.ir import (
 )
 from fastshaql.core.ir.shacl_path import PredicatePath
 from fastshaql.core.parser import parse_shapes
+from fastshaql.core.parser.errors import UnsupportedShapeError
+from fastshaql.core.parser.util import InvalidCodeIdentifierError
 from support.builders import EX, scalar_property
 
 # --- Minimal baseline ---
@@ -506,3 +509,165 @@ def test_deactivated_false_is_active() -> None:
     )
     thing = parse_shapes(graph).by_type_name["Thing"]
     assert set(thing.property_shapes) == {"label"}
+
+
+def test_multiple_deactivated_values_reject() -> None:
+    """§3.1.6 allows one ``sh:deactivated`` — a ``true , false`` pair would
+    flip the shape's visibility nondeterministically."""
+    graph = _shapes_graph(
+        """
+        @prefix ex: <http://example.org/> .
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+        ex:ThingShape a sh:NodeShape ;
+            sh:codeIdentifier "Thing" ;
+            sh:targetClass ex:Thing ;
+            sh:property [
+                sh:path ex:label ;
+                sh:datatype xsd:string ;
+                sh:deactivated true , false ;
+            ] .
+        """
+    )
+    with pytest.raises(UnsupportedShapeError, match="Multiple sh:deactivated"):
+        parse_shapes(graph)
+
+
+# --- Unsupported sh:node/sh:class forms, counts, and identifiers ---
+
+
+def _person_graph(prop_body: str) -> Graph:
+    """A Person shape whose single ``note`` property carries *prop_body*."""
+    return _shapes_graph(
+        f"""
+        @prefix ex: <http://example.org/> .
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+        ex:PersonShape a sh:NodeShape ;
+            sh:codeIdentifier "Person" ;
+            sh:targetClass ex:Person ;
+            sh:property [
+                sh:path ex:note ;
+                {prop_body}
+            ] .
+        """
+    )
+
+
+def test_blank_node_sh_node_on_property_shape_raises() -> None:
+    """An inline (blank-node) ``sh:node`` shape rejects — degrading the field
+    to a scalar would misdescribe it."""
+    graph = _person_graph("sh:node [] ;")
+    with pytest.raises(UnsupportedShapeError, match="Blank-node sh:node"):
+        parse_shapes(graph)
+
+
+@pytest.mark.parametrize(
+    ("body", "match"),
+    [
+        ("sh:node ex:AddressShape , ex:LocationShape ;", "Multiple sh:node values"),
+        ("sh:class ex:Company , ex:Org ;", "Multiple sh:class values"),
+    ],
+    ids=["multiple_sh_node", "multiple_sh_class"],
+)
+def test_multiple_relationship_anchor_values_raise(body: str, match: str) -> None:
+    """The spec conjoins repeated ``sh:node``/``sh:class`` values (§3.1.1) —
+    no lowering yet, and no silent arbitrary pick either."""
+    graph = _person_graph(body)
+    with pytest.raises(UnsupportedShapeError, match=match):
+        parse_shapes(graph)
+
+
+def test_literal_sh_node_value_raises() -> None:
+    """``sh:node`` values are node shapes — a literal is ill-formed (§7.8.1)."""
+    graph = _person_graph('sh:node "Address" ;')
+    with pytest.raises(UnsupportedShapeError, match="not a node shape"):
+        parse_shapes(graph)
+
+
+@pytest.mark.parametrize(
+    "class_value",
+    ["( ex:Company ex:Org )", "()"],
+    ids=["union", "empty_union"],
+)
+def test_sh_class_list_form_raises(class_value: str) -> None:
+    """The 1.2 union syntax (§7.1.1) has no lowering yet — including the
+    empty (vacuous) union, which reaches this branch rather than parsing
+    as an IRI."""
+    graph = _person_graph(f"sh:class {class_value} ;")
+    with pytest.raises(UnsupportedShapeError, match="list form"):
+        parse_shapes(graph)
+
+
+def test_literal_sh_class_value_raises() -> None:
+    """``sh:class`` values are IRIs or IRI lists — a literal is ill-formed (§7.1.1)."""
+    graph = _person_graph('sh:class "Company" ;')
+    with pytest.raises(UnsupportedShapeError, match="not an IRI"):
+        parse_shapes(graph)
+
+
+@pytest.mark.parametrize(
+    "count_decl",
+    [
+        'sh:minCount "3" ;',
+        'sh:maxCount "2.5"^^xsd:decimal ;',
+        'sh:maxCount "3.0"^^xsd:integer ;',
+    ],
+    ids=["string_lexical", "decimal_datatype", "ill_typed_integer"],
+)
+def test_non_integer_count_rejects(count_decl: str) -> None:
+    """§7.2.1/§7.2.2: counts are ``xsd:integer`` literals — anything else
+    rejects instead of silently falling back to the optional-list defaults."""
+    graph = _person_graph(count_decl)
+    with pytest.raises(UnsupportedShapeError, match="xsd:integer literal"):
+        parse_shapes(graph)
+
+
+def test_multiple_min_count_values_reject() -> None:
+    """§7.2: at most one ``sh:minCount`` — no silent arbitrary pick."""
+    graph = _person_graph("sh:minCount 1 , 2 ;")
+    with pytest.raises(UnsupportedShapeError, match="Multiple sh:minCount values"):
+        parse_shapes(graph)
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        "sh:datatype xsd:string ; sh:maxCount 0 ;",
+        "sh:datatype xsd:string ; sh:in () ;",
+    ],
+    ids=["max_count_zero", "empty_sh_in"],
+)
+def test_zero_capacity_property_excludes_field(
+    body: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A property that can never hold values (§7.2.2, §7.9.3) generates no
+    field, with a warning — the ``sh:deactivated`` reading (§3.1.6)."""
+    with caplog.at_level("WARNING"):
+        thing = parse_shapes(_person_graph(body)).by_type_name["Person"]
+    assert "note" not in thing.property_shapes
+    assert any("no field is generated" in r.message for r in caplog.records)
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        'sh:codeIdentifier "9Person"',
+        'sh:property [ sh:path ex:note ; sh:codeIdentifier "has-dash" ]',
+    ],
+    ids=["node_shape", "property_shape"],
+)
+def test_invalid_code_identifier_rejects_at_parse(declaration: str) -> None:
+    """§8.4 names must match ``^[a-zA-Z_][a-zA-Z0-9_]*$`` — validation fires
+    at parse, not as a broken GraphQL schema build later."""
+    graph = _shapes_graph(
+        f"""
+        @prefix ex: <http://example.org/> .
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        ex:PersonShape a sh:NodeShape ;
+            {declaration} ;
+            sh:targetClass ex:Person .
+        """
+    )
+    with pytest.raises(InvalidCodeIdentifierError, match="does not match"):
+        parse_shapes(graph)

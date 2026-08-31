@@ -55,7 +55,7 @@ Human-readable text on a Shape, propagated to the generated schema; one preferre
 _Avoid_: doc, comment, label
 
 **Non-validating characteristic**:
-A SHACL §8 metadata predicate (names, descriptions, ordering) that validators ignore and fastshaql maps to schema enrichment.
+A SHACL §8 metadata predicate (names, descriptions, ordering) that validators ignore; fastshaql consumes e.g., `sh:codeIdentifier`.
 _Avoid_: annotation, metadata predicate
 
 ### Fields — value type × value source

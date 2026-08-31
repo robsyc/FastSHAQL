@@ -20,7 +20,7 @@ fastshaql recognises shapes only by explicit typing — subjects of `rdf:type sh
 |---|---|---|
 | Named `sh:NodeShape` (§3.2) | Supported | One GraphQL type per shape |
 | `sh:property` (§7.8.2) | Supported | Inline blank-node Properties get synthesised IRIs; duplicate field names within a shape dedupe (first wins, warning); a standalone named `sh:PropertyShape` is never parsed |
-| `sh:deactivated` (§3.1.6) | Supported-with-interpretation | Constant `true` only — no type, no field. The 1.2 generalisations (node-expression values, reifier-based per-constraint deactivation) are never read; non-`true` values leave the shape active, silently |
+| `sh:deactivated` (§3.1.6) | Supported-with-interpretation | Constant `true` only — no type, no field. The 1.2 generalisations (node-expression values, reifier-based per-constraint deactivation) are never read; non-`true` values leave the shape active, silently; multiple values reject (at most one, §3.1.6) |
 | `sh:severity` (§3.1.4) / `sh:message` (§3.1.5) | Recognised-and-inert | Never read — validation-report vocabulary; no schema or query effect |
 | `sh:node` on node shapes (§7.8.1) | Supported-with-interpretation | Read as field-only inheritance: a reinterpretation of the spec's conjunction semantics (the spec's own analogy is `rdfs:subClassOf`); flattened at parse, transitive, multiple parents merge in IRI order ([ADR-0005](adr/0005-node-shape-inheritance.md)) |
 | Inherited-field override | Supported-with-interpretation | The child's whole property shape replaces the inherited one wholesale, with a warning naming both property shapes |
@@ -32,14 +32,13 @@ fastshaql recognises shapes only by explicit typing — subjects of `rdf:type sh
 |---|---|---|
 | Predicate path (§4.1) | Supported | Field name defaults to the predicate's local name; rendered `<iri>` (`a` for `rdf:type`) |
 | Inverse path (§4.4) | Supported | Rendered `^`; composite operands parenthesised per SPARQL `PathPrimary` |
-| Sequence path (§4.2) | Supported-with-interpretation | Rendered `/`; single-member lists accepted (spec requires ≥2); list walking is lenient — no SHACL-list validation; an empty list *is* `rdf:nil` (an IRI), so `sh:path ()` silently parses as a predicate path on `rdf:nil` — a field `nil`, no warning; only a non-list blank node hits the unrecognised-structure rejection |
-| Alternative path (§4.3) | Supported-with-interpretation | Rendered `\|`; empty list rejects loudly; single-member lists accepted (spec: ≥2) |
+| Sequence path (§4.2) | Supported | Rendered `/`; well-formed SHACL list and must carry ≥2 members (§4.2); an empty list *is* `rdf:nil` (an IRI) and rejects as an empty list |
+| Alternative path (§4.3) | Supported | Rendered `\|`; the operand list is walked strictly and must carry ≥2 members (§4.3) — including the empty list |
 | `sh:zeroOrMorePath` / `sh:oneOrMorePath` (§4.5–4.6) | Supported | Rendered `*` / `+` |
 | `sh:zeroOrOnePath` (§4.7) | Supported | Rendered `?` |
-| §4 well-formedness rules | Recognised-and-inert | Wrapper "exactly one triple", ≥2 members (see above), and "at most one `sh:path`" (§3.3) are not enforced — multi-predicate wrappers resolve silently by check order |
-| Path acyclicity (§4) | Rejected-loudly | No guard, no named error — a cyclic path recurses to an unguarded `RecursionError`; a cyclic `rdf:rest` chain raises rdflib's own list error |
+| Path acyclicity (§4) | Rejected-loudly | A blank-node path referencing itself rejects with a named error (§4 requires acyclic paths); a cyclic `rdf:rest` chain rejects inside the strict list walk |
 | Non-predicate path without `sh:codeIdentifier` | Rejected-loudly | The spec strongly recommends one for complex paths (§8.4); fastshaql requires it — there is no derivable field name |
-| Missing or unrecognised `sh:path` | Rejected-loudly | Both errors name the property-shape node itself — unrecognised structures include literals under `sh:path`; for inline properties the id is the raw blank-node id, since the error fires before IRI synthesis |
+| Missing or unrecognised `sh:path` | Rejected-loudly | Both errors name the property-shape node itself — unrecognised structures include literals under `sh:path`; for inline properties the id is the raw blank-node id, since the error fires before IRI synthesis; multiple `sh:path` values reject (§3.3: at most one) |
 
 `NegatedPropertySet` is not a SHACL term (1.1 or 1.2 — §4.1–§4.7 is the whole grammar), so a negated structure is simply an unrecognised `sh:path` and rejects; there is nothing to defer. The same full path grammar parses `shnex:pathValues` operands and `shnex:filterShape` conjunct paths.
 
@@ -64,14 +63,14 @@ fastshaql consumes a schema subset of §7 as GraphQL typing. Value-type preceden
 
 | Term | Disposition | Interpretation |
 |---|---|---|
-| `sh:class` (§7.1.1) | Supported-with-interpretation | Single IRI → relationship typing; resolves to a targeting shape, else a synthetic protected shape is created with a warning; multiple IRI values reject (the spec ANDs them) while non-IRI extra values are silently filtered; when both are present `sh:class` beats `sh:node` |
-| `sh:class` list form (1.2 union) | Recognised-and-inert | Silently dropped at property level — the field degrades to a scalar, no warning; the list form is consumed inside `shnex:filterShape` (§2) |
-| `sh:node` on property shapes (§7.8.1) | Supported-with-interpretation | Relationship typing by first IRI; multiple values silently pick one (the spec ANDs); blank-node values are silently dropped — the field degrades to a plain `String` scalar (the node-shape host differs: a blank parent raises, above); unknown IRI targets raise at schema build (registry), not parse |
+| `sh:class` (§7.1.1) | Supported-with-interpretation | Single IRI → relationship typing; resolves to a targeting shape, else a synthetic protected shape is created with a warning; multiple IRI values reject (the spec ANDs them), literal values reject as ill-formed, and the list form rejects as unsupported (below); when both are present `sh:class` beats `sh:node` |
+| `sh:class` list form (1.2 union) | Rejected-loudly | Union semantics are not lowered at property level — the list (including the empty list, the vacuous union) rejects by name; the list form is consumed inside `shnex:filterShape` (§2) |
+| `sh:node` on property shapes (§7.8.1) | Supported-with-interpretation | Relationship typing by sole IRI; multiple values reject (the spec conjoins them), blank-node values reject (inline node shapes — matching the node-shape host, above), and literal values reject as ill-formed; unknown IRI targets raise at schema build (registry), not parse |
 | `sh:datatype` (§7.1.2) | Supported | Single IRI or 1.2 list form; multiple triples (spec: at most one), empty lists, malformed lists, and non-IRI members reject loudly; unknown IRIs fall back to `String` |
 | String-union Property | Supported | `xsd:string` ∪ `rdf:langString` ∪ `rdf:dirLangString` — the only multi-entry set permitted (any other rejects); `String` output; the language chain applies with an implicit untagged terminal (§3) |
 | `sh:or` (§7.7.3) | Supported-with-interpretation | The datatype-only form (each member exactly `sh:datatype` with one IRI) normalises into the datatype tuple; any other `sh:or` warns once and is inert; `sh:datatype` + `sh:or` together and multiple `sh:or` values reject |
-| `sh:in` (§7.9.3) | Supported-with-interpretation | Homogeneous literal or IRI lists become enums; mixed lists and blank-node members reject (the spec permits mixed — a narrowing); duplicates warn and get distinct names mapping to one value; an empty list silently degrades the field to a plain `String` (value type only — cardinality untouched); relationship overlays are ignored with a warning; literals are never cross-checked against `sh:datatype` |
-| `sh:minCount` / `sh:maxCount` (§7.2.1–2) | Supported | FieldKind: `minCount >= 1` → required, `maxCount == 1` → scalar else list (`maxCount 0` therefore means a list); non-integer values and extra values are silently ignored; a defaulted field is non-null at any `minCount` (SD-6) |
+| `sh:in` (§7.9.3) | Supported-with-interpretation | Homogeneous literal or IRI lists become enums; mixed lists and blank-node members reject (the spec permits mixed — a narrowing); duplicates warn and get distinct names mapping to one value; an empty list excludes the field with a warning (no values are allowed — the `sh:deactivated` reading, §3.1.6); relationship overlays are ignored with a warning; literals are never cross-checked against `sh:datatype` |
+| `sh:minCount` / `sh:maxCount` (§7.2.1–2) | Supported-with-interpretation | FieldKind: `minCount >= 1` → required, `maxCount == 1` → scalar else list; values must be single `xsd:integer` literals — anything else, and extra values, reject (§7.2); `maxCount` below 1 (zero capacity — the property can never hold values) excludes the field with a warning, the `sh:deactivated` reading; a defaulted field is non-null at any `minCount` |
 | The other ~31 §7 components | Recognised-and-inert | Uniform boundary: never read at shape level — no warning, no schema or query effect. Covers `sh:nodeKind`, `sh:pattern`, the string/numeric range groups, the property-pair group, `sh:languageIn`, `sh:uniqueLang`, `sh:closed`, `sh:hasValue`, the logical group (`sh:and`/`sh:not`/`sh:xone`), the 1.2 list group, `sh:qualifiedValue*`, `sh:someValue`, `sh:reifierShape`, `sh:rootClass`, `sh:uniqueValuesFor`. Exception: inside `shnex:filterShape` a lowerable subset is consumed and everything else rejects loudly there (§2) |
 
 Datatype → scalar mapping (the code-stated 23-entry set):
@@ -90,7 +89,7 @@ Unknown or missing datatypes fall back to `String`/`StringFilter`; `rdf:dirLangS
 
 | Term | Disposition | Interpretation |
 |---|---|---|
-| `sh:codeIdentifier` (§8.4) | Supported | Field and type names (the spec names GraphQL as the use case); predicate-local-name fallback for predicate paths; not validated against the spec's `^[a-zA-Z_][a-zA-Z0-9_]*$` — an invalid name surfaces at GraphQL schema build; multiple values are silently collapsed to one |
+| `sh:codeIdentifier` (§8.4) | Supported | Field and type names (the spec names GraphQL as the use case); predicate-local-name fallback for predicate paths; validated at parse — an `xsd:string` literal matching `^[a-zA-Z_][a-zA-Z0-9_]*$`, else a named rejection (§8.4's grammar is the GraphQL name grammar); at most one value — multiples reject |
 | `sh:name` / `sh:description` (§8.1) | Supported | Field descriptions on property shapes (`sh:description` first, then `sh:name`); unread on node shapes, where the spec says not to use them |
 | `rdfs:label` / `rdfs:comment` | Supported | Node-shape descriptions (`rdfs:comment` first, then `rdfs:label`); per-predicate language selection at parse time — predicate priority beats language ([ADR-0007](adr/0007-description-language-selection.md)) |
 | `sh:order` (§8.6), `sh:group` (§8.7), `sh:intent` (§8.2), `sh:agentInstruction` (§8.3), `sh:unit` (§8.5) | Recognised-and-inert | Never read — no schema or query effect |
@@ -112,7 +111,7 @@ Value semantics: the spec (§6.8.2) unions path values with `sh:values` output a
 | `shnex:instancesOf` (§4.5.1) | Supported-with-interpretation | Constant folding only (constant IRI or all-IRI list); lowers `rdf:type/rdfs:subClassOf*` reading the queried graphs only — the spec's optional shapes-graph subclass lookup (§6.3) is a named deviation ([ADR-0016](adr/0016-derived-targets.md)) |
 | `sh:select` (shacl12-sparql §6.1) | Supported-with-interpretation | Merge-able bodies only: the WHERE body dissolves into the enclosing query, never a verbatim sub-SELECT (portability, [ADR-0015](adr/0015-derived-fields-node-expressions.md)); exactly one projected variable; `DISTINCT`/`REDUCED` head modifiers, head expressions, `SELECT *`, top-level `GROUP BY`/`ORDER BY`/`LIMIT`/`OFFSET`/`HAVING`, and any trailing SPARQL after the WHERE block reject; `SERVICE` is allowed; `$this` substitution is code-position-only (string literals, IRIREFs, comments protected); the Appendix A scan rejects `MINUS`, `AS ?this`, and `VALUES` over `this` (scoped to `this` only) |
 | `sh:sparqlExpr` (§6.2) | Supported-with-interpretation | `BIND(expr AS ?var)` at the enclosing scope — a named deviation from the spec's `SELECT ($EXPR$ AS ?result) WHERE {}` wrapper; an erroring expression leaves the variable unbound, as under SPARQL assignment semantics |
-| `sh:prefixes` (§2) | Supported-with-interpretation | Direct `sh:declare` on the referenced node only — the spec's `owl:imports`/`owl:versionIRI` traversal is a permanent exclusion; no shapes-graph fallback of any kind (absent `sh:prefixes` means no prefixes); incomplete declarations are silently skipped; prefix conflicts raise as ill-formed |
+| `sh:prefixes` (§2) | Supported-with-interpretation | Direct `sh:declare` on the referenced node only — the spec's `owl:imports`/`owl:versionIRI` traversal is a permanent exclusion; no shapes-graph fallback of any kind (absent `sh:prefixes` means no prefixes); incomplete declarations are silently skipped and duplicate `sh:prefix`/`sh:namespace` values silently pick one; prefix conflicts raise as ill-formed |
 | Empty expression `[]` (§4.1.1) | Rejected-loudly | Blank nodes that are subject of no triple reject as empty node expressions |
 | All remaining functions | Rejected-loudly | By name, inventory-pinned: the sub-SELECT tier (`shnex:orderBy`, `shnex:limit`, `shnex:offset`), aggregates (`shnex:count`/`min`/`max`/`sum`), `shnex:distinct`/`intersection`/`concat`/`remove`, `shnex:flatMap`/`findFirst`/`matchAll`, `shnex:nodesMatching`/`conformsToShape`, `shnex:var`, `shnex:arg`, `sparql:`* list-parameter functions, and custom functions |
 
@@ -165,7 +164,7 @@ One SPARQL query per operation: relationships lower to inline join triples and `
 
 ## 4. Not consumed
 
-- **SHACL Rules** — never executed; a future era may consume their materialised output.
+- **SHACL Rules (`sh:rule`, Inference Rules spec)** — never parsed or executed today. The writes-era design ([ADR-0024](adr/0024-mutations-via-shape-rules.md), Proposed).
 - **SHACL UI** — never read.
 - **ShEx** — no bridge.
 - **SPARQL Update / Graph Store Protocol** — reserved for the writes era.

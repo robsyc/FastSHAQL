@@ -49,6 +49,7 @@ from fastshaql.core.parser.node_expr import UnsupportedShapeError, parse_node_ex
 from fastshaql.core.parser.node_expr.parse import _DEFERRED_KEY_PARAMS
 from fastshaql.core.parser.node_expr.semantics import arm_label
 from fastshaql.core.parser.parse import parse_shapes
+from fastshaql.core.parser.shacl_path import UnsupportedShaclPathError
 
 EX = URIRef("http://example.org/")
 
@@ -385,6 +386,22 @@ def test_shnex_path_values_parses() -> None:
     )
     ir = parse_node_expr(graph, prop)
     assert ir == PathValuesNodeExpr(path=PredicatePath(EX + "foo"), focus_node=None)
+
+
+def test_shnex_path_values_single_member_list_raises() -> None:
+    """The operand is a path, not a wrapping list — a one-member sequence
+    list violates §4.2 (≥2 members), same as at ``sh:path``."""
+    graph, prop = _graph_with_values(
+        """
+        @prefix ex: <http://example.org/> .
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
+        ex:prop a sh:PropertyShape ;
+            sh:values [ shnex:pathValues ( ex:foo ) ] .
+        """
+    )
+    with pytest.raises(UnsupportedShaclPathError, match="at least two members"):
+        parse_node_expr(graph, prop)
 
 
 def test_shnex_path_values_focus_node_constant_parses() -> None:
@@ -1789,6 +1806,29 @@ def test_filter_shape_property_without_path_raises() -> None:
         """
     )
     with pytest.raises(UnsupportedShapeError, match="without sh:path"):
+        parse_node_expr(graph, prop)
+
+
+def test_filter_shape_property_with_multiple_paths_raises() -> None:
+    """A filter conjunct follows §3.3 too — no silent pick among paths."""
+    graph, prop = _graph_with_values(
+        """
+        @prefix ex: <http://example.org/> .
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
+        ex:prop a sh:PropertyShape ;
+            sh:values [
+                shnex:filterShape [
+                    sh:property [
+                        sh:path ex:label , ex:name ;
+                        sh:hasValue "x" ;
+                    ] ;
+                ] ;
+                shnex:nodes ex:thing ;
+            ] .
+        """
+    )
+    with pytest.raises(UnsupportedShapeError, match="Multiple sh:path values"):
         parse_node_expr(graph, prop)
 
 

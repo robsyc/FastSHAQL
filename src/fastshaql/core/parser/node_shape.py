@@ -12,14 +12,14 @@ from rdflib import RDFS, SH, URIRef
 
 from fastshaql.core.ir import NodeShapeIR, PropertyShapeIR
 
+from .errors import UnsupportedShapeError
 from .property_shape import parse_property_shape
 from .targets import parse_target
 from .util import (
-    SH_CODE_IDENTIFIER,
     first_localized_str,
     graphql_type_name,
     is_deactivated,
-    object_str,
+    read_code_identifier,
 )
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ def _parse_inherited_shape_iris(graph: Graph, shape_iri: URIRef) -> tuple[URIRef
     iris: list[URIRef] = []
     for node_ref in graph.objects(shape_iri, SH.node):
         if not isinstance(node_ref, URIRef):
-            raise NotImplementedError(
+            raise UnsupportedShapeError(
                 f"Blank-node sh:node on {shape_iri} — inline node shapes are not supported"
             )
         iris.append(node_ref)
@@ -60,7 +60,7 @@ def parse_node_shape(
         A parsed node shape with property shapes and metadata.
     """
     type_name = graphql_type_name(
-        code_identifier=object_str(graph, shape_iri, SH_CODE_IDENTIFIER),
+        code_identifier=read_code_identifier(graph, shape_iri),
         iri=shape_iri,
     )
     property_shapes: dict[str, PropertyShapeIR] = {}
@@ -73,6 +73,8 @@ def parse_node_shape(
             parent_graphql_type_name=type_name,
             description_language=description_language,
         )
+        if prop is None:
+            continue  # can never hold values (§7.2.2/§7.9.3) → no GraphQL field
         if prop.graphql_field_name in property_shapes:
             log.warning(
                 "Duplicate graphql field name %s in %s — skipping",

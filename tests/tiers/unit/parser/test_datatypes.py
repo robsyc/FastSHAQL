@@ -256,7 +256,7 @@ def test_derived_field_with_union_datatypes_parses() -> None:
     carry tagged values (the chain lowering covers it)."""
     prop = _parse_property(
         "sh:datatype ( xsd:string rdf:langString ) ;"
-        " sh:values [ shnex:pathValues ( ex:source ) ] ;",
+        " sh:values [ shnex:pathValues ex:source ] ;",
     )
     assert prop.datatypes == (XSD.string, RDF.langString)
     assert prop.source is not None

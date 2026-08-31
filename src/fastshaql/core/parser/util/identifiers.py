@@ -9,28 +9,76 @@ semantics. All consumers are inside ``core/parser/``.
 from __future__ import annotations
 
 import keyword
+import re
 from typing import TYPE_CHECKING
 
 from rdflib import URIRef
+from rdflib.namespace import XSD
+from rdflib.term import Literal
 
 from fastshaql.core.ir.shacl_path import PredicatePath, ShaclPropertyPath
 from fastshaql.core.kernel.constants import INLINE_SHAPE_PREFIX
 from fastshaql.core.kernel.identifiers import local_name
 
+from .graph_reads import sole_object
+from .namespaces import SH_CODE_IDENTIFIER
+
 if TYPE_CHECKING:
+    from rdflib import Graph
     from rdflib.term import Node
 
 __all__ = [
+    "InvalidCodeIdentifierError",
     "MissingCompositePathCodeIdentifierError",
     "graphql_type_name",
     "property_graphql_field_name",
+    "read_code_identifier",
     "safe_python_identifier",
     "synthesize_inline_shape_iri",
 ]
 
 
+class InvalidCodeIdentifierError(ValueError):
+    """Raised when ``sh:codeIdentifier`` violates the SHACL 1.2 §8.4 syntax."""
+
+
 class MissingCompositePathCodeIdentifierError(ValueError):
     """Raised when a composite-path property shape lacks ``sh:codeIdentifier``."""
+
+
+_CODE_IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
+
+
+def read_code_identifier(graph: Graph, subject: Node) -> str | None:
+    """``sh:codeIdentifier`` on *subject*, validated at parse time (§8.4).
+
+    The value must be an ``xsd:string`` literal matching
+    ``^[a-zA-Z_][a-zA-Z0-9_]*$`` — the same grammar GraphQL names follow,
+    so an invalid one would otherwise surface far from its source, as a
+    broken schema build.
+
+    Raises:
+        InvalidCodeIdentifierError: On a non-literal or non-``xsd:string``
+            value, or a lexical form outside the §8.4 grammar.
+        UnsupportedShapeError: On multiple values (§8.4 allows one).
+    """
+    term = sole_object(graph, subject, SH_CODE_IDENTIFIER, what="sh:codeIdentifier")
+    if term is None:
+        return None
+    if not isinstance(term, Literal) or (
+        term.language is not None or term.datatype not in (None, XSD.string)
+    ):
+        raise InvalidCodeIdentifierError(
+            f"sh:codeIdentifier on {subject} must be an xsd:string literal "
+            f"matching ^[a-zA-Z_][a-zA-Z0-9_]*$ (SHACL 1.2 §8.4), got {term!r}"
+        )
+    value = str(term)
+    if _CODE_IDENTIFIER_PATTERN.fullmatch(value) is None:
+        raise InvalidCodeIdentifierError(
+            f"sh:codeIdentifier {value!r} on {subject} does not match "
+            "^[a-zA-Z_][a-zA-Z0-9_]*$ (SHACL 1.2 §8.4)"
+        )
+    return value
 
 
 def safe_python_identifier(name: str) -> str:

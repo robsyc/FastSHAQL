@@ -16,6 +16,7 @@ from rdflib.namespace import XSD
 from fastshaql.core.ir.property_shape import ValueType
 from fastshaql.core.ir.shacl_path import SequencePath
 from fastshaql.core.parser import parse_shapes
+from fastshaql.core.parser.errors import UnsupportedShapeError
 
 _PREFIXES = textwrap.dedent(
     """
@@ -242,7 +243,7 @@ def test_blank_node_sh_node_raises() -> None:
             sh:node [ a sh:NodeShape ] .
         """
     )
-    with pytest.raises(NotImplementedError, match="Blank-node sh:node"):
+    with pytest.raises(UnsupportedShapeError, match="Blank-node sh:node"):
         parse_shapes(_graph(turtle))
 
 

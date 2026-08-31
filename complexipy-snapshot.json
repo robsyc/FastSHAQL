@@ -38,15 +38,5 @@
         "complexity": 16
       }
     ]
-  },
-  {
-    "path": "src/fastshaql/core/parser/shacl_path.py",
-    "file_name": "shacl_path.py",
-    "functions": [
-      {
-        "name": "parse_shacl_path_node",
-        "complexity": 16
-      }
-    ]
   }
 ]

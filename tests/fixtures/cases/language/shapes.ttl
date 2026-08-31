@@ -49,7 +49,7 @@ ex:PersonShape a sh:NodeShape ;
         sh:datatype rdf:langString ;
         sh:minCount 0 ;
         sh:maxCount 1 ;
-        sh:values [ shnex:pathValues ( ex:summarySource ) ]
+        sh:values [ shnex:pathValues ex:summarySource ]
     ] ;
     sh:property [
         sh:path ex:employer ;

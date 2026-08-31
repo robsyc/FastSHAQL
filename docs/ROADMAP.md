@@ -48,20 +48,6 @@ The reserved `QueryContext.write_graph` slot (read scope and write target stay s
 - **TopBraid-style limited write interface** — `create`, `addTo`, `update`, `delete` mirroring [TopBraid's GraphQL write model](https://docs.topquadrant.com/latest/graphql/index.html) as a compromise between full mutation freedom and staged-transaction control. Reconsider after query-type consolidation.
 - **NEW: [Dash SPARQL templates](https://www.datashapes.org/templates.html)** Which may be an easier path to a write surface than rules-based one, but as expressive.
 
-## Bugs
-
-Found during the support-matrix audit. Each is a silent degradation or a dead guard — the fix is a loud error or correct handling, not new design.
-
-- **Blank `sh:node` on property shapes silently dropped** — the `NotImplementedError` guard is unreachable (`object_uri` returns `None` for blank nodes); the field degrades to a String scalar with no warning. The node-shape host (inheritance parent) raises correctly.
-- **`sh:class` list form silently dropped at property level** — the SHACL 1.2 union syntax (§7.1.1) is ignored; alongside an IRI value the list is dropped, alone it degrades the field to a String scalar.
-- **`sh:path ()` parses as a predicate path on `rdf:nil`** — an empty list *is* `rdf:nil`, an IRI, so the predicate branch wins before any list check; the dedicated empty-sequence error is dead code.
-- **Silent arbitrary picks** — multiple `sh:node` values on one property shape and multiple `sh:path` values resolve by graph iteration order (a nondeterminism source), no warning.
-- **`sh:codeIdentifier` unvalidated** — §8.4 requires `^[a-zA-Z_][a-zA-Z0-9_]*$`; any string is accepted and flows into GraphQL type/field names.
-- **No path-acyclicity check** — cyclic blank-node paths crash with `RecursionError` at parse (the spec requires acyclic paths; a parse-time check is the fix).
-- **List well-formedness unenforced** — single-member sequence/alternative lists are accepted (the spec requires ≥2 members); the path parser uses the lenient list walk where a strict one exists.
-- **Non-integer `sh:minCount`/`sh:maxCount` silently ignored** — cardinality falls back to the optional-list defaults.
-- **`sh:maxCount 0` yields a list-kind field** — a zero-capacity property still emits an always-empty list field instead of being dropped or rejected.
-
 ## Backlog
 
 Each needs deep understanding and a dedicated design decision before any implementation.
