@@ -62,6 +62,7 @@ from fastshaql.core.sparql import (
 from fastshaql.core.sparql.terms import render_term
 from fastshaql.core.translation.node_expr import (
     _substitute_focus_var,
+    default_value_operand,
     translate_node_expr,
 )
 
@@ -1262,3 +1263,471 @@ def test_boolean_literals_render_canonical() -> None:
     assert render_term(Literal(True)) == "true"
     assert render_term(Literal(False)) == "false"
     assert render_term(Literal("true")) == '"true"'
+
+
+# --- Sub-variable naming discipline (mutation-hardening batch) ---
+
+
+def _var_names(node: object) -> set[str]:
+    """Every SPARQL variable reachable in a pattern/expression tree — the
+    exact-name contract for the ``_role_{base}`` minting discipline."""
+    names: set[str] = set()
+
+    def walk(obj: object) -> None:
+        if isinstance(obj, Variable):
+            names.add(str(obj))
+        elif isinstance(obj, str):
+            return
+        elif isinstance(obj, (list, tuple)):
+            for item in obj:
+                walk(item)
+        elif hasattr(obj, "__dict__"):
+            for value in vars(obj).values():
+                walk(value)
+
+    walk(node)
+    return names
+
+
+def test_exists_arm_binds_role_var() -> None:
+    """A top-level ``shnex:exists`` arm's inner patterns bind
+    ``?_exists_{value_var}`` — the role mint of ``_exists_expr``."""
+    patterns = translate_node_expr(
+        _exists("tag"),
+        focus_term=Variable("iri"),
+        value_var=Variable("tag"),
+    )
+    assert patterns == [
+        BindPattern(
+            ExistsExpr(
+                GroupPattern(
+                    (
+                        TriplePattern(
+                            subject=Variable("iri"),
+                            predicate=SparqlPredicatePath(EX + "tag"),
+                            object=Variable("_exists_tag"),
+                        ),
+                    )
+                )
+            ),
+            Variable("tag"),
+        )
+    ]
+
+
+def test_pure_if_exists_branches_inline_with_role_vars() -> None:
+    """The fully-inlined ``IF`` form: condition/then/else exists branches
+    mint ``?_cond_{base}`` and inner values ``?_exists__then_{base}`` /
+    ``?_exists__else_{base}`` (role-prefixed bases, never a bare reuse)."""
+    ir = IfNodeExpr(
+        cond=_exists("flag"),
+        then=_exists("thenVal"),
+        otherwise=_exists("elseVal"),
+    )
+    patterns = translate_node_expr(
+        ir, focus_term=Variable("iri"), value_var=Variable("tag")
+    )
+    assert len(patterns) == 1
+    bind = patterns[0]
+    assert isinstance(bind, BindPattern)
+    assert bind.var == Variable("tag")
+    assert isinstance(bind.expr, FunctionCall)
+    assert bind.expr.name == "IF"
+    assert _var_names(bind.expr.args[0]) == {"iri", "_exists_tag"}
+    assert _var_names(bind.expr.args[1]) == {"iri", "_exists__then_tag"}
+    assert _var_names(bind.expr.args[2]) == {"iri", "_exists__else_tag"}
+
+
+def test_materialized_condition_binds_cond_var() -> None:
+    """An impure condition binds ``?_cond_{base}`` ahead of the value
+    ``BIND`` — the sub-BIND fallback's condition source (form 2)."""
+    ir = IfNodeExpr(
+        cond=PathValuesNodeExpr(path=PredicatePath(EX + "flag")),
+        then=_exists("thenVal"),
+        otherwise=ConstantNodeExpr(Literal(False)),
+    )
+    patterns = translate_node_expr(
+        ir, focus_term=Variable("iri"), value_var=Variable("tag")
+    )
+    # The impure then-branch is contained in its own OPTIONAL over
+    # ``?_then_{base}``; the condition binds ``?_cond_{base}``; the else
+    # arm is a pure constant inlined into the closing value BIND.
+    assert _var_names(patterns) == {
+        "iri",
+        "tag",
+        "_cond_tag",
+        "_then_tag",
+        "_exists__then_tag",
+    }
+    assert isinstance(patterns[-1], BindPattern)
+    assert patterns[-1].var == Variable("tag")
+
+
+def test_multivalued_branch_takes_optional_arm_form() -> None:
+    """A multivalued-capable then-branch forces the two-conditioned-``OPTIONAL``
+    form (form 3): the arm binds the shared ``value_var`` directly, with no
+    ``_then_``/``_else_`` sub-BINDs — row grouping must not be flattened."""
+    ir = IfNodeExpr(
+        cond=_exists("flag"),
+        then=PathValuesNodeExpr(path=PredicatePath(EX + "name")),
+        otherwise=ConstantNodeExpr(Literal(0)),
+    )
+    patterns = translate_node_expr(
+        ir, focus_term=Variable("iri"), value_var=Variable("tag")
+    )
+    assert _var_names(patterns) == {"iri", "tag", "_exists_tag"}
+    arms = [p for p in patterns if isinstance(p, OptionalPattern)]
+    assert len(arms) == 2
+    triple = arms[0].child.children[0]
+    assert triple == TriplePattern(
+        subject=Variable("iri"),
+        predicate=SparqlPredicatePath(EX + "name"),
+        object=Variable("tag"),
+    )
+
+
+def test_default_value_operand_impure_arm_binds_dv_default_var() -> None:
+    """The ``sh:defaultValue`` lane: an arm needing sub-``BIND`` s binds
+    ``?_dv_default_{value_var}`` and the operand references that variable."""
+    ir = IfNodeExpr(
+        cond=PathValuesNodeExpr(path=PredicatePath(EX + "flag")),
+        then=ConstantNodeExpr(Literal(1)),
+        otherwise=ConstantNodeExpr(Literal(0)),
+    )
+    expr, patterns = default_value_operand(ir, Variable("iri"), Variable("score"))
+    assert expr == TermExpr(Variable("_dv_default_score"))
+    assert _var_names(patterns) == {
+        "iri",
+        "_dv_default_score",
+        "_cond__dv_default_score",
+    }
+
+
+def test_default_value_operand_pure_exists_inlines_with_role_var() -> None:
+    """A pure exists default inlines as ``EXISTS { … }`` over inner patterns
+    binding ``?_exists__dv_default_{value_var}`` — the role mint of the pure
+    lane (the ``dv_default`` role prefixes the exists base)."""
+    expr, patterns = default_value_operand(
+        _exists("flag"), Variable("iri"), Variable("dv")
+    )
+    assert patterns == []
+    assert expr == ExistsExpr(
+        GroupPattern(
+            (
+                TriplePattern(
+                    subject=Variable("iri"),
+                    predicate=SparqlPredicatePath(EX + "flag"),
+                    object=Variable("_exists__dv_default_dv"),
+                ),
+            )
+        )
+    )
+
+
+# --- role-prefixed bases through nesting (mutation-hardening batch) ---
+
+
+def test_exists_over_exists_mints_nested_role_vars() -> None:
+    """Nested ``shnex:exists``: the inner exists lowers against the outer's
+    ``_exists_{base}`` as its base, so the innermost value variable is
+    ``?_exists__exists_{base}`` — same-role variables stay distinct per depth."""
+    patterns = translate_node_expr(
+        ExistsNodeExpr(
+            inner=ExistsNodeExpr(
+                inner=PathValuesNodeExpr(path=PredicatePath(EX + "tag"))
+            )
+        ),
+        focus_term=Variable("iri"),
+        value_var=Variable("tag"),
+    )
+    assert patterns == [
+        BindPattern(
+            ExistsExpr(
+                GroupPattern(
+                    (
+                        BindPattern(
+                            ExistsExpr(
+                                GroupPattern(
+                                    (
+                                        TriplePattern(
+                                            subject=Variable("iri"),
+                                            predicate=SparqlPredicatePath(EX + "tag"),
+                                            object=Variable("_exists__exists_tag"),
+                                        ),
+                                    )
+                                )
+                            ),
+                            Variable("_exists_tag"),
+                        ),
+                    )
+                )
+            ),
+            Variable("tag"),
+        )
+    ]
+
+
+def test_filter_shape_inner_expression_keeps_value_var_base() -> None:
+    """A ``shnex:filterShape``'s nodes arm lowers against the caller's value
+    var as base — an inner exists mints ``?_exists_{value_var}``, never a
+    base-less name."""
+    patterns = translate_node_expr(
+        FilterShapeNodeExpr(
+            nodes=ExistsNodeExpr(
+                inner=PathValuesNodeExpr(path=PredicatePath(EX + "tag"))
+            ),
+            shape=FilterShapeIR(conjuncts=()),
+        ),
+        focus_term=Variable("iri"),
+        value_var=Variable("tag"),
+    )
+    assert patterns == [
+        BindPattern(
+            ExistsExpr(
+                GroupPattern(
+                    (
+                        TriplePattern(
+                            subject=Variable("iri"),
+                            predicate=SparqlPredicatePath(EX + "tag"),
+                            object=Variable("_exists_tag"),
+                        ),
+                    )
+                )
+            ),
+            Variable("tag"),
+        )
+    ]
+
+
+def test_materialized_compound_condition_mints_cond_base() -> None:
+    """An impure compound condition (here: a filterShape) binds
+    ``?_cond_{base}`` and its own nested sub-expressions lower against that
+    variable as base — ``?_exists__cond_{base}``."""
+    ir = IfNodeExpr(
+        cond=FilterShapeNodeExpr(
+            nodes=ExistsNodeExpr(
+                inner=PathValuesNodeExpr(path=PredicatePath(EX + "flag"))
+            ),
+            shape=FilterShapeIR(conjuncts=()),
+        ),
+        then=ConstantNodeExpr(Literal(1)),
+        otherwise=ConstantNodeExpr(Literal(0)),
+    )
+    patterns = translate_node_expr(
+        ir, focus_term=Variable("iri"), value_var=Variable("tag")
+    )
+    assert _var_names(patterns) == {"iri", "tag", "_cond_tag", "_exists__cond_tag"}
+    assert isinstance(patterns[-1], BindPattern)
+    assert patterns[-1].var == Variable("tag")
+
+
+def test_pure_nested_if_condition_mints_cond_role() -> None:
+    """A pure nested ``shnex:if`` used as a condition lowers against
+    ``?_cond_{base}`` — its exists arm mints ``?_exists__cond_{base}``."""
+    ir = IfNodeExpr(
+        cond=IfNodeExpr(
+            cond=_exists("flag"),
+            then=ConstantNodeExpr(Literal(True)),
+            otherwise=ConstantNodeExpr(Literal(False)),
+        ),
+        then=ConstantNodeExpr(Literal(1)),
+        otherwise=ConstantNodeExpr(Literal(0)),
+    )
+    patterns = translate_node_expr(
+        ir, focus_term=Variable("iri"), value_var=Variable("tag")
+    )
+    assert len(patterns) == 1
+    bind = patterns[0]
+    assert isinstance(bind, BindPattern)
+    assert bind.var == Variable("tag")
+    assert isinstance(bind.expr, FunctionCall)
+    assert _var_names(bind.expr.args[0]) == {"iri", "_exists__cond_tag"}
+
+
+def test_impure_else_branch_keeps_focus_term_and_else_role() -> None:
+    """Form 2 with an impure *else*: the branch binds ``?_else_{base}``, its
+    exists reads the focus term as subject, and the value ``BIND`` references
+    the branch variable."""
+    ir = IfNodeExpr(
+        cond=PathValuesNodeExpr(path=PredicatePath(EX + "flag")),
+        then=ConstantNodeExpr(Literal(1)),
+        otherwise=ExistsNodeExpr(
+            inner=PathValuesNodeExpr(path=PredicatePath(EX + "alt"))
+        ),
+    )
+    patterns = translate_node_expr(
+        ir, focus_term=Variable("iri"), value_var=Variable("tag")
+    )
+    assert _var_names(patterns) == {
+        "iri",
+        "tag",
+        "_cond_tag",
+        "_else_tag",
+        "_exists__else_tag",
+    }
+    assert patterns[1] == BindPattern(
+        ExistsExpr(
+            GroupPattern(
+                (
+                    TriplePattern(
+                        subject=Variable("iri"),
+                        predicate=SparqlPredicatePath(EX + "alt"),
+                        object=Variable("_exists__else_tag"),
+                    ),
+                )
+            )
+        ),
+        Variable("_else_tag"),
+    )
+    assert patterns[-1].var == Variable("tag")
+
+
+def test_multivalued_sibling_arm_exists_mints_then_role() -> None:
+    """Arm form (a multivalued sibling forces conditioned OPTIONALs): the
+    single-valued ``then`` exists lowers against ``?_then_{base}`` — its
+    inner value variable is ``?_exists__then_{base}``."""
+    ir = IfNodeExpr(
+        cond=_exists("flag"),
+        then=ExistsNodeExpr(inner=PathValuesNodeExpr(path=PredicatePath(EX + "alt"))),
+        otherwise=PathValuesNodeExpr(path=PredicatePath(EX + "name")),
+    )
+    patterns = translate_node_expr(
+        ir, focus_term=Variable("iri"), value_var=Variable("tag")
+    )
+    assert patterns == [
+        OptionalPattern(
+            GroupPattern(
+                (
+                    BindPattern(
+                        ExistsExpr(
+                            GroupPattern(
+                                (
+                                    TriplePattern(
+                                        subject=Variable("iri"),
+                                        predicate=SparqlPredicatePath(EX + "alt"),
+                                        object=Variable("_exists__then_tag"),
+                                    ),
+                                )
+                            )
+                        ),
+                        Variable("tag"),
+                    ),
+                    FilterPattern(
+                        ExistsExpr(
+                            GroupPattern(
+                                (
+                                    TriplePattern(
+                                        subject=Variable("iri"),
+                                        predicate=SparqlPredicatePath(EX + "flag"),
+                                        object=Variable("_exists_tag"),
+                                    ),
+                                )
+                            )
+                        )
+                    ),
+                )
+            )
+        ),
+        OptionalPattern(
+            GroupPattern(
+                (
+                    TriplePattern(
+                        subject=Variable("iri"),
+                        predicate=SparqlPredicatePath(EX + "name"),
+                        object=Variable("tag"),
+                    ),
+                    FilterPattern(
+                        NotExpr(
+                            ExistsExpr(
+                                GroupPattern(
+                                    (
+                                        TriplePattern(
+                                            subject=Variable("iri"),
+                                            predicate=SparqlPredicatePath(EX + "flag"),
+                                            object=Variable("_exists_tag"),
+                                        ),
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                )
+            )
+        ),
+    ]
+
+
+def test_multivalued_sibling_arm_exists_mints_else_role() -> None:
+    """Mirror of the then-arm test: the ``else`` exists lowers against
+    ``?_else_{base}`` — ``?_exists__else_{base}``."""
+    ir = IfNodeExpr(
+        cond=_exists("flag"),
+        then=PathValuesNodeExpr(path=PredicatePath(EX + "name")),
+        otherwise=ExistsNodeExpr(
+            inner=PathValuesNodeExpr(path=PredicatePath(EX + "alt"))
+        ),
+    )
+    patterns = translate_node_expr(
+        ir, focus_term=Variable("iri"), value_var=Variable("tag")
+    )
+    assert patterns == [
+        OptionalPattern(
+            GroupPattern(
+                (
+                    TriplePattern(
+                        subject=Variable("iri"),
+                        predicate=SparqlPredicatePath(EX + "name"),
+                        object=Variable("tag"),
+                    ),
+                    FilterPattern(
+                        ExistsExpr(
+                            GroupPattern(
+                                (
+                                    TriplePattern(
+                                        subject=Variable("iri"),
+                                        predicate=SparqlPredicatePath(EX + "flag"),
+                                        object=Variable("_exists_tag"),
+                                    ),
+                                )
+                            )
+                        )
+                    ),
+                )
+            )
+        ),
+        OptionalPattern(
+            GroupPattern(
+                (
+                    BindPattern(
+                        ExistsExpr(
+                            GroupPattern(
+                                (
+                                    TriplePattern(
+                                        subject=Variable("iri"),
+                                        predicate=SparqlPredicatePath(EX + "alt"),
+                                        object=Variable("_exists__else_tag"),
+                                    ),
+                                )
+                            )
+                        ),
+                        Variable("tag"),
+                    ),
+                    FilterPattern(
+                        NotExpr(
+                            ExistsExpr(
+                                GroupPattern(
+                                    (
+                                        TriplePattern(
+                                            subject=Variable("iri"),
+                                            predicate=SparqlPredicatePath(EX + "flag"),
+                                            object=Variable("_exists_tag"),
+                                        ),
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                )
+            )
+        ),
+    ]

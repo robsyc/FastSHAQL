@@ -273,3 +273,71 @@ def test_select_values_without_data_block_allowed() -> None:
     # Appendix-A ``this``-binding violation — the triple store rejects the
     # query at execution time, so the scanner defers.
     validate_select_prebinding("?this ex:p ?x . VALUES ?x")
+
+
+# --- scanner edges (mutation-hardening batch) ---
+
+
+def test_parse_select_where_at_end_of_text_raises() -> None:
+    # WHERE as the last token: no ``{`` follows — a clean UnsupportedShapeError,
+    # never an IndexError off the end of the text.
+    with pytest.raises(UnsupportedShapeError):
+        parse_shacl_select("SELECT ?x WHERE")
+
+
+def test_select_values_this_after_braced_group_raises() -> None:
+    # A preceding braced group (OPTIONAL/BIND block) must not become the
+    # data-block anchor: the var-list span is between this VALUES and *its
+    # own* ``{`` — binding ?this there is still an Appendix-A violation.
+    with pytest.raises(UnsupportedShapeError, match="VALUES"):
+        validate_select_prebinding(
+            "OPTIONAL { ?a ex:p ?b } VALUES ?this { <http://example.org/a> }"
+        )
+
+
+def test_select_values_this_without_data_block_defers() -> None:
+    # Malformed VALUES binding-shaped var list (?this, no ``{`` at all):
+    # deferred to the store — a real violation needs a data block to bind.
+    validate_select_prebinding("?s ?p ?o . VALUES ?this")
+
+
+# --- scanner anchoring edges (mutation-hardening batch) ---
+
+
+def test_select_where_search_is_anchored_after_the_select_head() -> None:
+    # Leading code (dropped by the merge) may itself contain WHERE — the
+    # scan for the real WHERE starts after the SELECT head, never at 0.
+    body, projection = parse_shacl_select(
+        "?this WHERE ?s ?p ?o . SELECT ?x WHERE { ?x ex:p ?x }"
+    )
+    assert body == "?x ex:p ?x"
+    assert projection == "x"
+
+
+def test_malformed_values_does_not_mask_a_later_minus() -> None:
+    # A VALUES without its data block defers to the store for THAT span —
+    # later code spans are still scanned for Appendix A violations.
+    with pytest.raises(UnsupportedShapeError, match="MINUS"):
+        validate_select_prebinding('VALUES ?x "lit" ?s ?p ?o . MINUS { ?a ?b ?c }')
+
+
+def test_values_this_referenced_outside_its_data_block_stays_legal() -> None:
+    # The Appendix A rule binds ?this only between VALUES and its data
+    # block's opening brace — a ?this reference after the block is a plain
+    # variable read (UNDEF data values keep this a single code span).
+    validate_select_prebinding(
+        "VALUES ?x { UNDEF } ?this ex:p ?o . OPTIONAL { ?z ex:q ?w }"
+    )
+
+
+def test_whitespace_between_trailing_literals_does_not_mask_junk() -> None:
+    # A whitespace-only span between two string literals must not end the
+    # suffix scan — later trailing content still rejects.
+    with pytest.raises(UnsupportedShapeError, match="trailing"):
+        parse_shacl_select('SELECT ?x WHERE { ?x ex:p ?x } "a"  "b" trailing')
+
+
+def test_malformed_values_with_trailing_content_still_defers() -> None:
+    # No data block anywhere: binding-shaped var lists defer to the store
+    # even when more code follows the malformed VALUES.
+    validate_select_prebinding("VALUES ?this ?other")

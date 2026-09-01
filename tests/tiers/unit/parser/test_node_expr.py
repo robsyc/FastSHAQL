@@ -13,8 +13,8 @@ from __future__ import annotations
 import logging
 
 import pytest
-from rdflib import Graph, Literal, URIRef
-from rdflib.namespace import RDF
+from rdflib import BNode, Graph, Literal, URIRef
+from rdflib.namespace import RDF, SH, XSD
 
 from fastshaql.core.ir.filter_shape import (
     FilterClass,
@@ -46,10 +46,16 @@ from fastshaql.core.ir.shacl_path import InversePath, PredicatePath
 from fastshaql.core.kernel.identifiers import local_name
 from fastshaql.core.kernel.io import load_shapes
 from fastshaql.core.parser.node_expr import UnsupportedShapeError, parse_node_expr
+from fastshaql.core.parser.node_expr.filter_shape import parse_filter_shape
 from fastshaql.core.parser.node_expr.parse import _DEFERRED_KEY_PARAMS
-from fastshaql.core.parser.node_expr.semantics import arm_label
+from fastshaql.core.parser.node_expr.semantics import (
+    arm_label,
+    reject_derived_path_targets,
+)
+from fastshaql.core.parser.node_expr.shacl_prefixes import parse_shacl_prefixes
 from fastshaql.core.parser.parse import parse_shapes
 from fastshaql.core.parser.shacl_path import UnsupportedShaclPathError
+from fastshaql.core.parser.util.namespaces import SH_VALUES
 
 EX = URIRef("http://example.org/")
 
@@ -2389,3 +2395,133 @@ def test_derived_list_field_bare_exists_raises() -> None:
     )
     with pytest.raises(UnsupportedShapeError, match=r"uses shnex:exists"):
         parse_shapes(load_shapes(turtle))
+
+
+# --- filter-shape conjunct scoping (mutation-hardening batch) ---
+
+
+def test_filter_shape_conjuncts_scoped_to_their_shape() -> None:
+    """Two sibling filter shapes in one graph: each parse reads only its own
+    conjunct triples — a datatype/class conjunct from the sibling must never
+    leak into the other's ``FilterShapeIR``."""
+    graph = Graph()
+    by_class, by_datatype = BNode("byClass"), BNode("byDatatype")
+    graph.add((by_class, SH["class"], EX + "Disease"))
+    graph.add((by_datatype, SH.datatype, XSD.date))
+    class_ir = parse_filter_shape(graph, by_class)
+    datatype_ir = parse_filter_shape(graph, by_datatype)
+    assert class_ir == FilterShapeIR(
+        conjuncts=(FilterClass(classes=(EX + "Disease",)),)
+    )
+    assert datatype_ir == FilterShapeIR(conjuncts=(FilterDatatype(datatype=XSD.date),))
+
+
+# --- parser scoping and rule-chaining edges (mutation-hardening batch) ---
+
+
+def test_filter_shape_conjuncts_never_leak_from_sibling_nodes() -> None:
+    """Conjunct scans are subject-scoped: a sibling node's class, datatype,
+    range, flags, and hasValue triples must never enter the target's IR."""
+    graph = Graph()
+    target, sibling = BNode("target"), BNode("sibling")
+    graph.add((target, SH["class"], EX + "Disease"))
+    graph.add((target, SH.pattern, Literal("^A")))
+    graph.add((sibling, SH["class"], EX + "Other"))
+    graph.add((sibling, SH.datatype, XSD.date))
+    graph.add((sibling, SH.minInclusive, Literal(1)))
+    graph.add((sibling, SH.flags, Literal("i")))
+    graph.add((sibling, SH.hasValue, EX + "Alpha"))
+    assert parse_filter_shape(graph, target) == FilterShapeIR(
+        conjuncts=(FilterClass((EX + "Disease",)), FilterRegex(Literal("^A"), None))
+    )
+
+
+def test_filter_shape_rejects_unknown_predicate_after_known_one() -> None:
+    graph = Graph()
+    shape = BNode("shape")
+    graph.add((shape, SH["class"], EX + "Disease"))
+    graph.add((shape, EX + "bogus", Literal("x")))
+    with pytest.raises(UnsupportedShapeError, match="bogus"):
+        parse_filter_shape(graph, shape)
+
+
+def test_rule_chaining_inside_nested_property_conjunct_rejected() -> None:
+    graph = Graph()
+    derived = BNode("derivedShape")
+    graph.add((derived, SH.path, EX + "salary"))
+    graph.add((derived, SH_VALUES, Literal("derived")))
+    ir = FilterShapeNodeExpr(
+        nodes=PathValuesNodeExpr(path=PredicatePath(EX + "employed")),
+        shape=FilterShapeIR(
+            conjuncts=(
+                FilterProperty(
+                    path=PredicatePath(EX + "salary"),
+                    nested=FilterShapeIR(conjuncts=()),
+                ),
+            )
+        ),
+    )
+    with pytest.raises(UnsupportedShapeError, match="rule chaining"):
+        reject_derived_path_targets(graph, ir, EX + "Shape", "score")
+
+
+def test_derived_target_scan_requires_a_path_predicate() -> None:
+    """Only ``sh:path`` declarations count as property shapes — an object
+    position match under any other predicate is not a derived target."""
+    graph = Graph()
+    decoy = BNode("decoy")
+    graph.add((decoy, EX + "mentions", EX + "name"))
+    graph.add((decoy, SH_VALUES, Literal("x")))
+    reject_derived_path_targets(
+        graph, PathValuesNodeExpr(path=PredicatePath(EX + "name")), EX + "S", "f"
+    )
+
+
+def test_prefix_declarations_read_only_declare_edges() -> None:
+    """Prefix resolution walks ``sh:declare`` edges of the node's
+    ``sh:prefixes`` — annotations and unrelated declarations elsewhere in
+    the graph never contribute."""
+    graph = Graph()
+    node, prefixes, decl = BNode("expr"), BNode("prefixes"), BNode("decl")
+    graph.add((node, SH.prefixes, prefixes))
+    graph.add((prefixes, SH.declare, decl))
+    graph.add((decl, SH.prefix, Literal("foo")))
+    graph.add((decl, SH.namespace, URIRef("http://example.org/ns#")))
+    annotated = BNode("annotated")
+    graph.add((prefixes, EX + "note", annotated))
+    graph.add((annotated, SH.prefix, Literal("p")))
+    graph.add((annotated, SH.namespace, URIRef("http://example.org/other#")))
+    unrelated, decl2 = BNode("unrelated"), BNode("decl2")
+    graph.add((unrelated, SH.declare, decl2))
+    graph.add((decl2, SH.prefix, Literal("bar")))
+    graph.add((decl2, SH.namespace, URIRef("http://example.org/bar#")))
+    assert parse_shacl_prefixes(graph, node) == {"foo": "http://example.org/ns#"}
+
+
+def test_rule_chaining_two_property_levels_deep_rejected() -> None:
+    """The chaining guard recurses through nested ``sh:property`` conjuncts —
+    a derived path two levels down is still rejected."""
+    graph = Graph()
+    derived = BNode("derivedShape")
+    graph.add((derived, SH.path, EX + "salary"))
+    graph.add((derived, SH_VALUES, Literal("derived")))
+    ir = FilterShapeNodeExpr(
+        nodes=PathValuesNodeExpr(path=PredicatePath(EX + "employed")),
+        shape=FilterShapeIR(
+            conjuncts=(
+                FilterProperty(
+                    path=PredicatePath(EX + "employed"),
+                    nested=FilterShapeIR(
+                        conjuncts=(
+                            FilterProperty(
+                                path=PredicatePath(EX + "salary"),
+                                nested=FilterShapeIR(conjuncts=()),
+                            ),
+                        )
+                    ),
+                ),
+            )
+        ),
+    )
+    with pytest.raises(UnsupportedShapeError, match="rule chaining"):
+        reject_derived_path_targets(graph, ir, EX + "Shape", "score")

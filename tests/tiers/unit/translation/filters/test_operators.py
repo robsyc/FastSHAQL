@@ -9,14 +9,22 @@ Order: OR folding → scalar operator translation → IRI operator translation.
 from __future__ import annotations
 
 from graphql.language.ast import (
+    ListValueNode,
     NameNode,
     ObjectFieldNode,
     ObjectValueNode,
     StringValueNode,
 )
 from rdflib import Literal, Variable
+from rdflib.namespace import XSD
 
-from fastshaql.core.sparql import CompareExpr, FunctionCall, OrExpr, TermExpr
+from fastshaql.core.sparql import (
+    CompareExpr,
+    FunctionCall,
+    InExpr,
+    OrExpr,
+    TermExpr,
+)
 from fastshaql.core.translation.filters.operators import (
     combine_or,
     filter_lhs,
@@ -86,3 +94,33 @@ def test_translate_iri_filter_string_pattern() -> None:
     expr = translate_iri_filter(node, Variable("iri"))
     assert isinstance(expr, FunctionCall)
     assert expr.render() == 'STRSTARTS(STR(?iri), "http://example.org/sa")'
+
+
+# --- membership operand coercion (mutation-hardening batch) ---
+
+
+def test_translate_scalar_ops_in_carries_declared_datatype() -> None:
+    """``in`` operands ride the field's declared datatype — a date field
+    filters against ``xsd:date`` literals, not plain strings."""
+    prop = scalar_property("born", min_count=1, max_count=1, datatype=XSD.date)
+    node = ObjectValueNode(
+        fields=(
+            ObjectFieldNode(
+                name=NameNode(value="in"),
+                value=ListValueNode(
+                    values=(
+                        StringValueNode(value="2020-01-01"),
+                        StringValueNode(value="2021-06-30"),
+                    )
+                ),
+            ),
+        )
+    )
+    expr = translate_scalar_ops(node, prop, Variable("born"))
+    assert expr == InExpr(
+        TermExpr(Variable("born")),
+        (
+            Literal("2020-01-01", datatype=XSD.date),
+            Literal("2021-06-30", datatype=XSD.date),
+        ),
+    )
