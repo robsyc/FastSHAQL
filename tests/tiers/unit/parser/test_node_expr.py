@@ -138,7 +138,13 @@ def test_derived_without_datatype_raises() -> None:
             sh:values "FastshaqlEMR" ;
         ] ."""
     )
-    with pytest.raises(UnsupportedShapeError, match="sh:datatype"):
+    with pytest.raises(
+        UnsupportedShapeError,
+        match=(
+            r"derived field 'recordSource' on urn:fastshaql:inline:ThingRecordSource "
+            r"requires sh:datatype"
+        ),
+    ):
         parse_shapes(load_shapes(turtle))
 
 
@@ -185,7 +191,11 @@ def test_derived_constant_list_raises() -> None:
             sh:values "only-one" ;
         ] ."""
     )
-    with pytest.raises(UnsupportedShapeError, match=r"uses constant.*multi-valued arm"):
+    with pytest.raises(
+        UnsupportedShapeError,
+        # The remediation names the multi-valued arms, exact terms.
+        match=r"shnex:pathValues, shnex:ListExpression",
+    ):
         parse_shapes(load_shapes(turtle))
 
 
@@ -275,7 +285,16 @@ def test_derived_min_count_warns(caplog: pytest.LogCaptureFixture) -> None:
     )
     with caplog.at_level(logging.WARNING):
         registry = parse_shapes(load_shapes(turtle))
-    assert any("minCount" in r.message for r in caplog.records)
+    ignored = [r for r in caplog.records if "minCount" in r.message]
+    assert len(ignored) == 1
+    # The warning names the field, the shape, and the retained cardinality —
+    # ignored for validation, still emitted.
+    message = ignored[0].getMessage()
+    assert message.startswith(
+        "sh:minCount on derived field 'recordSource' "
+        "on urn:fastshaql:inline:ThingRecordSource"
+    )
+    assert message.endswith("min_count=1")
     prop = registry.by_type_name["Thing"].property_shapes["recordSource"]
     assert prop.min_count == 1
 
@@ -867,6 +886,29 @@ def test_default_value_twice_raises() -> None:
         parse_shapes(load_shapes(turtle))
 
 
+def test_default_value_multivalued_arm_raises() -> None:
+    """A multi-valued default expression cannot honour the single-value
+    fallback — the same statically-single-valued discipline as ``shnex:if``
+    branches (ADR-0015)."""
+    turtle = _thing_shape(
+        """sh:property [
+            sh:path ex:recordSource ;
+            sh:datatype xsd:string ;
+            sh:maxCount 1 ;
+            sh:defaultValue [ shnex:pathValues ex:source ] ;
+        ] ."""
+    )
+    with pytest.raises(
+        UnsupportedShapeError,
+        match=(
+            r"sh:defaultValue on urn:fastshaql:inline:ThingRecordSource "
+            r"field 'recordSource' uses .*"
+            r"the fallback must be statically single-valued$"
+        ),
+    ):
+        parse_shapes(load_shapes(turtle))
+
+
 def test_default_value_relationship_raises() -> None:
     """Scalar-only (ADR-0015): a defaulted relationship would need
     per-entity set-emptiness over join rows — not flat-expressible."""
@@ -878,7 +920,13 @@ def test_default_value_relationship_raises() -> None:
             sh:defaultValue ex:someThing ;
         ] ."""
     )
-    with pytest.raises(UnsupportedShapeError, match="scalar"):
+    with pytest.raises(
+        UnsupportedShapeError,
+        match=(
+            r"sh:defaultValue on urn:fastshaql:inline:ThingParent field 'parent' "
+            r"is scalar-only \(a defaulted relationship"
+        ),
+    ):
         parse_shapes(load_shapes(turtle))
 
 
@@ -890,7 +938,13 @@ def test_default_value_without_datatype_raises() -> None:
             sh:defaultValue "fallback" ;
         ] ."""
     )
-    with pytest.raises(UnsupportedShapeError, match="sh:datatype"):
+    with pytest.raises(
+        UnsupportedShapeError,
+        match=(
+            r"sh:defaultValue on urn:fastshaql:inline:ThingRecordSource "
+            r"field 'recordSource' requires sh:datatype"
+        ),
+    ):
         parse_shapes(load_shapes(turtle))
 
 
@@ -908,21 +962,6 @@ def test_default_value_list_cardinality_raises(max_count_clause: str) -> None:
         ] ."""
     )
     with pytest.raises(UnsupportedShapeError, match=r"maxCount 1"):
-        parse_shapes(load_shapes(turtle))
-
-
-def test_default_value_multivalued_arm_raises() -> None:
-    """A multi-valued default expression cannot honour the single-value
-    fallback — same single-valued discipline as ``shnex:if`` branches."""
-    turtle = _thing_shape(
-        """sh:property [
-            sh:path ex:recordSource ;
-            sh:datatype xsd:string ;
-            sh:maxCount 1 ;
-            sh:defaultValue [ shnex:pathValues ex:source ] ;
-        ] ."""
-    )
-    with pytest.raises(UnsupportedShapeError, match=r"defaultValue.*single-valued"):
         parse_shapes(load_shapes(turtle))
 
 
@@ -1363,7 +1402,14 @@ def test_expression_targeting_derived_property_raises(
         f"""{_DERIVED_FLAG_PROPERTY}
             {consumer_property}"""
     )
-    with pytest.raises(UnsupportedShapeError, match="rule chaining"):
+    with pytest.raises(
+        UnsupportedShapeError,
+        # The rejection names the consuming field and its property shape.
+        match=(
+            r"derived field '\w+' on urn:fastshaql:inline:Thing\S* "
+            r"reads derived property"
+        ),
+    ):
         parse_shapes(load_shapes(turtle))
 
 

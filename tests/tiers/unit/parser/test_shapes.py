@@ -5,7 +5,7 @@ verify cardinality resolution (``FieldKind``), registry indexes, and
 relationship property resolution (``sh:class``, ``sh:node``), unsupported
 forms, and zero-capacity field exclusion.
 
-Order: minimal fixture baseline → cardinality → registry indexes → relationships → unsupported forms.
+Order: minimal fixture baseline → cardinality → registry indexes → relationships → unsupported forms → read scoping.
 """
 
 from __future__ import annotations
@@ -141,7 +141,18 @@ def test_parse_sh_class_creates_synthetic_shape_when_no_target(
     assert synthetic.target_class is None
     assert synthetic.property_shapes == {}
     assert registry.by_type_name["Department"] is synthetic
-    assert "No shape targets class" in caplog.text
+    warnings = [r for r in caplog.records if "No shape targets class" in r.message]
+    assert len(warnings) == 1
+    # The warning names both the untargeted class and the synthetic shape it
+    # produced — the author's pointer from problem to remedy.
+    assert (
+        warnings[0]
+        .getMessage()
+        .startswith(
+            f"No shape targets class {EX}Department — "
+            "created synthetic urn:fastshaql:synthetic:Department"
+        )
+    )
 
 
 def test_parse_nested_value_shape_iri_resolves_through_registry(
@@ -189,7 +200,13 @@ def test_duplicate_graphql_field_name_skips_second(
         registry = parse_shapes(graph)
     person = registry.by_type_name["Person"]
     assert set(person.property_shapes) == {"name"}
-    assert "Duplicate graphql field name" in caplog.text
+    skip = [r for r in caplog.records if "Duplicate graphql field name" in r.message]
+    assert len(skip) == 1
+    # The warning names the field and the declaring shape, and states the
+    # action taken — first-wins with the second skipped.
+    message = skip[0].getMessage()
+    assert message.startswith(f"Duplicate graphql field name name in {EX}PersonShape")
+    assert message.endswith("— skipping")
 
 
 # --- Blank-node NodeShape skip ---
@@ -213,7 +230,16 @@ def test_blank_node_shape_is_skipped(
     with caplog.at_level("WARNING"):
         registry = parse_shapes(graph)
     assert len(registry.shapes) == 0
-    assert "Skipping blank-node NodeShape" in caplog.text
+    skipping = [
+        r for r in caplog.records if "Skipping blank-node NodeShape" in r.message
+    ]
+    assert len(skipping) == 1
+    # The warning names the skipped node — not a bare reason string.
+    message = skipping[0].getMessage()
+    assert message.startswith(
+        "Skipping blank-node NodeShape (not addressable by IRI): "
+    )
+    assert "None" not in message
 
 
 # --- Synthetic-shape cache ---
@@ -600,9 +626,13 @@ def test_sh_class_list_form_raises(class_value: str) -> None:
 
 
 def test_literal_sh_class_value_raises() -> None:
-    """``sh:class`` values are IRIs or IRI lists — a literal is ill-formed (§7.1.1)."""
+    """``sh:class`` values are IRIs or IRI lists — a literal is ill-formed
+    (§7.1.1), and the error cites the spec rule."""
     graph = _person_graph('sh:class "Company" ;')
-    with pytest.raises(UnsupportedShapeError, match="not an IRI"):
+    with pytest.raises(
+        UnsupportedShapeError,
+        match=r"is not an IRI \(SHACL §7\.1\.1: values are IRIs or lists of IRIs\)$",
+    ):
         parse_shapes(graph)
 
 
@@ -631,22 +661,31 @@ def test_multiple_min_count_values_reject() -> None:
 
 
 @pytest.mark.parametrize(
-    "body",
+    ("body", "warning_prefix"),
     [
-        "sh:datatype xsd:string ; sh:maxCount 0 ;",
-        "sh:datatype xsd:string ; sh:in () ;",
+        ("sh:datatype xsd:string ; sh:maxCount 0 ;", "sh:maxCount 0 on "),
+        ("sh:datatype xsd:string ; sh:in () ;", "Empty sh:in on "),
     ],
     ids=["max_count_zero", "empty_sh_in"],
 )
 def test_zero_capacity_property_excludes_field(
-    body: str, caplog: pytest.LogCaptureFixture
+    body: str, warning_prefix: str, caplog: pytest.LogCaptureFixture
 ) -> None:
     """A property that can never hold values (§7.2.2, §7.9.3) generates no
-    field, with a warning — the ``sh:deactivated`` reading (§3.1.6)."""
+    field, with a warning — the ``sh:deactivated`` reading (§3.1.6). The
+    warning names the zero-capacity declaration and the property shape it
+    came from, so the author can find the offending block."""
     with caplog.at_level("WARNING"):
         thing = parse_shapes(_person_graph(body)).by_type_name["Person"]
     assert "note" not in thing.property_shapes
-    assert any("no field is generated" in r.message for r in caplog.records)
+    excluded = [r for r in caplog.records if "no field is generated" in r.message]
+    assert len(excluded) == 1
+    message = excluded[0].getMessage()
+    assert message.startswith(warning_prefix)
+    assert "on None" not in message  # the property shape is named, never dropped
+    assert message.endswith(
+        "— the property can never hold values; no field is generated"
+    )
 
 
 @pytest.mark.parametrize(
@@ -670,4 +709,194 @@ def test_invalid_code_identifier_rejects_at_parse(declaration: str) -> None:
         """
     )
     with pytest.raises(InvalidCodeIdentifierError, match="does not match"):
+        parse_shapes(graph)
+
+
+# --- Read scoping within one shapes graph ---
+
+
+def test_property_reads_are_scoped_to_the_property() -> None:
+    """One property's ``sh:description`` / ``sh:defaultValue`` never leak
+    into a sibling property's read — a silent sibling stays silent."""
+    graph = _shapes_graph(
+        """
+        @prefix ex:  <http://example.org/> .
+        @prefix sh:  <http://www.w3.org/ns/shacl#> .
+        @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+        ex:PersonShape a sh:NodeShape ;
+            sh:codeIdentifier "Person" ;
+            sh:targetClass ex:Person ;
+            sh:property [
+                sh:path ex:rich ;
+                sh:datatype xsd:string ;
+                sh:maxCount 1 ;
+                sh:description "Rich label"@en ;
+                sh:defaultValue "fallback" ;
+            ] ;
+            sh:property [
+                sh:path ex:plain ;
+                sh:datatype xsd:string ;
+                sh:maxCount 1 ;
+            ] .
+        """
+    )
+    plain = parse_shapes(graph).by_type_name["Person"].property_shapes["plain"]
+    assert plain.description is None
+    assert plain.default_expr is None
+
+
+def test_node_description_read_is_scoped_to_the_shape() -> None:
+    """An ``rdfs:comment`` on one shape never becomes another shape's
+    description — the read is ``(shape_iri, rdfs:comment, ?)``."""
+    graph = _shapes_graph(
+        """
+        @prefix ex:   <http://example.org/> .
+        @prefix sh:   <http://www.w3.org/ns/shacl#> .
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+        ex:AlphaShape a sh:NodeShape ;
+            sh:codeIdentifier "Alpha" ;
+            sh:targetClass ex:Alpha ;
+            rdfs:comment "Alpha comment"@en .
+
+        ex:BetaShape a sh:NodeShape ;
+            sh:codeIdentifier "Beta" ;
+            sh:targetClass ex:Beta .
+        """
+    )
+    assert parse_shapes(graph).by_type_name["Beta"].description is None
+
+
+def test_shape_discovery_reads_rdf_type_only() -> None:
+    """Shapes are discovered by ``(?, rdf:type, sh:NodeShape)`` — a resource
+    that merely mentions ``sh:NodeShape`` as an object is nobody's shape."""
+    graph = _shapes_graph(
+        """
+        @prefix ex: <http://example.org/> .
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+
+        ex:ThingShape a sh:NodeShape ;
+            sh:codeIdentifier "Thing" ;
+            sh:targetClass ex:Thing .
+
+        ex:Ghost ex:mentions sh:NodeShape .
+        """
+    )
+    assert set(parse_shapes(graph).by_type_name) == {"Thing"}
+
+
+def test_property_walk_continues_past_skipped_properties(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A deactivated (§3.1.6), zero-capacity, or duplicate-name property is
+    skipped alone — the walk still reaches every property after it. The
+    skipped properties are declared first; ``sh:property`` objects iterate
+    in document order."""
+    graph = _shapes_graph(
+        """
+        @prefix ex:  <http://example.org/> .
+        @prefix ex2: <http://other.org/> .
+        @prefix sh:  <http://www.w3.org/ns/shacl#> .
+        @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+        ex:PersonShape a sh:NodeShape ;
+            sh:codeIdentifier "Person" ;
+            sh:targetClass ex:Person ;
+            sh:property [ sh:path ex:dead ; sh:datatype xsd:string ; sh:deactivated true ] ;
+            sh:property [ sh:path ex:never ; sh:datatype xsd:string ; sh:maxCount 0 ] ;
+            sh:property [ sh:path ex:name ; sh:datatype xsd:string ; sh:minCount 1 ] ;
+            sh:property [ sh:path ex2:name ; sh:datatype xsd:string ; sh:minCount 1 ] ;
+            sh:property [ sh:path ex:tag ; sh:datatype xsd:string ; sh:minCount 1 ] .
+        """
+    )
+    with caplog.at_level("WARNING"):
+        person = parse_shapes(graph).by_type_name["Person"]
+    assert set(person.property_shapes) == {"name", "tag"}
+    assert person.property_shapes["name"].min_count == 1
+
+
+def test_derived_relationship_without_datatype_parses() -> None:
+    """A derived relationship anchors on ``sh:class`` alone — the
+    ``sh:datatype`` requirement binds only non-relationship derived fields
+    (ADR-0015: (RELATIONSHIP, DERIVED) needs no literal space)."""
+    graph = _shapes_graph(
+        """
+        @prefix ex:    <http://example.org/> .
+        @prefix sh:    <http://www.w3.org/ns/shacl#> .
+        @prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
+
+        ex:PersonShape a sh:NodeShape ;
+            sh:codeIdentifier "Person" ;
+            sh:targetClass ex:Person ;
+            sh:property [
+                sh:path ex:friend ;
+                sh:class ex:Person ;
+                sh:values [ shnex:pathValues ex:knows ] ;
+            ] .
+        """
+    )
+    friend = parse_shapes(graph).by_type_name["Person"].property_shapes["friend"]
+    assert friend.datatypes == ()
+    assert friend.value_class == EX + "Person"
+    assert friend.value_type is ValueType.RELATIONSHIP
+
+
+def test_default_description_language_is_english() -> None:
+    """The default ``description_language`` is ``en`` — at both the shape and
+    the property level, an ``en`` literal beats a lower-ordered ``de`` one."""
+    graph = _shapes_graph(
+        """
+        @prefix ex:   <http://example.org/> .
+        @prefix sh:   <http://www.w3.org/ns/shacl#> .
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+        @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+        ex:ThingShape a sh:NodeShape ;
+            sh:codeIdentifier "Thing" ;
+            sh:targetClass ex:Thing ;
+            rdfs:comment "Zebra"@en , "Ant"@de ;
+            sh:property [
+                sh:path ex:note ;
+                sh:datatype xsd:string ;
+                sh:description "PropZebra"@en , "PropAnt"@de ;
+            ] .
+        """
+    )
+    thing = parse_shapes(graph).by_type_name["Thing"]
+    assert thing.description == "Zebra"
+    assert thing.property_shapes["note"].description == "PropZebra"
+
+
+def test_description_language_reaches_property_shapes() -> None:
+    """``description_language`` flows through the node shape into every
+    property shape's own description read (ADR-0007)."""
+    graph = _shapes_graph(
+        """
+        @prefix ex:   <http://example.org/> .
+        @prefix sh:   <http://www.w3.org/ns/shacl#> .
+        @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+        ex:ThingShape a sh:NodeShape ;
+            sh:codeIdentifier "Thing" ;
+            sh:targetClass ex:Thing ;
+            sh:property [
+                sh:path ex:note ;
+                sh:datatype xsd:string ;
+                sh:description "A label."@en , "Ein Etikett."@de ;
+            ] .
+        """
+    )
+    note = parse_shapes(graph, description_language="de").by_type_name["Thing"]
+    assert note.property_shapes["note"].description == "Ein Etikett."
+
+
+def test_malformed_max_count_error_names_the_declaration() -> None:
+    """The count error names the offending predicate — ``sh:maxCount``, exact
+    case, at the message start — so the author can find the block."""
+    graph = _person_graph('sh:maxCount "2"^^xsd:decimal ;')
+    with pytest.raises(
+        UnsupportedShapeError,
+        match=r"^sh:maxCount on .* must be an xsd:integer literal",
+    ):
         parse_shapes(graph)

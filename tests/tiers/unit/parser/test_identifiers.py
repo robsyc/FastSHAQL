@@ -5,7 +5,8 @@ Unit tier: ``local_name`` extraction for schemes without ``#`` or ``/``,
 ``enum_member_names`` collision suffixing, and parse-time ``sh:codeIdentifier``
 validation (SHACL 1.2 §8.4).
 
-Order: local_name → enum member names → sh:codeIdentifier validation.
+Order: local_name → enum member names → sh:codeIdentifier validation →
+reserved names → Python-keyword escapes.
 """
 
 from __future__ import annotations
@@ -161,3 +162,30 @@ def test_property_field_name_rejects_reserved_dunder(
 def test_graphql_type_name_single_underscore_stays_legal() -> None:
     """``_``-prefix is GraphQL-legal — only the reserved ``__`` prefix rejects."""
     assert graphql_type_name(code_identifier="_Foo", iri=SUBJECT) == "_Foo"
+
+
+# --- Python-keyword escapes (finalize_graphql_name) ---
+
+
+def test_graphql_type_name_escapes_python_keyword() -> None:
+    """A type name landing on a Python keyword gets the ``_`` suffix —
+    GraphQL allows it, Python resolvers/serializers need the escape."""
+    assert graphql_type_name(code_identifier="class", iri=SUBJECT) == "class_"
+
+
+def test_property_field_name_escapes_python_keyword_from_local_name() -> None:
+    """A predicate local name that is a keyword escapes the same way —
+    both field-name derivation paths share the escape."""
+    assert (
+        property_graphql_field_name(
+            path=PredicatePath(URIRef("http://example.org/class")),
+            code_identifier=None,
+            prop_shape=SUBJECT,
+        )
+        == "class_"
+    )
+
+
+def test_graphql_type_name_non_keyword_passes_through_unchanged() -> None:
+    """Ordinary names never gain the suffix."""
+    assert graphql_type_name(code_identifier="Person", iri=SUBJECT) == "Person"
