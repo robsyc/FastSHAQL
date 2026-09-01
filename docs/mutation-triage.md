@@ -26,7 +26,8 @@ Killing tests landed in `tests/tiers/unit/parser/` (score 88.2% → 89.9%); the 
 | `fastshaql.core.parser.property_shape.x_parse_property_shape__mutmut_64` | `parse_property_shape` | `shape_iri` → `None` (warning arg) | ineffective | feeds warning text only |
 | `fastshaql.core.parser.property_shape.x_parse_property_shape__mutmut_69` | `parse_property_shape` | warning text → `XX…XX` | ineffective | warning wording only |
 | `fastshaql.core.parser.property_shape.x__sole_datatype_constraint__mutmut_5` | `sole_datatype_constraint` | `predicates(member, None)` → `predicates(member,)` | equivalent | removed arg *is* the `None` default |
-| `fastshaql.core.parser.property_shape.x__sole_datatype_constraint__mutmut_12` | `sole_datatype_constraint` | `objects(member, SH.datatype)` → `objects(member,)` | equivalent | trailing-arg removal ⇒ `None`; the behavioral case is mutant `_10` (wave-1b) |
+| `fastshaql.core.parser.property_shape.x__sole_datatype_constraint__mutmut_10` | `sole_datatype_constraint` | `objects(member, SH.datatype)` → `objects(member, None)` | equivalent | the `predicates == {sh:datatype}` guard means every object *is* a datatype object — filter subsumed |
+| `fastshaql.core.parser.property_shape.x__sole_datatype_constraint__mutmut_12` | `sole_datatype_constraint` | `objects(member, SH.datatype)` → `objects(member,)` | equivalent | trailing-arg removal ⇒ `None`, same subsumption as `_10` |
 
 ### `parser/shacl_path.py`
 
@@ -142,4 +143,4 @@ Killing tests landed in `tests/tiers/unit/parser/` (score 88.2% → 89.9%); the 
 
 ### Wave-1b kill list (not triaged — tests landing next)
 
-Real logic gaps the wave-1 tests missed; killing tests land as a follow-up batch: `property_shape.x_parse_property_shape__mutmut_1` and `_61`, `property_shape.x__sole_datatype_constraint__mutmut_10`, `parse.x_parse_shapes__mutmut_20` and `_25`, `shacl_in.x_parse_shacl_in__mutmut_36`, `targets.x__reject_unsupported__mutmut_21`, `targets.x__implicit_class_target__mutmut_4`, `node_shape.x_parse_node_shape__mutmut_1`, `util.graph_reads.x__pick_localized_literal__mutmut_4`.
+Killed by the wave-1b batch (default-language contract, per-shape skip loops, `sh:in` duplicate-warning scoping, target-predicate scoping, lexical fallback determinism): `property_shape.x_parse_property_shape__mutmut_1` and `_61`, `parse.x_parse_shapes__mutmut_20` and `_25`, `shacl_in.x_parse_shacl_in__mutmut_36`, `targets.x__reject_unsupported__mutmut_21`, `targets.x__implicit_class_target__mutmut_4`, `node_shape.x_parse_node_shape__mutmut_1`, `util.graph_reads.x__pick_localized_literal__mutmut_4`. Reclassified after reading the guard: `property_shape.x__sole_datatype_constraint__mutmut_10` is equivalent (row above).

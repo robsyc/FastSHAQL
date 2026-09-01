@@ -116,3 +116,13 @@ def test_first_localized_str_reads_only_the_given_subject() -> None:
     resource never leaks into this one's description."""
     graph = _graph_with_comment(Literal("Other subject", lang="en"))
     assert first_localized_str(graph, EX + "SilentShape", RDFS.comment) is None
+
+
+def test_first_localized_str_fallback_picks_the_lexically_first_literal() -> None:
+    """With no language match and nothing untagged, the fallback pick is the
+    lexically-first literal — stable across numeric datatypes (the documented
+    determinism is over lexical forms, not value ordering)."""
+    graph = Graph()
+    graph.add((SUBJECT, RDFS.comment, Literal(10)))
+    graph.add((SUBJECT, RDFS.comment, Literal(2)))
+    assert first_localized_str(graph, SUBJECT, RDFS.comment, lang="en") == "10"

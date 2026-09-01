@@ -13,6 +13,7 @@ import pytest
 from rdflib import Graph, Literal, URIRef
 
 from fastshaql.core.kernel.io import load_shapes
+from fastshaql.core.parser import parse_shapes
 from fastshaql.core.parser.errors import UnsupportedShapeError
 from fastshaql.core.parser.shacl_in import UnsupportedShaclInError, parse_shacl_in
 
@@ -180,3 +181,47 @@ def test_empty_sh_in_list_returns_empty_tuple() -> None:
         """
     )
     assert parse_shacl_in(graph, prop) == ()
+
+
+def test_clean_list_does_not_warn_duplicates(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The duplicate-members warning fires for repeats only — a clean list
+    must parse silently (membership is duplicate-insensitive; the warning is
+    about enum emission, not list validity)."""
+    graph, prop = _graph_with_in(
+        """
+        @prefix ex: <http://example.org/> .
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        ex:prop a sh:PropertyShape ;
+            sh:in ( "active" "inactive" "pending" ) .
+        """
+    )
+    with caplog.at_level("WARNING"):
+        parse_shacl_in(graph, prop)
+    assert not [r for r in caplog.records if "Duplicate sh:in" in r.message]
+
+
+def test_scalar_sh_in_does_not_warn_relationship_overlay(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The overlay notice is relationship-specific: a scalar enum field is
+    the *normal* ``sh:in`` usage and must not warn."""
+    graph = Graph()
+    graph.parse(
+        data="""
+        @prefix ex: <http://example.org/> .
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        ex:PersonShape a sh:NodeShape ;
+            sh:codeIdentifier "Person" ;
+            sh:targetClass ex:Person ;
+            sh:property [
+                sh:path ex:status ;
+                sh:in ( "active" "inactive" ) ;
+            ] .
+        """,
+        format="turtle",
+    )
+    with caplog.at_level("WARNING"):
+        parse_shapes(graph)
+    assert not [r for r in caplog.records if "Relationship-overlay sh:in" in r.message]

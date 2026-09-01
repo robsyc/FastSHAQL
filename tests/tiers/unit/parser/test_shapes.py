@@ -23,6 +23,8 @@ from fastshaql.core.ir import (
 from fastshaql.core.ir.shacl_path import PredicatePath
 from fastshaql.core.parser import parse_shapes
 from fastshaql.core.parser.errors import UnsupportedShapeError
+from fastshaql.core.parser.node_shape import parse_node_shape
+from fastshaql.core.parser.property_shape import parse_property_shape
 from fastshaql.core.parser.util import InvalidCodeIdentifierError
 from support.builders import EX, scalar_property
 
@@ -889,6 +891,89 @@ def test_description_language_reaches_property_shapes() -> None:
     )
     note = parse_shapes(graph, description_language="de").by_type_name["Thing"]
     assert note.property_shapes["note"].description == "Ein Etikett."
+
+
+def test_node_description_defaults_to_english() -> None:
+    """The ``description_language`` default (``"en"``) is contract: without an
+    override, a shape with ``de``/``en`` descriptions reads the English one
+    (ADR-0007) — the lexical fallback would pick ``de``."""
+    graph = _shapes_graph(
+        """
+        @prefix ex:   <http://example.org/> .
+        @prefix sh:   <http://www.w3.org/ns/shacl#> .
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+        ex:ThingShape a sh:NodeShape ;
+            sh:codeIdentifier "Thing" ;
+            sh:targetClass ex:Thing ;
+            rdfs:comment "Hello"@en , "Hallo"@de .
+        """
+    )
+    shape = parse_node_shape(graph, EX + "ThingShape")
+    assert shape.description == "Hello"
+
+
+def test_property_description_defaults_to_english() -> None:
+    """Same default at the property level: a directly parsed property shape
+    without a language override reads the English description."""
+    graph = _shapes_graph(
+        """
+        @prefix ex:   <http://example.org/> .
+        @prefix sh:   <http://www.w3.org/ns/shacl#> .
+        @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+        ex:noteShape a sh:PropertyShape ;
+            sh:path ex:note ;
+            sh:datatype xsd:string ;
+            sh:description "A label."@en , "Ein Etikett."@de .
+        """
+    )
+    parsed = parse_property_shape(
+        graph, EX + "noteShape", parent_graphql_type_name="Thing"
+    )
+    assert parsed is not None
+    assert parsed.description == "A label."
+
+
+def test_blank_node_shape_skip_keeps_later_shapes() -> None:
+    """Skipping a blank-node shape is per-shape: shapes after it in document
+    order still parse (Core §3.1.6 adjacency — the skip must not end the
+    pass)."""
+    graph = _shapes_graph(
+        """
+        @prefix ex:   <http://example.org/> .
+        @prefix sh:   <http://www.w3.org/ns/shacl#> .
+
+        [ a sh:NodeShape ; sh:targetClass ex:Ignored ] .
+        ex:ThingShape a sh:NodeShape ;
+            sh:codeIdentifier "Thing" ;
+            sh:targetClass ex:Thing .
+        """
+    )
+    assert "Thing" in parse_shapes(graph).by_type_name
+
+
+def test_deactivated_shape_skip_keeps_later_shapes() -> None:
+    """A deactivated shape is skipped without ending the pass — shapes after
+    it still parse (Core §3.1.6: not evaluated ≠ others dropped)."""
+    graph = _shapes_graph(
+        """
+        @prefix ex:   <http://example.org/> .
+        @prefix sh:   <http://www.w3.org/ns/shacl#> .
+
+        ex:OldShape a sh:NodeShape ;
+            sh:codeIdentifier "Old" ;
+            sh:targetClass ex:Old ;
+            sh:deactivated true .
+
+        ex:ThingShape a sh:NodeShape ;
+            sh:codeIdentifier "Thing" ;
+            sh:targetClass ex:Thing .
+        """
+    )
+    registry = parse_shapes(graph).by_type_name
+    assert "Old" not in registry
+    assert "Thing" in registry
 
 
 def test_malformed_max_count_error_names_the_declaration() -> None:
