@@ -144,3 +144,234 @@ Killing tests landed in `tests/tiers/unit/parser/` (score 88.2% → 89.9%); the 
 ### Wave-1b kill list (not triaged — tests landing next)
 
 Killed by the wave-1b batch (default-language contract, per-shape skip loops, `sh:in` duplicate-warning scoping, target-predicate scoping, lexical fallback determinism): `property_shape.x_parse_property_shape__mutmut_1` and `_61`, `parse.x_parse_shapes__mutmut_20` and `_25`, `shacl_in.x_parse_shacl_in__mutmut_36`, `targets.x__reject_unsupported__mutmut_21`, `targets.x__implicit_class_target__mutmut_4`, `node_shape.x_parse_node_shape__mutmut_1`, `util.graph_reads.x__pick_localized_literal__mutmut_4`. Reclassified after reading the guard: `property_shape.x__sole_datatype_constraint__mutmut_10` is equivalent (row above).
+
+## Wave 2 — `parser/node_expr/*` + `core/translation` (post-batch residue, 2026-09-01)
+
+Scope: the 220 survivors of the wave-1 batch in `core/parser/node_expr/`
+(select_scan, semantics, shacl_prefixes, parse, filter_shape) and
+`core/translation/` (node_expr, filter_shape, query, selection, variables,
+paths, patterns, joins, field_binding, filters/*). Killed by the wave-2
+batch:
+
+- `select_scan`: `parse_shacl_select` — keyword search anchoring after the
+  SELECT head, end-of-text brace boundary; `_reject_trailing_suffix` —
+  whitespace spans between trailing literals don't end the scan;
+  `validate_select_prebinding` — VALUES data-block anchoring (first `{`,
+  never `rfind`), malformed-VALUES fallthrough keeps later spans checked.
+- `semantics`: `reject_derived_path_targets` / `_reject_derived_conjuncts` —
+  recursion through nested `sh:property` conjuncts (arity and argument
+  neutralizations); `_reject_derived_predicates` — candidate shapes come
+  from `sh:path` declarations only.
+- `shacl_prefixes`: `parse_shacl_prefixes` — declarations are read from
+  `sh:declare` edges of the node's `sh:prefixes` only.
+- `parser/filter_shape`: `_parse_shape`, `_class_conjuncts`,
+  `_pattern_conjuncts` — conjunct scans are subject-scoped (no sibling
+  leakage); `_reject_unknown_predicates` — every predicate is checked.
+- `translation/node_expr`: the role-var minting discipline — role-prefixed
+  bases through every nesting lane (exists-over-exists, filterShape nodes,
+  materialized compound conditions, pure nested-if conditions, single-branch
+  impure arms, conditioned-OPTIONAL arm forms, defaultValue lanes).
+- `translation/filter_shape`: exact lowering contracts — `datatype()`
+  equality, `hasValue` equality, `sh:minCount 1` absorption inside property
+  conjuncts, counter-allocated value variables through nesting depth.
+- `translation/field_binding`: `_promote_relationship_field` registers
+  `(join var, empty child VariableMap)` exactly.
+- `translation/joins`: `relationship_join_patterns` emits the child
+  `rdf:type` triple only when asked (`emit_type_triple` default False).
+- `translation/filters/literals`: declared datatypes ride GraphQL string /
+  int / bool / list operands.
+- `translation/filters/operators`: `_membership_values` carries the field's
+  declared datatype into `IN` literals.
+- `translation/filters/fields`: `_branch_to_expression` call sites (AND/OR
+  branches, NOT) wrap pattern-bearing branches in `EXISTS`.
+- `translation/filters/exists`: `translate_exists_relationship` threads the
+  registry into nested EXISTS walks.
+
+Residue below (ordered by module, then mutant id).
+### `parser/node_expr/select_scan.py`
+
+| `fastshaql.core.parser.node_expr.select_scan.x_parse_shacl_select__mutmut_7` | `shacl_select` | -select_pos = find_keyword(text, "SELECT") +select_pos = find_keyword(text, "select") | equivalent | find_keyword is case-insensitive |
+| `fastshaql.core.parser.node_expr.select_scan.x_parse_shacl_select__mutmut_10` | `shacl_select` | -raise UnsupportedShapeError("sh:select must start with SELECT") +raise UnsupportedShapeError("XXsh:select mus | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x_parse_shacl_select__mutmut_34` | `shacl_select` | -where_pos = find_keyword(text, "WHERE", head_start) +where_pos = find_keyword(text, "where", head_start) | equivalent | find_keyword is case-insensitive |
+| `fastshaql.core.parser.node_expr.select_scan.x_parse_shacl_select__mutmut_37` | `shacl_select` | -raise UnsupportedShapeError("sh:select must contain WHERE") +raise UnsupportedShapeError("XXsh:select must co | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x_parse_shacl_select__mutmut_39` | `shacl_select` | -raise UnsupportedShapeError("sh:select must contain WHERE") +raise UnsupportedShapeError("SH:SELECT MUST CONT | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x_parse_shacl_select__mutmut_54` | `shacl_select` | -"sh:select WHERE must be followed by a graph pattern block" +"XXsh:select WHERE must be followed by a graph p | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x_parse_shacl_select__mutmut_55` | `shacl_select` | -"sh:select WHERE must be followed by a graph pattern block" +"sh:select where must be followed by a graph pat | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x__extract_projection_var__mutmut_3` | `extract_projection_var` | -raise UnsupportedShapeError("sh:select must project exactly one variable") +raise UnsupportedShapeError("XXsh | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x__extract_projection_var__mutmut_8` | `extract_projection_var` | -"sh:select SELECT-head expression (e.g. (EXPR AS ?var)) is not supported; " +"XXsh:select SELECT-head express | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x__extract_projection_var__mutmut_11` | `extract_projection_var` | -"move the computation into the WHERE body via BIND" +"XXmove the computation into the WHERE body via BINDXX" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x__extract_projection_var__mutmut_12` | `extract_projection_var` | -"move the computation into the WHERE body via BIND" +"move the computation into the where body via bind" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x__extract_projection_var__mutmut_13` | `extract_projection_var` | -"move the computation into the WHERE body via BIND" +"MOVE THE COMPUTATION INTO THE WHERE BODY VIA BIND" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x__extract_projection_var__mutmut_22` | `extract_projection_var` | -if not vars_found: +if vars_found: | equivalent | both arms raise the same error type |
+| `fastshaql.core.parser.node_expr.select_scan.x__extract_projection_var__mutmut_24` | `extract_projection_var` | -raise UnsupportedShapeError("sh:select must project exactly one variable") +raise UnsupportedShapeError("XXsh | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x__reject_trailing_suffix__mutmut_9` | `reject_trailing_suffix` | -if m := _TOP_LEVEL_MODIFIERS_RE.search(suffix, start, end): +if m := _TOP_LEVEL_MODIFIERS_RE.search(suffix, s | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x__reject_trailing_suffix__mutmut_14` | `reject_trailing_suffix` | -"sh:select must not contain trailing SPARQL after the WHERE block" +"XXsh:select must not contain trailing SP | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x_validate_select_prebinding__mutmut_5` | `validate_select_prebinding` | -"sh:select body must not contain MINUS (SHACL-SPARQL Appendix A)" +"XXsh:select body must not contain MINUS ( | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x_validate_select_prebinding__mutmut_7` | `validate_select_prebinding` | -"sh:select body must not contain MINUS (SHACL-SPARQL Appendix A)" +"SH:SELECT BODY MUST NOT CONTAIN MINUS (SH | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x_validate_select_prebinding__mutmut_10` | `validate_select_prebinding` | -"sh:select body must not bind AS ?this or AS $this (SHACL-SPARQL Appendix A)" +"XXsh:select body must not bin | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x_validate_select_prebinding__mutmut_24` | `validate_select_prebinding` | -continue  # malformed VALUES — defer to the triple store +break  # malformed VALUES — defer to the triple sto | equivalent | break and continue coincide: a later data block would be found for the earlier match too |
+| `fastshaql.core.parser.node_expr.select_scan.x_validate_select_prebinding__mutmut_27` | `validate_select_prebinding` | -"sh:select body must not bind ?this/$this via VALUES (SHACL-SPARQL Appendix A)" +"XXsh:select body must not b | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.select_scan.x_validate_select_prebinding__mutmut_29` | `validate_select_prebinding` | -"sh:select body must not bind ?this/$this via VALUES (SHACL-SPARQL Appendix A)" +"SH:SELECT BODY MUST NOT BIN | ineffective | error/warning wording only |
+
+### `parser/node_expr/semantics.py`
+
+| `fastshaql.core.parser.node_expr.semantics.x_arm_label__mutmut_10` | `arm_label` | -case _ as unreachable:  # pragma: no cover — unreachable: closed union \| assert_never(unreachable) + | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.semantics.x_arm_label__mutmut_15` | `arm_label` | -label = "shnex:ListExpression" +label = "XXshnex:ListExpressionXX" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.semantics.x_arm_label__mutmut_23` | `arm_label` | -label = "sh:select" +label = "XXsh:selectXX" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.semantics.x_arm_label__mutmut_26` | `arm_label` | -label = "shnex:pathValues" +label = "XXshnex:pathValuesXX" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.semantics.x_arm_label__mutmut_40` | `arm_label` | -assert_never(unreachable) +assert_never(None) | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.semantics.x_reject_derived_path_targets__mutmut_6` | `reject_derived_path_targets` | -case _ as unreachable:  # pragma: no cover — unreachable: closed union \| assert_never(unreachable) + | equivalent | unreachable arm (closed union) |
+| `fastshaql.core.parser.node_expr.semantics.x_reject_derived_path_targets__mutmut_56` | `reject_derived_path_targets` | -assert_never(unreachable) +assert_never(None) | equivalent | unreachable arm (closed union) |
+| `fastshaql.core.parser.node_expr.semantics.x__reject_derived_conjuncts__mutmut_11` | `reject_derived_conjuncts` | -_reject_derived_conjuncts(graph, conjunct.nested, shape_iri, field_name) +_reject_derived_conjuncts(graph, co | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.semantics.x__reject_derived_conjuncts__mutmut_12` | `reject_derived_conjuncts` | -_reject_derived_conjuncts(graph, conjunct.nested, shape_iri, field_name) +_reject_derived_conjuncts(graph, co | ineffective | error/warning wording only |
+
+### `parser/node_expr/parse.py`
+
+| `fastshaql.core.parser.node_expr.parse.x_parse_expr_object__mutmut_6` | `expr_object` | -f"unsupported node expression object {obj!r}" +None | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__sole_key_parameter__mutmut_14` | `sole_key_parameter` | -"more than once" +"XXmore than onceXX" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__sole_key_parameter__mutmut_20` | `sole_key_parameter` | -names = ", ".join(_qname(graph, key) for key in present) +names = "XX, XX".join(_qname(graph, key) for key in | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__sole_key_parameter__mutmut_26` | `sole_key_parameter` | -"exactly one function identifier is required" +"XXexactly one function identifier is requiredXX" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__sole_key_parameter__mutmut_27` | `sole_key_parameter` | -"exactly one function identifier is required" +"EXACTLY ONE FUNCTION IDENTIFIER IS REQUIRED" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__sole_key_parameter__mutmut_58` | `sole_key_parameter` | -"more than once" +"XXmore than onceXX" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__sole_key_parameter__mutmut_59` | `sole_key_parameter` | -"more than once" +"MORE THAN ONCE" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__parse_path_values__mutmut_4` | `parse_path_values` | -path = parse_shacl_path_node(graph, path_node, expr_node) +path = parse_shacl_path_node(graph, path_node, Non | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__parse_path_values__mutmut_20` | `parse_path_values` | -"(non-constant focus expressions are not supported)" +"XX(non-constant focus expressions are not supported)XX | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__parse_path_values__mutmut_21` | `parse_path_values` | -"(non-constant focus expressions are not supported)" +"(NON-CONSTANT FOCUS EXPRESSIONS ARE NOT SUPPORTED)" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__parse_if__mutmut_9` | `parse_if` | -"must be statically single-valued expressions (shnex:exists, constants, " +"XXmust be statically single-value | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__parse_if__mutmut_11` | `parse_if` | -"sh:sparqlExpr, nested shnex:if)" +"XXsh:sparqlExpr, nested shnex:if)XX" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__parse_if__mutmut_12` | `parse_if` | -"sh:sparqlExpr, nested shnex:if)" +"sh:sparqlexpr, nested shnex:if)" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__parse_if__mutmut_13` | `parse_if` | -"sh:sparqlExpr, nested shnex:if)" +"SH:SPARQLEXPR, NESTED SHNEX:IF)" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__parse_constant_list__mutmut_11` | `parse_constant_list` | -"not supported)" +"XXnot supported)XX" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__parse_constant_list__mutmut_12` | `parse_constant_list` | -"not supported)" +"NOT SUPPORTED)" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__parse_instances_of__mutmut_13` | `parse_instances_of` | -"IRI list — arbitrary class expressions are not supported" +"XXIRI list — arbitrary class expressions are not | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__parse_instances_of__mutmut_14` | `parse_instances_of` | -"IRI list — arbitrary class expressions are not supported" +"iri list — arbitrary class expressions are not s | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__parse_instances_of__mutmut_15` | `parse_instances_of` | -"IRI list — arbitrary class expressions are not supported" +"IRI LIST — ARBITRARY CLASS EXPRESSIONS ARE NOT S | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__unsupported_message__mutmut_12` | `unsupported_message` | -names = ", ".join(sorted(str(p) for p in predicates)) +names = "XX, XX".join(sorted(str(p) for p in predicate | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__unsupported_message__mutmut_18` | `unsupported_message` | -"expected sh:select, sh:sparqlExpr, or a shnex: function" +"XXexpected sh:select, sh:sparqlExpr, or a shnex:  | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__unsupported_message__mutmut_19` | `unsupported_message` | -"expected sh:select, sh:sparqlExpr, or a shnex: function" +"expected sh:select, sh:sparqlexpr, or a shnex: fu | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.parse.x__unsupported_message__mutmut_20` | `unsupported_message` | -"expected sh:select, sh:sparqlExpr, or a shnex: function" +"EXPECTED SH:SELECT, SH:SPARQLEXPR, OR A SHNEX: FU | ineffective | error/warning wording only |
+
+### `parser/node_expr/filter_shape.py`
+
+| `fastshaql.core.parser.node_expr.filter_shape.x_parse_filter_shape__mutmut_3` | `filter_shape` | -return _parse_shape(graph, shape_node, inside_property=False) +return _parse_shape(graph, shape_node, inside_ | equivalent | None is falsy, equal to the False default |
+| `fastshaql.core.parser.node_expr.filter_shape.x__parse_shape__mutmut_3` | `parse_shape` | -"named shape references are not supported" +"XXnamed shape references are not supportedXX" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__parse_shape__mutmut_4` | `parse_shape` | -"named shape references are not supported" +"NAMED SHAPE REFERENCES ARE NOT SUPPORTED" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__parse_shape__mutmut_32` | `parse_shape` | -"must be IRIs (Core §7.1.2)" +"XXmust be IRIs (Core §7.1.2)XX" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__parse_shape__mutmut_66` | `parse_shape` | -f"shnex:filterShape sh:maxCount {graph.value(shape_node, SH.maxCount)} " +f"shnex:filterShape sh:maxCount {gr | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__parse_shape__mutmut_67` | `parse_shape` | -f"shnex:filterShape sh:maxCount {graph.value(shape_node, SH.maxCount)} " +f"shnex:filterShape sh:maxCount {gr | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__parse_shape__mutmut_68` | `parse_shape` | -f"shnex:filterShape sh:maxCount {graph.value(shape_node, SH.maxCount)} " +f"shnex:filterShape sh:maxCount {gr | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__parse_shape__mutmut_69` | `parse_shape` | -f"shnex:filterShape sh:maxCount {graph.value(shape_node, SH.maxCount)} " +f"shnex:filterShape sh:maxCount {gr | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__parse_shape__mutmut_70` | `parse_shape` | -"is not supported — cardinality upper bounds need k-variable EXISTS " +"XXis not supported — cardinality uppe | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__parse_shape__mutmut_71` | `parse_shape` | -"is not supported — cardinality upper bounds need k-variable EXISTS " +"is not supported — cardinality upper  | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__parse_shape__mutmut_72` | `parse_shape` | -"is not supported — cardinality upper bounds need k-variable EXISTS " +"IS NOT SUPPORTED — CARDINALITY UPPER  | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__parse_shape__mutmut_73` | `parse_shape` | -"(implementation narrowing)" +"XX(implementation narrowing)XX" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__parse_shape__mutmut_74` | `parse_shape` | -"(implementation narrowing)" +"(IMPLEMENTATION NARROWING)" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__has_value_conjuncts__mutmut_8` | `has_value_conjuncts` | -"be matched in a filter (IRI or literal required)" +"XXbe matched in a filter (IRI or literal required)XX" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__has_value_conjuncts__mutmut_9` | `has_value_conjuncts` | -"be matched in a filter (IRI or literal required)" +"be matched in a filter (iri or literal required)" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__has_value_conjuncts__mutmut_10` | `has_value_conjuncts` | -"be matched in a filter (IRI or literal required)" +"BE MATCHED IN A FILTER (IRI OR LITERAL REQUIRED)" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__class_conjuncts__mutmut_12` | `class_conjuncts` | -graph, value, what=f"shnex:filterShape {predicate} list" +graph, value, what=None | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__pattern_conjuncts__mutmut_10` | `pattern_conjuncts` | -"at most one is supported" +"XXat most one is supportedXX" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__pattern_conjuncts__mutmut_11` | `pattern_conjuncts` | -"at most one is supported" +"AT MOST ONE IS SUPPORTED" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__min_count_conjuncts__mutmut_11` | `min_count_conjuncts` | -"sh:property (a node-level minCount is vacuous)" +"XXsh:property (a node-level minCount is vacuous)XX" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__min_count_conjuncts__mutmut_12` | `min_count_conjuncts` | -"sh:property (a node-level minCount is vacuous)" +"sh:property (a node-level mincount is vacuous)" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__min_count_conjuncts__mutmut_13` | `min_count_conjuncts` | -"sh:property (a node-level minCount is vacuous)" +"SH:PROPERTY (A NODE-LEVEL MINCOUNT IS VACUOUS)" | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__min_count_conjuncts__mutmut_19` | `min_count_conjuncts` | -"only sh:minCount 1 lowers to flat SPARQL (implementation narrowing)" +"XXonly sh:minCount 1 lowers to flat S | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__min_count_conjuncts__mutmut_20` | `min_count_conjuncts` | -"only sh:minCount 1 lowers to flat SPARQL (implementation narrowing)" +"only sh:mincount 1 lowers to flat spa | ineffective | error/warning wording only |
+| `fastshaql.core.parser.node_expr.filter_shape.x__min_count_conjuncts__mutmut_21` | `min_count_conjuncts` | -"only sh:minCount 1 lowers to flat SPARQL (implementation narrowing)" +"ONLY SH:MINCOUNT 1 LOWERS TO FLAT SPA | ineffective | error/warning wording only |
+
+### `translation/node_expr.py`
+
+| `fastshaql.core.translation.node_expr.x__substitute_focus_var__mutmut_4` | `substitute_focus_var` | -pos = 0 +pos = None | equivalent | None equals 0 as a slice start |
+| `fastshaql.core.translation.node_expr.x__translate__mutmut_10` | `translate` | -case _ as unreachable:  # pragma: no cover — unreachable: closed union \| assert_never(unreachable) + | equivalent | unreachable arm (closed union) |
+| `fastshaql.core.translation.node_expr.x__translate__mutmut_105` | `translate` | -assert_never(unreachable) +assert_never(None) | equivalent | unreachable arm (closed union) |
+| `fastshaql.core.translation.node_expr.x__condition__mutmut_24` | `condition` | -return [], Condition(_strict_true(pure), total=False) +return [], Condition(_strict_true(pure), total=None) | equivalent | None is falsy, same as total=False in the guards |
+| `fastshaql.core.translation.node_expr.x__pure_branch__mutmut_20` | `pure_branch` | -case IfNodeExpr(cond=c, then=t, otherwise=o) if t is not None and o is not None: +case IfNodeExpr(cond=c, the | equivalent | a None branch fails the pure walk either way |
+
+### `translation/filter_shape.py`
+
+| `fastshaql.core.translation.filter_shape.x__translate_conjunct__mutmut_8` | `translate_conjunct` | -case FilterMinCountOne():  # pragma: no cover — parser rejects node-level minCount \| raise TypeError( \| "Filt | equivalent | unreachable arm (closed union) |
+| `fastshaql.core.translation.filter_shape.x__translate_conjunct__mutmut_9` | `translate_conjunct` | -case _ as unreachable:  # pragma: no cover — unreachable: closed union \| assert_never(unreachable) + | equivalent | unreachable arm (closed union) |
+| `fastshaql.core.translation.filter_shape.x__translate_conjunct__mutmut_109` | `translate_conjunct` | -"FilterMinCountOne is only meaningful inside a property conjunct" +None | ineffective | error/warning wording only |
+| `fastshaql.core.translation.filter_shape.x__translate_conjunct__mutmut_110` | `translate_conjunct` | -"FilterMinCountOne is only meaningful inside a property conjunct" +"XXFilterMinCountOne is only meaningful in | ineffective | error/warning wording only |
+| `fastshaql.core.translation.filter_shape.x__translate_conjunct__mutmut_111` | `translate_conjunct` | -"FilterMinCountOne is only meaningful inside a property conjunct" +"filtermincountone is only meaningful insi | ineffective | error/warning wording only |
+| `fastshaql.core.translation.filter_shape.x__translate_conjunct__mutmut_112` | `translate_conjunct` | -"FilterMinCountOne is only meaningful inside a property conjunct" +"FILTERMINCOUNTONE IS ONLY MEANINGFUL INSI | ineffective | error/warning wording only |
+| `fastshaql.core.translation.filter_shape.x__translate_conjunct__mutmut_113` | `translate_conjunct` | -assert_never(unreachable) +assert_never(None) | ineffective | error/warning wording only |
+
+### `translation/query.py`
+
+| `fastshaql.core.translation.query.x_translate_query__mutmut_5` | `translate_query` | -"QueryContext.write_graph is reserved for the future writes era " +"XXQueryContext.write_graph is reserved fo | ineffective | error/warning wording only |
+| `fastshaql.core.translation.query.x_translate_query__mutmut_6` | `translate_query` | -"QueryContext.write_graph is reserved for the future writes era " +"querycontext.write_graph is reserved for  | ineffective | error/warning wording only |
+| `fastshaql.core.translation.query.x_translate_query__mutmut_8` | `translate_query` | -"(SPARQL Update WITH / Graph Store Protocol target); the " +"XX(SPARQL Update WITH / Graph Store Protocol tar | ineffective | error/warning wording only |
+| `fastshaql.core.translation.query.x_translate_query__mutmut_9` | `translate_query` | -"(SPARQL Update WITH / Graph Store Protocol target); the " +"(sparql update with / graph store protocol targe | ineffective | error/warning wording only |
+| `fastshaql.core.translation.query.x_translate_query__mutmut_10` | `translate_query` | -"(SPARQL Update WITH / Graph Store Protocol target); the " +"(SPARQL UPDATE WITH / GRAPH STORE PROTOCOL TARGE | ineffective | error/warning wording only |
+| `fastshaql.core.translation.query.x_translate_query__mutmut_11` | `translate_query` | -"read-only query pipeline never consumes it — leave it unset" +"XXread-only query pipeline never consumes it  | ineffective | error/warning wording only |
+| `fastshaql.core.translation.query.x_translate_query__mutmut_12` | `translate_query` | -"read-only query pipeline never consumes it — leave it unset" +"READ-ONLY QUERY PIPELINE NEVER CONSUMES IT —  | ineffective | error/warning wording only |
+| `fastshaql.core.translation.query.x__target_entity_patterns__mutmut_17` | `target_entity_patterns` | -"cannot translate root query field" +"XXcannot translate root query fieldXX" | ineffective | error/warning wording only |
+| `fastshaql.core.translation.query.x__target_entity_patterns__mutmut_18` | `target_entity_patterns` | -"cannot translate root query field" +"CANNOT TRANSLATE ROOT QUERY FIELD" | ineffective | error/warning wording only |
+
+### `translation/selection.py`
+
+| `fastshaql.core.translation.selection.x_iter_field_selections__mutmut_3` | `iter_field_selections` | -kind = type(sel).__name__ +kind = None | ineffective | error/warning wording only |
+| `fastshaql.core.translation.selection.x_iter_field_selections__mutmut_4` | `iter_field_selections` | -kind = type(sel).__name__ +kind = type(None).__name__ | ineffective | error/warning wording only |
+| `fastshaql.core.translation.selection.x_iter_field_selections__mutmut_6` | `iter_field_selections` | -f"Unsupported selection kind {kind!r}" +None | ineffective | error/warning wording only |
+| `fastshaql.core.translation.selection.x__translate_relationship_selection__mutmut_3` | `translate_relationship_selection` | -prop, field_name=field_name +prop, field_name=None | ineffective | error/warning wording only |
+| `fastshaql.core.translation.selection.x__translate_relationship_selection__mutmut_5` | `translate_relationship_selection` | -prop, field_name=field_name \| ) +prop, ) | ineffective | error/warning wording only |
+| `fastshaql.core.translation.selection.x__translate_relationship_selection__mutmut_24` | `translate_relationship_selection` | -translate_selection(child_selection, child_shape, child_scope, frozenset()) +translate_selection(child_select | equivalent | explicit frozenset equals the parameter default |
+
+### `translation/variables.py`
+
+| `fastshaql.core.translation.variables.xǁVariableAllocatorǁallocate__mutmut_13` | `VariableAllocator.allocate` | -"unreachable" +None | ineffective | error/warning wording only |
+| `fastshaql.core.translation.variables.xǁVariableAllocatorǁallocate__mutmut_14` | `VariableAllocator.allocate` | -"unreachable" +"XXunreachableXX" | ineffective | error/warning wording only |
+| `fastshaql.core.translation.variables.xǁVariableAllocatorǁallocate__mutmut_15` | `VariableAllocator.allocate` | -"unreachable" +"UNREACHABLE" | ineffective | error/warning wording only |
+
+### `translation/paths.py`
+
+| `fastshaql.core.translation.paths.x_map_shacl_path_to_sparql_path__mutmut_16` | `map_shacl_path_to_sparql_path` | -f"Unsupported SHACL property path type: {type(path).__name__}" +None | ineffective | error/warning wording only |
+| `fastshaql.core.translation.paths.x_map_shacl_path_to_sparql_path__mutmut_17` | `map_shacl_path_to_sparql_path` | -f"Unsupported SHACL property path type: {type(path).__name__}" +f"Unsupported SHACL property path type: {type | ineffective | error/warning wording only |
+
+### `translation/patterns.py`
+
+| `fastshaql.core.translation.patterns.x__raw_core__mutmut_3` | `raw_core` | -f"derived property {prop.graphql_field_name!r} lacks its sh:values node expression" +None | ineffective | error/warning wording only |
+| `fastshaql.core.translation.patterns.x_scalar_bind_patterns__mutmut_51` | `scalar_bind_patterns` | -*wrap_if_unbound(_raw_core(prop, inner, subject), bound=False), +*wrap_if_unbound(_raw_core(prop, inner, subj | equivalent | None is falsy, equal to the False default |
+
+### `translation/joins.py`
+
+| `fastshaql.core.translation.joins.x_relationship_join_patterns__mutmut_4` | `relationship_join_patterns` | -f"derived property {prop.graphql_field_name!r} lacks its sh:values node expression" +None | ineffective | error/warning wording only |
+
+### `translation/field_binding.py`
+
+| `fastshaql.core.translation.field_binding.x__promote_relationship_field__mutmut_10` | `promote_relationship_field` | -emit_type_triple=False, +emit_type_triple=None, | equivalent | None is falsy, equal to the False default |
+| `fastshaql.core.translation.field_binding.x__promote_relationship_field__mutmut_14` | `promote_relationship_field` | -emit_type_triple=False, \| ) +) | equivalent | dropped argument falls back to the same False default |
+| `fastshaql.core.translation.field_binding.x_bind_promoted_fields__mutmut_3` | `bind_promoted_fields` | -continue +break | equivalent | None is falsy, equal to the False default |
+| `fastshaql.core.translation.field_binding.x_bind_promoted_fields__mutmut_7` | `bind_promoted_fields` | -continue  # pragma: no cover — promoted names guaranteed in property_shapes +break  # pragma: no cover — prom | equivalent | None is falsy, equal to the False default |
+| `fastshaql.core.translation.field_binding.x_bind_promoted_fields__mutmut_21` | `bind_promoted_fields` | -field_name, prop, scope, project=False, bound=True +field_name, prop, scope, project=None, bound=True | equivalent | unreachable continue (promoted names guaranteed) |
+
+### `translation/filters/literals.py`
+
+| `fastshaql.core.translation.filters.literals.x_value_to_literal__mutmut_5` | `value_to_literal` | -case NullValueNode(): \| return None + | equivalent | falls through to the same None-returning arm |
+| `fastshaql.core.translation.filters.literals.x_value_to_literal__mutmut_6` | `value_to_literal` | -case _:  # pragma: no cover — List/Object/Variable unreachable (GraphQL coerces) \| return None + | equivalent | falls off the match to the same None return |
+
+### `translation/filters/extract.py`
+
+| `fastshaql.core.translation.filters.extract.x__extract_int_argument__mutmut_5` | `extract_int_argument` | -f"{name!r} argument must be an integer" +None | ineffective | error/warning wording only |
+| `fastshaql.core.translation.filters.extract.x_extract_where_argument__mutmut_6` | `extract_where_argument` | -"where argument must be an object value" +None | ineffective | error/warning wording only |
+| `fastshaql.core.translation.filters.extract.x_extract_where_argument__mutmut_7` | `extract_where_argument` | -"where argument must be an object value" +"XXwhere argument must be an object valueXX" | ineffective | error/warning wording only |
+| `fastshaql.core.translation.filters.extract.x_extract_where_argument__mutmut_8` | `extract_where_argument` | -"where argument must be an object value" +"WHERE ARGUMENT MUST BE AN OBJECT VALUE" | ineffective | error/warning wording only |
+
+### `translation/filters/exists.py`
+
+| `fastshaql.core.translation.filters.exists.x_translate_exists_relationship__mutmut_11` | `translate_exists_relationship` | -ctx.subject, child_subject, prop, emit_type_triple=False +ctx.subject, child_subject, prop, emit_type_triple= | equivalent | None is falsy, equal to the False default |
+| `fastshaql.core.translation.filters.exists.x_translate_exists_relationship__mutmut_15` | `translate_exists_relationship` | -ctx.subject, child_subject, prop, emit_type_triple=False \| ) +ctx.subject, child_subject, prop, ) | equivalent | dropped argument falls back to the same False default |
+
+### `translation/filters/fields.py`
+
+| `fastshaql.core.translation.filters.fields.xǁ_FieldTranslatorǁ__init____mutmut_1` | `FieldTranslator.__init__` | -self.shape = shape +self.shape = None | equivalent | attribute never read after assignment |
+| `fastshaql.core.translation.filters.fields.xǁ_FieldTranslatorǁon_property__mutmut_4` | `FieldTranslator.on_property` | -f"Relationship filter {name!r} requires an object value" +None | ineffective | error/warning wording only |
+| `fastshaql.core.translation.filters.fields.x_translate_fields__mutmut_2` | `translate_fields` | -translator = _FieldTranslator(shape, ctx, registry) +translator = _FieldTranslator(None, ctx, registry) | equivalent | attribute never read after assignment |
+
+### `translation/filters/operators.py`
+
+| `fastshaql.core.translation.filters.operators.x_translate_scalar_ops__mutmut_23` | `translate_scalar_ops` | -iri_values=False, +iri_values=None, | equivalent | None is falsy, equal to the False default |
+| `fastshaql.core.translation.filters.operators.x__enum_term__mutmut_4` | `enum_term` | -if term is None or not isinstance(term, (URIRef, Literal)): +if term is None and not isinstance(term, (URIRef | equivalent | parser guarantees enum terms are URIRef/Literal |
+| `fastshaql.core.translation.filters.operators.x_translate_operator_field__mutmut_20` | `translate_operator_field` | -literal = value_to_literal(op_field.value, XSD.string) +literal = value_to_literal(op_field.value, None) | equivalent | XSD.string and None produce the same plain literal |
+
