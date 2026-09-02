@@ -82,6 +82,6 @@ def build_field(
     return GraphQLField(
         wrap_field_type(
             base, prop.kind
-        ),  # non-null synthesis for defaulted fields lives in kind (SD-6)
+        ),  # non-null synthesis for defaulted fields lives in kind
         description=prop.description,
     )

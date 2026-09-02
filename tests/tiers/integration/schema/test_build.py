@@ -125,7 +125,7 @@ def test_build_schema_string_family_spaces_are_string_output(
 @pytest.mark.parametrize("min_count", [0, 1], ids=["mincount_0", "mincount_1"])
 def test_build_schema_defaulted_field_is_non_nullable(min_count: int) -> None:
     """A defaulted field is non-nullable regardless of ``sh:minCount`` — the
-    COALESCE always binds a value (SD-6)."""
+    COALESCE always binds a value."""
     shape = node_shape(
         "Fb",
         property_shapes={

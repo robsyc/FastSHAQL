@@ -102,6 +102,15 @@ def test_load_shapes_empty_directory_raises(tmp_path: Path) -> None:
         load_shapes(tmp_path)
 
 
+def test_load_shapes_directory_suffix_match_is_case_sensitive(tmp_path: Path) -> None:
+    """``.Xttl`` is not ``.ttl`` — suffix recognition is rdflib's exact map,
+    so a directory holding only a case variant is as empty as one holding
+    no RDF at all."""
+    _write_ttl(tmp_path, "a.Xttl", "a")
+    with pytest.raises(FileNotFoundError, match="no RDF files"):
+        load_shapes(tmp_path)
+
+
 def test_load_shapes_sequence_items_expand(tmp_path: Path) -> None:
     """Directories expand inside sequences too — flattening, not nesting."""
     _write_ttl(tmp_path, "dir.ttl", "dir")
@@ -173,6 +182,28 @@ def test_load_shapes_explicit_format_override(tmp_path: Path) -> None:
     graph = load_shapes(path, format="turtle")
     subject = URIRef("http://example.org/s")
     assert (subject, URIRef("http://example.org/p"), Literal("ok")) in graph
+
+
+def test_load_shapes_inline_explicit_format_override() -> None:
+    """The format override reaches inline strings too — RDF/XML data parses
+    as XML, not as the turtle default."""
+    xml = (
+        '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" '
+        'xmlns:ex="http://example.org/">'
+        '<rdf:Description rdf:about="http://example.org/s">'
+        "<ex:p>x</ex:p>"
+        "</rdf:Description>"
+        "</rdf:RDF>"
+    )
+    graph = load_shapes(xml, format="xml")
+    assert (URIRef("http://example.org/s"), URIRef("http://example.org/p"), V) in graph
+
+
+def test_load_shapes_file_url(tmp_path: Path) -> None:
+    """A ``file://`` URL is a location, not inline data — read locally, no network."""
+    file = _write_ttl(tmp_path, "shapes.ttl", "fromurl")
+    graph = load_shapes(f"file://{file}")
+    assert (URIRef("http://example.org/fromurl"), P, V) in graph
 
 
 def test_load_shapes_rejects_invalid_type() -> None:

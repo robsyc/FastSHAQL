@@ -175,7 +175,7 @@ class PropertyShapeIR(ShapeIR):
     1, statically single-valued): the fallback fires when the path/values
     yield nothing, lowered as ``OPTIONAL { … } BIND(COALESCE(?v, d) AS ?out)``
     — per-entity set-emptiness is flat-expressible exactly in the single-value
-    case. A defaulted field is non-nullable (SD-6)."""
+    case. A defaulted field is non-nullable."""
 
     @property
     def datatype(self) -> URIRef | None:
@@ -213,7 +213,7 @@ class PropertyShapeIR(ShapeIR):
 
         ``minCount >= 1`` is required; ``maxCount == 1`` is scalar; otherwise
         list. A defaulted field (``default_expr``) is non-null at any
-        ``minCount`` (SD-6): the ``COALESCE`` always binds the value
+        ``minCount``: the ``COALESCE`` always binds the value
         variable, and the path must stay optional so the default can serve
         the entities it fills — exact for the scalar-only default boundary
         the parser enforces.

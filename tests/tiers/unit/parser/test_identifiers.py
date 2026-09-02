@@ -16,7 +16,12 @@ from rdflib import Graph, URIRef
 from rdflib.term import Literal, Node
 
 from fastshaql.core.ir.shacl_path import PredicatePath
-from fastshaql.core.kernel.identifiers import enum_member_names, local_name
+from fastshaql.core.kernel.identifiers import (
+    enum_member_names,
+    local_name,
+    mangle_enum_member_name,
+    raw_enum_member_name,
+)
 from fastshaql.core.parser.errors import UnsupportedShapeError
 from fastshaql.core.parser.util import (
     InvalidCodeIdentifierError,
@@ -37,6 +42,30 @@ SUBJECT = URIRef("http://example.org/ThingShape")
 def test_local_name_non_split_returns_full_string(iri: str) -> None:
     """An IRI without ``#`` or ``/`` — ``local_name`` returns the full string."""
     assert local_name(URIRef(iri)) == iri
+
+
+@pytest.mark.parametrize(
+    ("iri", "expected"),
+    [("#frag", "frag"), ("/root", "root")],
+    ids=["fragment_at_start", "slash_at_start"],
+)
+def test_local_name_separator_at_position_zero(iri: str, expected: str) -> None:
+    """A separator at index 0 is still a separator — the local name is the
+    remainder after it, not the whole (relative) IRI."""
+    assert local_name(URIRef(iri)) == expected
+
+
+@pytest.mark.parametrize("raw", ["true", "false", "null"])
+def test_mangle_reserved_word_gains_underscore_prefix(raw: str) -> None:
+    """The reserved-word check is case-insensitive on the mangled (uppercased)
+    result — ``true``/``false``/``null`` escape as ``_TRUE``/``_FALSE``/``_NULL``."""
+    assert mangle_enum_member_name(raw) == f"_{raw.upper()}"
+
+
+def test_raw_enum_member_name_iri_uses_local_name() -> None:
+    """An IRI member's source name is its local name (literals use the lexical
+    form — the split happens here, not in mangling)."""
+    assert raw_enum_member_name(URIRef("http://example.org/ns#Alpha")) == "Alpha"
 
 
 def test_enum_member_names_no_collision_matches_mangling() -> None:
@@ -66,6 +95,12 @@ def test_enum_member_names_duplicate_terms_get_suffixed() -> None:
     """Duplicate terms (SHACL-legal, membership-insensitive) get distinct names
     mapping to the same internal value; serialization is first-name-wins."""
     assert enum_member_names((Literal("<"), Literal("<"))) == ["_", "_2"]
+
+
+def test_enum_member_names_collision_on_plain_base_uses_underscore_joiner() -> None:
+    """A colliding base without a trailing ``_`` suffixes as ``_2`` — one
+    underscore; the collapsing joiner applies only to trailing-``_`` bases."""
+    assert enum_member_names((Literal("A"), Literal("A"))) == ["A", "A_2"]
 
 
 # --- sh:codeIdentifier validation (parser/util/identifiers.py) ---

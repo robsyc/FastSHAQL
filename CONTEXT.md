@@ -71,7 +71,7 @@ How values are *obtained*: asserted (triples at the path) or derived (a node exp
 _Avoid_: derived flag, is-derived
 
 **FieldKind**:
-Cardinality enum (REQUIRED_SCALAR, OPTIONAL_SCALAR, REQUIRED_LIST, OPTIONAL_LIST) derived from `sh:minCount`/`sh:maxCount` — and from `sh:defaultValue` (a Defaulted field is non-null at any minCount, SD-6).
+Cardinality enum (REQUIRED_SCALAR, OPTIONAL_SCALAR, REQUIRED_LIST, OPTIONAL_LIST) derived from `sh:minCount`/`sh:maxCount` — and from `sh:defaultValue` (a Defaulted field is non-null at any minCount).
 _Avoid_: cardinality (the SHACL constraint pair)
 
 **Scalar**:
