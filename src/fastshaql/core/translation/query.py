@@ -18,14 +18,14 @@ from fastshaql.core.sparql import (
     TriplePattern,
 )
 
-from .field_binding import bind_promoted_fields
+from .field_binding import FieldBindings
 from .filters import (
+    RootFilterContext,
     compute_promoted_fields,
     extract_pagination_arguments,
     extract_where_argument,
     translate_where_filter,
 )
-from .filters.context import RootFilterContext
 from .node_expr import translate_node_expr
 from .scope import TranslationScope
 from .selection import iter_field_selections, translate_selection
@@ -76,9 +76,11 @@ def translate_query(
             "read-only query pipeline never consumes it — leave it unset"
         )
     where_arg = extract_where_argument(field_node)
-    promoted = compute_promoted_fields(where_arg, shape)
     limit, offset = extract_pagination_arguments(field_node)
     paginate = limit is not None or offset is not None
+    bindings = FieldBindings(
+        promoted=compute_promoted_fields(where_arg, shape), isolated=paginate
+    )
 
     allocator = VariableAllocator()
     subject = allocator.allocate(IRI_FIELD)
@@ -91,19 +93,14 @@ def translate_query(
     entity_patterns = _target_entity_patterns(shape, subject)
     scope.projection.append(subject)
 
-    selected_names: list[str] = []
     selection_patterns: list[Pattern] = []
     for selection in iter_field_selections(field_node):
-        selected_names.append(selection.name.value)
         selection_patterns.extend(
-            translate_selection(selection, shape, scope, promoted)
+            translate_selection(selection, shape, scope, bindings)
         )
-    selected = frozenset(selected_names)
 
-    promoted_patterns = bind_promoted_fields(shape, scope, promoted, selected)
-    filter_ctx = RootFilterContext.from_scope(
-        scope, isolated=paginate, selected=selected
-    )
+    promoted_patterns = bindings.bind_promoted_fields(shape, scope)
+    filter_ctx = RootFilterContext.from_scope(scope, bindings=bindings)
     filter_patterns = translate_where_filter(where_arg, filter_ctx, shape, registry)
 
     where = assemble_where(
@@ -118,6 +115,7 @@ def translate_query(
         limit=limit,
         offset=offset,
     )
+    bindings.assert_promoted_bound(scope)
     query = SelectQuery(
         projection=tuple(scope.projection),
         where=where,

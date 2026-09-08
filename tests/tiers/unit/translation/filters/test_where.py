@@ -1,9 +1,11 @@
-"""``where`` object field walking — ``core/translation/filters/fields.py``.
+"""Where-object pipeline — ``core/translation/filters/where.py``.
 
-Unit tier: ``translate_fields`` dispatch across combinator and property fields,
-including the empty-relationship-filter no-op relied on by root promotion.
+Unit tier: argument extraction, ``translate_fields`` dispatch across
+combinator and property fields (including the empty-relationship-filter
+no-op relied on by root promotion), branch wrapping, and top-level
+``translate_where_filter`` dispatch.
 
-Order: combinator branch no-op.
+Order: scalar filter dispatch → combinator branch no-op → branch wrapping and deep nesting.
 """
 
 from __future__ import annotations
@@ -28,18 +30,38 @@ from fastshaql.core.sparql import (
     TermExpr,
     TriplePattern,
 )
-from fastshaql.core.translation.filters.context import (
+from fastshaql.core.translation.field_binding import FieldBindings, bind_scalar_field
+from fastshaql.core.translation.filters.exists_scope import (
     ExistsContext,
     RootFilterContext,
 )
-from fastshaql.core.translation.filters.fields import (
+from fastshaql.core.translation.filters.where import (
     _branch_to_expression,
+    extract_where_argument,
     translate_fields,
+    translate_where_filter,
 )
 from fastshaql.core.translation.variables import VariableMap
+from support.graphql_utils import root_field_node
 from support.translation import translation_scope
 
 EX = URIRef("http://example.org/")
+
+
+def test_translate_where_filter_scalar(relationship_registry) -> None:
+    person = relationship_registry.by_type_name["Person"]
+    scope = translation_scope(relationship_registry)
+    bind_scalar_field(
+        "name", person.property_shapes["name"], scope, project=True, bound=True
+    )
+    where = extract_where_argument(
+        root_field_node('query { persons(where: { name: { eq: "Alice" } }) { name } }')
+    )
+    assert isinstance(where, ObjectValueNode)
+    ctx = RootFilterContext.from_scope(scope, bindings=FieldBindings())
+    patterns = translate_where_filter(where, ctx, person, relationship_registry)
+    assert len(patterns) == 1
+    assert isinstance(patterns[0], FilterPattern)
 
 
 def test_combinator_branch_empty_relationship_filter_is_noop(
@@ -48,7 +70,7 @@ def test_combinator_branch_empty_relationship_filter_is_noop(
     """Empty relationship filters inside combinators rely on root promotion."""
     person = relationship_registry.by_type_name["Person"]
     scope = translation_scope(relationship_registry)
-    ctx = RootFilterContext.from_scope(scope, isolated=False, selected=frozenset())
+    ctx = RootFilterContext.from_scope(scope, bindings=FieldBindings())
     node = ObjectValueNode(
         fields=(
             ObjectFieldNode(
@@ -112,7 +134,7 @@ def test_deeply_nested_relationship_filters_resolve_targets(
         join_var,
         VariableMap(subject_var=join_var, fields={}, relationships={}),
     )
-    ctx = RootFilterContext.from_scope(scope, isolated=False, selected=frozenset())
+    ctx = RootFilterContext.from_scope(scope, bindings=FieldBindings())
     node = ObjectValueNode(
         fields=(
             ObjectFieldNode(

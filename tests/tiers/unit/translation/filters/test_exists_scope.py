@@ -1,4 +1,4 @@
-"""Filter context strategies — ``core/translation/filters/context.py``.
+"""Filter context strategies — ``core/translation/filters/exists_scope.py``.
 
 Unit tier: ``RootFilterContext`` flat vs isolated scalar-var re-emission, and
 ``ExistsContext`` relationship-filter variable allocation.
@@ -23,7 +23,11 @@ from fastshaql.core.sparql import (
     RawGraphPattern,
     TriplePattern,
 )
-from fastshaql.core.translation.filters.context import ExistsContext, RootFilterContext
+from fastshaql.core.translation.field_binding import FieldBindings
+from fastshaql.core.translation.filters.exists_scope import (
+    ExistsContext,
+    RootFilterContext,
+)
 from fastshaql.core.translation.variables import VariableMap
 from support.builders import derived_property
 from support.translation import translation_scope
@@ -36,7 +40,7 @@ def test_root_filter_context_flat_scalar_var_no_patterns(
 ) -> None:
     scope = translation_scope(relationship_registry)
     scope.fields["name"] = Variable("name")
-    ctx = RootFilterContext.from_scope(scope, isolated=False, selected=frozenset())
+    ctx = RootFilterContext.from_scope(scope, bindings=FieldBindings())
     prop = relationship_registry.by_type_name["Person"].property_shapes["name"]
     var, patterns = ctx.scalar_var("name", prop)
     assert var == Variable("name")
@@ -51,9 +55,9 @@ def test_root_filter_context_isolated_reemit_selected_scalar(
 ) -> None:
     scope = translation_scope(relationship_registry)
     scope.fields["name"] = Variable("name")
-    ctx = RootFilterContext.from_scope(
-        scope, isolated=True, selected=frozenset({"name"})
-    )
+    bindings = FieldBindings(isolated=True)
+    bindings.note_selected("name")
+    ctx = RootFilterContext.from_scope(scope, bindings=bindings)
     prop = relationship_registry.by_type_name["Person"].property_shapes["name"]
     _, patterns = ctx.scalar_var("name", prop)
     assert len(patterns) == 1
@@ -74,12 +78,13 @@ def test_root_filter_context_isolated_relationship_reemit(
         join_var,
         VariableMap(subject_var=join_var, fields={}, relationships={}),
     )
+    bindings = FieldBindings(isolated=True)
+    bindings.note_selected("employer")
     ctx = RootFilterContext(
         subject=scope.subject,
         fields=scope.fields,
         relationships=scope.relationships,
-        isolated=True,
-        selected=frozenset({"employer"}),
+        bindings=bindings,
     )
     node = ObjectValueNode(
         fields=(

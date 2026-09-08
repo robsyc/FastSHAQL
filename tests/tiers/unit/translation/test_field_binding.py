@@ -1,9 +1,10 @@
-"""Bind classification and promotion — ``core/translation/field_binding.py``.
+"""Bind primitives and promotion emission — ``core/translation/field_binding.py``.
 
-Unit tier: ``field_is_bound`` cardinality/promotion rules, and
-``bind_promoted_fields`` emitting patterns for filter-promoted scalars and derived fields.
+Unit tier: ``bind_scalar_field``/relationship join emission and
+``FieldBindings.bind_promoted_fields`` registering promoted fields on the
+scope (see ``filters/test_field_bindings.py`` for the state object itself).
 
-Order: bind classification → promoted-field binding.
+Order: promoted-field binding → relationship join emission and registration.
 """
 
 from __future__ import annotations
@@ -18,39 +19,17 @@ from fastshaql.core.sparql import (
     RawGraphPattern,
     TriplePattern,
 )
-from fastshaql.core.translation.field_binding import (
-    bind_promoted_fields,
-    field_is_bound,
-)
+from fastshaql.core.translation.field_binding import FieldBindings
 from fastshaql.core.translation.joins import relationship_join_patterns
 from fastshaql.core.translation.variables import VariableMap
 from support.builders import (
     derived_property,
     relationship_property,
-    scalar_property,
     shape_with,
 )
 from support.translation import translation_scope
 
 EX = URIRef("http://example.org/")
-
-# --- Bind classification ---
-
-
-def test_field_is_bound_when_required() -> None:
-    prop = scalar_property("name", min_count=1, max_count=1)
-    assert field_is_bound(prop, "name", frozenset()) is True
-
-
-def test_field_is_bound_when_promoted() -> None:
-    prop = scalar_property("name", min_count=0, max_count=1)
-    assert field_is_bound(prop, "name", frozenset({"name"})) is True
-
-
-def test_field_is_bound_optional_unpromoted() -> None:
-    prop = scalar_property("name", min_count=0, max_count=1)
-    assert field_is_bound(prop, "name", frozenset()) is False
-
 
 # --- Promoted-field binding ---
 
@@ -60,9 +39,8 @@ def test_bind_promoted_fields_emits_unselected_filter_field(
 ) -> None:
     person = relationship_registry.by_type_name["Person"]
     scope = translation_scope(relationship_registry)
-    patterns = bind_promoted_fields(
-        person, scope, promoted=frozenset({"name"}), selected=frozenset()
-    )
+    bindings = FieldBindings(promoted=frozenset({"name"}))
+    patterns = bindings.bind_promoted_fields(person, scope)
     assert len(patterns) == 1
     assert isinstance(patterns[0], TriplePattern)
     assert "name" in scope.fields
@@ -83,9 +61,8 @@ def test_bind_promoted_fields_emits_unselected_derived_field(
         ),
     )
     scope = translation_scope(relationship_registry)
-    patterns = bind_promoted_fields(
-        person, scope, promoted=frozenset({"label"}), selected=frozenset()
-    )
+    bindings = FieldBindings(promoted=frozenset({"label"}))
+    patterns = bindings.bind_promoted_fields(person, scope)
     assert any(isinstance(p, RawGraphPattern) for p in patterns)
     assert not any(isinstance(p, TriplePattern) for p in patterns)
     assert "label" in scope.fields
@@ -139,9 +116,8 @@ def test_promoted_relationship_registers_fresh_empty_child_var_map(
     registers an empty child variable map anchored on that variable."""
     person = relationship_registry.by_type_name["Person"]
     scope = translation_scope(relationship_registry)
-    patterns = bind_promoted_fields(
-        person, scope, promoted=frozenset({"employer"}), selected=frozenset()
-    )
+    bindings = FieldBindings(promoted=frozenset({"employer"}))
+    patterns = bindings.bind_promoted_fields(person, scope)
     first = patterns[0]
     assert isinstance(first, TriplePattern)
     child_var = cast("Variable", first.object)
