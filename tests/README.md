@@ -48,13 +48,16 @@ tests/
     ├── import_guard.py       # no-extras import check (run via `just import-guard`)
     ├── architecture/         # module_graph.py — mermaid DAG for ARCHITECTURE.md
     ├── mutation/             # floor.py — mutation-score floor gate
+    ├── django_conf/          # Django settings/urls for the adapter-tier tests
+    ├── badges.py             # shields endpoint badges (run via `just badges`)
+    ├── release_notes.py      # CHANGELOG section extractor (run via `just release-notes`)
     └── eval/            # evaluation-only (consumed solely by tiers/evaluation/)
         ├── session.py   # StoreSession Protocol — the store contract
         ├── graphdb.py   # GraphDbSession — the GraphDB adapter
         └── report.py    # EvalReport — JSON sidecar + CI summary renderer
 ```
 
-Everything at the `support/` root is shared across ≥2 tiers; `support/eval/` is the only evaluation-specific subgroup.
+Most entries at the `support/` root are shared across ≥2 tiers; the exceptions are the CI/release scripts (`badges.py`, `release_notes.py`), the adapter-tier `django_conf/`, and `support/eval/`, the only evaluation-specific subgroup.
 
 ## Tiers
 

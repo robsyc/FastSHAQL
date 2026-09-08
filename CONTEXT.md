@@ -234,7 +234,7 @@ Scoped SPARQL variable naming during the selection walk.
 ### Architecture
 
 **Core**:
-The framework-neutral subpackage (`fastshaql.core`) — parser, Shape IR, translation, rendering, execution.
+The framework-neutral subpackage (`fastshaql.core`) — kernel, parser, Shape IR, registry, schema, translation, rendering, execution.
 
 **Adapter**:
 A thin framework wrapper (FastAPI, Django) around graphql-core execution; injects `ResolverContext` per request.
@@ -253,7 +253,7 @@ The level of the test pyramid a test belongs to — unit, integration, e2e, eval
 _Avoid_: bare "tier" for node-expression lowering (Flat tier and Sub-SELECT tier own that sense)
 
 **Store matrix**:
-The set of triple stores the evaluation tier runs — one `StoreSession` adapter per store, selected by name (ADR-0022).
+The set of triple stores the evaluation tier runs — one `StoreSession` adapter per store, selected by name (ADR-0022; designed — GraphDB CE is the shipped leg, the widening is ROADMAP backlog).
 _Avoid_: backend ("database, backend" is the retired Store synonym); store list
 
 **Envelope**:
