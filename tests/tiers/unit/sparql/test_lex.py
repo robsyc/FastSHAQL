@@ -19,6 +19,7 @@ from fastshaql.core.sparql.lex import (
     code_spans,
     extract_braced_body,
     find_keyword,
+    map_code_spans,
     skip_ws_and_comments,
     word_bounded_any,
 )
@@ -95,6 +96,20 @@ def test_code_spans_empty_text() -> None:
 
 def test_code_spans_fully_protected_text() -> None:
     assert code_spans('"only a string"') == []
+
+
+# --- map_code_spans ---
+
+
+def test_map_code_spans_transforms_code_regions_only() -> None:
+    assert map_code_spans(
+        '?this :p "ex:a" # comment ex:b', lambda code: code.upper()
+    ) == ('?THIS :P "ex:a" # comment ex:b')
+
+
+def test_map_code_spans_empty_and_fully_protected_pass_through() -> None:
+    assert map_code_spans("", str.upper) == ""
+    assert map_code_spans('"only a string"', str.upper) == '"only a string"'
 
 
 # --- extract_braced_body ---

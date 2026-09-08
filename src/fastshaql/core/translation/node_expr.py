@@ -73,7 +73,7 @@ from fastshaql.core.sparql import (
     ValuesPattern,
     contain_row_eliminating,
 )
-from fastshaql.core.sparql.lex import THIS_REF, code_spans
+from fastshaql.core.sparql.lex import THIS_REF, map_code_spans
 from fastshaql.core.sparql.paths import (
     PredicatePath as SparqlPredicatePath,
 )
@@ -109,21 +109,14 @@ def _substitute_focus_var(text: str, focus_term: RenderTerm) -> str:
 
     String literals, IRIREFs, and comments are protected (SPARQL 1.2 §19) — a
     ``$this`` inside a string is a literal value, not a focus-node reference, so
-    it is left untouched. Mirrors the protected-region guarantee of
-    :func:`~fastshaql.core.parser.node_expr.shacl_prefixes.expand_sparql_prefixes`.
-    The term renders through :func:`~fastshaql.core.sparql.terms.render_term`
-    (``?var`` for variables, ``<iri>`` for the constant-IRI focus at target
-    position).
+    it is left untouched. Both this and prefix expansion lower through the one
+    canonical protected-region transform,
+    :func:`~fastshaql.core.sparql.lex.map_code_spans`. The term renders through
+    :func:`~fastshaql.core.sparql.terms.render_term` (``?var`` for variables,
+    ``<iri>`` for the constant-IRI focus at target position).
     """
     replacement = render_term(focus_term)
-    parts: list[str] = []
-    pos = 0
-    for start, end in code_spans(text):
-        parts.append(text[pos:start])
-        parts.append(THIS_REF.sub(replacement, text[start:end]))
-        pos = end
-    parts.append(text[pos:])
-    return "".join(parts)
+    return map_code_spans(text, lambda code: THIS_REF.sub(replacement, code))
 
 
 def translate_node_expr(
