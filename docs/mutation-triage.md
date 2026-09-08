@@ -190,6 +190,9 @@ batch:
 Residue below (ordered by module, then mutant id).
 ### `parser/node_expr/select_scan.py`
 
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
+
 | `fastshaql.core.parser.node_expr.select_scan.x_parse_shacl_select__mutmut_7` | `shacl_select` | -select_pos = find_keyword(text, "SELECT") +select_pos = find_keyword(text, "select") | equivalent | find_keyword is case-insensitive |
 | `fastshaql.core.parser.node_expr.select_scan.x_parse_shacl_select__mutmut_10` | `shacl_select` | -raise UnsupportedShapeError("sh:select must start with SELECT") +raise UnsupportedShapeError("XXsh:select mus | ineffective | error/warning wording only |
 | `fastshaql.core.parser.node_expr.select_scan.x_parse_shacl_select__mutmut_34` | `shacl_select` | -where_pos = find_keyword(text, "WHERE", head_start) +where_pos = find_keyword(text, "where", head_start) | equivalent | find_keyword is case-insensitive |
@@ -215,6 +218,9 @@ Residue below (ordered by module, then mutant id).
 
 ### `parser/node_expr/semantics.py`
 
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
+
 | `fastshaql.core.parser.node_expr.semantics.x_arm_label__mutmut_10` | `arm_label` | -case _ as unreachable:  # pragma: no cover — unreachable: closed union \| assert_never(unreachable) + | ineffective | error/warning wording only |
 | `fastshaql.core.parser.node_expr.semantics.x_arm_label__mutmut_15` | `arm_label` | -label = "shnex:ListExpression" +label = "XXshnex:ListExpressionXX" | ineffective | error/warning wording only |
 | `fastshaql.core.parser.node_expr.semantics.x_arm_label__mutmut_23` | `arm_label` | -label = "sh:select" +label = "XXsh:selectXX" | ineffective | error/warning wording only |
@@ -226,6 +232,9 @@ Residue below (ordered by module, then mutant id).
 | `fastshaql.core.parser.node_expr.semantics.x__reject_derived_conjuncts__mutmut_12` | `reject_derived_conjuncts` | -_reject_derived_conjuncts(graph, conjunct.nested, shape_iri, field_name) +_reject_derived_conjuncts(graph, co | ineffective | error/warning wording only |
 
 ### `parser/node_expr/parse.py`
+
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
 
 | `fastshaql.core.parser.node_expr.parse.x_parse_expr_object__mutmut_6` | `expr_object` | -f"unsupported node expression object {obj!r}" +None | ineffective | error/warning wording only |
 | `fastshaql.core.parser.node_expr.parse.x__sole_key_parameter__mutmut_14` | `sole_key_parameter` | -"more than once" +"XXmore than onceXX" | ineffective | error/warning wording only |
@@ -252,6 +261,9 @@ Residue below (ordered by module, then mutant id).
 | `fastshaql.core.parser.node_expr.parse.x__unsupported_message__mutmut_20` | `unsupported_message` | -"expected sh:select, sh:sparqlExpr, or a shnex: function" +"EXPECTED SH:SELECT, SH:SPARQLEXPR, OR A SHNEX: FU | ineffective | error/warning wording only |
 
 ### `parser/node_expr/filter_shape.py`
+
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
 
 | `fastshaql.core.parser.node_expr.filter_shape.x_parse_filter_shape__mutmut_3` | `filter_shape` | -return _parse_shape(graph, shape_node, inside_property=False) +return _parse_shape(graph, shape_node, inside_ | equivalent | None is falsy, equal to the False default |
 | `fastshaql.core.parser.node_expr.filter_shape.x__parse_shape__mutmut_3` | `parse_shape` | -"named shape references are not supported" +"XXnamed shape references are not supportedXX" | ineffective | error/warning wording only |
@@ -281,6 +293,9 @@ Residue below (ordered by module, then mutant id).
 
 ### `translation/node_expr.py`
 
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
+
 | `fastshaql.core.translation.node_expr.x__substitute_focus_var__mutmut_4` | `substitute_focus_var` | -pos = 0 +pos = None | equivalent | None equals 0 as a slice start |
 | `fastshaql.core.translation.node_expr.x__translate__mutmut_10` | `translate` | -case _ as unreachable:  # pragma: no cover — unreachable: closed union \| assert_never(unreachable) + | equivalent | unreachable arm (closed union) |
 | `fastshaql.core.translation.node_expr.x__translate__mutmut_105` | `translate` | -assert_never(unreachable) +assert_never(None) | equivalent | unreachable arm (closed union) |
@@ -288,6 +303,9 @@ Residue below (ordered by module, then mutant id).
 | `fastshaql.core.translation.node_expr.x__pure_branch__mutmut_20` | `pure_branch` | -case IfNodeExpr(cond=c, then=t, otherwise=o) if t is not None and o is not None: +case IfNodeExpr(cond=c, the | equivalent | a None branch fails the pure walk either way |
 
 ### `translation/filter_shape.py`
+
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
 
 | `fastshaql.core.translation.filter_shape.x__translate_conjunct__mutmut_8` | `translate_conjunct` | -case FilterMinCountOne():  # pragma: no cover — parser rejects node-level minCount \| raise TypeError( \| "Filt | equivalent | unreachable arm (closed union) |
 | `fastshaql.core.translation.filter_shape.x__translate_conjunct__mutmut_9` | `translate_conjunct` | -case _ as unreachable:  # pragma: no cover — unreachable: closed union \| assert_never(unreachable) + | equivalent | unreachable arm (closed union) |
@@ -298,6 +316,9 @@ Residue below (ordered by module, then mutant id).
 | `fastshaql.core.translation.filter_shape.x__translate_conjunct__mutmut_113` | `translate_conjunct` | -assert_never(unreachable) +assert_never(None) | ineffective | error/warning wording only |
 
 ### `translation/query.py`
+
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
 
 | `fastshaql.core.translation.query.x_translate_query__mutmut_5` | `translate_query` | -"QueryContext.write_graph is reserved for the future writes era " +"XXQueryContext.write_graph is reserved fo | ineffective | error/warning wording only |
 | `fastshaql.core.translation.query.x_translate_query__mutmut_6` | `translate_query` | -"QueryContext.write_graph is reserved for the future writes era " +"querycontext.write_graph is reserved for  | ineffective | error/warning wording only |
@@ -311,6 +332,9 @@ Residue below (ordered by module, then mutant id).
 
 ### `translation/selection.py`
 
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
+
 | `fastshaql.core.translation.selection.x_iter_field_selections__mutmut_3` | `iter_field_selections` | -kind = type(sel).__name__ +kind = None | ineffective | error/warning wording only |
 | `fastshaql.core.translation.selection.x_iter_field_selections__mutmut_4` | `iter_field_selections` | -kind = type(sel).__name__ +kind = type(None).__name__ | ineffective | error/warning wording only |
 | `fastshaql.core.translation.selection.x_iter_field_selections__mutmut_6` | `iter_field_selections` | -f"Unsupported selection kind {kind!r}" +None | ineffective | error/warning wording only |
@@ -320,25 +344,40 @@ Residue below (ordered by module, then mutant id).
 
 ### `translation/variables.py`
 
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
+
 | `fastshaql.core.translation.variables.xǁVariableAllocatorǁallocate__mutmut_13` | `VariableAllocator.allocate` | -"unreachable" +None | ineffective | error/warning wording only |
 | `fastshaql.core.translation.variables.xǁVariableAllocatorǁallocate__mutmut_14` | `VariableAllocator.allocate` | -"unreachable" +"XXunreachableXX" | ineffective | error/warning wording only |
 | `fastshaql.core.translation.variables.xǁVariableAllocatorǁallocate__mutmut_15` | `VariableAllocator.allocate` | -"unreachable" +"UNREACHABLE" | ineffective | error/warning wording only |
 
 ### `translation/paths.py`
 
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
+
 | `fastshaql.core.translation.paths.x_map_shacl_path_to_sparql_path__mutmut_16` | `map_shacl_path_to_sparql_path` | -f"Unsupported SHACL property path type: {type(path).__name__}" +None | ineffective | error/warning wording only |
 | `fastshaql.core.translation.paths.x_map_shacl_path_to_sparql_path__mutmut_17` | `map_shacl_path_to_sparql_path` | -f"Unsupported SHACL property path type: {type(path).__name__}" +f"Unsupported SHACL property path type: {type | ineffective | error/warning wording only |
 
 ### `translation/patterns.py`
+
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
 
 | `fastshaql.core.translation.patterns.x__raw_core__mutmut_3` | `raw_core` | -f"derived property {prop.graphql_field_name!r} lacks its sh:values node expression" +None | ineffective | error/warning wording only |
 | `fastshaql.core.translation.patterns.x_scalar_bind_patterns__mutmut_51` | `scalar_bind_patterns` | -*wrap_if_unbound(_raw_core(prop, inner, subject), bound=False), +*wrap_if_unbound(_raw_core(prop, inner, subj | equivalent | None is falsy, equal to the False default |
 
 ### `translation/joins.py`
 
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
+
 | `fastshaql.core.translation.joins.x_relationship_join_patterns__mutmut_4` | `relationship_join_patterns` | -f"derived property {prop.graphql_field_name!r} lacks its sh:values node expression" +None | ineffective | error/warning wording only |
 
 ### `translation/field_binding.py`
+
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
 
 | `fastshaql.core.translation.field_binding.x__promote_relationship_field__mutmut_10` | `promote_relationship_field` | -emit_type_triple=False, +emit_type_triple=None, | equivalent | None is falsy, equal to the False default |
 | `fastshaql.core.translation.field_binding.x__promote_relationship_field__mutmut_14` | `promote_relationship_field` | -emit_type_triple=False, \| ) +) | equivalent | dropped argument falls back to the same False default |
@@ -348,10 +387,16 @@ Residue below (ordered by module, then mutant id).
 
 ### `translation/filters/literals.py`
 
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
+
 | `fastshaql.core.translation.filters.literals.x_value_to_literal__mutmut_5` | `value_to_literal` | -case NullValueNode(): \| return None + | equivalent | falls through to the same None-returning arm |
 | `fastshaql.core.translation.filters.literals.x_value_to_literal__mutmut_6` | `value_to_literal` | -case _:  # pragma: no cover — List/Object/Variable unreachable (GraphQL coerces) \| return None + | equivalent | falls off the match to the same None return |
 
 ### `translation/filters/extract.py`
+
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
 
 | `fastshaql.core.translation.filters.extract.x__extract_int_argument__mutmut_5` | `extract_int_argument` | -f"{name!r} argument must be an integer" +None | ineffective | error/warning wording only |
 | `fastshaql.core.translation.filters.extract.x_extract_where_argument__mutmut_6` | `extract_where_argument` | -"where argument must be an object value" +None | ineffective | error/warning wording only |
@@ -360,10 +405,16 @@ Residue below (ordered by module, then mutant id).
 
 ### `translation/filters/exists.py`
 
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
+
 | `fastshaql.core.translation.filters.exists.x_translate_exists_relationship__mutmut_11` | `translate_exists_relationship` | -ctx.subject, child_subject, prop, emit_type_triple=False +ctx.subject, child_subject, prop, emit_type_triple= | equivalent | None is falsy, equal to the False default |
 | `fastshaql.core.translation.filters.exists.x_translate_exists_relationship__mutmut_15` | `translate_exists_relationship` | -ctx.subject, child_subject, prop, emit_type_triple=False \| ) +ctx.subject, child_subject, prop, ) | equivalent | dropped argument falls back to the same False default |
 
 ### `translation/filters/fields.py`
+
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
 
 | `fastshaql.core.translation.filters.fields.xǁ_FieldTranslatorǁ__init____mutmut_1` | `FieldTranslator.__init__` | -self.shape = shape +self.shape = None | equivalent | attribute never read after assignment |
 | `fastshaql.core.translation.filters.fields.xǁ_FieldTranslatorǁon_property__mutmut_4` | `FieldTranslator.on_property` | -f"Relationship filter {name!r} requires an object value" +None | ineffective | error/warning wording only |
@@ -371,7 +422,102 @@ Residue below (ordered by module, then mutant id).
 
 ### `translation/filters/operators.py`
 
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
+
 | `fastshaql.core.translation.filters.operators.x_translate_scalar_ops__mutmut_23` | `translate_scalar_ops` | -iri_values=False, +iri_values=None, | equivalent | None is falsy, equal to the False default |
 | `fastshaql.core.translation.filters.operators.x__enum_term__mutmut_4` | `enum_term` | -if term is None or not isinstance(term, (URIRef, Literal)): +if term is None and not isinstance(term, (URIRef | equivalent | parser guarantees enum terms are URIRef/Literal |
 | `fastshaql.core.translation.filters.operators.x_translate_operator_field__mutmut_20` | `translate_operator_field` | -literal = value_to_literal(op_field.value, XSD.string) +literal = value_to_literal(op_field.value, None) | equivalent | XSD.string and None produce the same plain literal |
 
+
+## Wave 3 — registry / schema / execution / adapters / sparql / kernel (post-batch residue, 2026-09-07)
+
+Scope: the 160 never-triaged survivors outside parser/translation —
+`core/registry.py` + `executable.py` (41), `core/schema/*` (46),
+`core/execution/*` + `adapters/*` (42), `core/sparql/*` + `core/kernel/*` (31).
+Killed by the wave-3 batch (score 92.2% → 93.7%, survivors 383 → 313):
+
+- `registry`: declaration reads are schema-subject-scoped — stray
+  `graphql:*Shape`/`*Class` edges on non-schema resources are inert, and an
+  object read scoped to the schema's own edges (public/protected/private,
+  class closures, the publicNamespace warning, the schema hunt itself);
+  class closures expand the declared class itself plus `rdfs:subClassOf`
+  descendants only (predicate discipline); declaration precedence
+  private > public > protected; `index_by_target_class` skips unindexed
+  shapes instead of terminating the scan.
+- `schema`: the operator → field-type contract (`_graphql_fields_for_spec`,
+  `_list_field`) — which operator fields each `*Filter` input exposes and the
+  GraphQL type per category (`Int` equality, `[Int!]!` membership, `String`
+  patterns), asserted by direct call (see the shielding note below); the
+  root type name `Query`.
+- `execution`: metrics are strictly-positive after a real pipeline pass
+  (`translate_ms`/`store_ms`/`convert_ms` wired, not the 0.0 defaults);
+  `_group_rows_by_var` skips rows missing the group key (a decode-omitted
+  unbound var never truncates later groups).
+- `adapters`: `ide=True` defaults for both `build_graphql_view` and
+  `build_graphql_router` serve GraphiQL on GET without opting in.
+- `sparql`: `word_bounded_any` builds a working alternation (pinned directly
+  — see shielding note); `skip_ws_and_comments` skips exactly the four SPARQL
+  whitespace chars; `extract_braced_body` raises the opener `ValueError`
+  (never `IndexError`) on empty text; `CompareExpr` threads `indent` into a
+  populated `EXISTS` operand.
+- `kernel`: the Accept-Language default weight is exactly 1.0 (a q-less entry
+  ties an explicit `q=1`); `http(s)://` sources merge as locations
+  (positional `parse(source)`), never inline data.
+
+Process note (test trims): the same batch loosened ~15 diagnostics-wording
+pins in `unit/parser/` to identifier-substring asserts (thermo-nuclear
+review: sentence pins contradict the ineffective-wording verdicts below) and
+deleted tests whose emissions the e2e goldens pin byte-for-byte (lang chain
+twins, the FROM-render trio). Ten wording-only mutants those pins used to
+kill are reclassified ineffective below rather than re-pinned.
+
+### Residue — wave-3 scope
+
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
+| `fastshaql.core.registry.x__demote_untargeted_public_shapes__mutmut_5/7/8/11/12/13/14/15` | `demote_untargeted_public_shapes` | warning text/args | ineffective | warning wording only |
+| `fastshaql.core.registry.x_resolve_visibility__mutmut_12/19/33` | `resolve_visibility` | error/warning text | ineffective | wording only; existing `match` substrings survive |
+| `fastshaql.core.registry.x__enforce_closed_world__mutmut_4/6` | `enforce_closed_world` | guard `or`→`and` / `_is_synthetic(None)` | equivalent | synthetic shapes are never EXCLUDED (PROTECTED precedes), so un-skipping them cannot fire the VisibilityError |
+| `fastshaql.executable.x__resolver_context__mutmut_4` | `resolver_context` | TypeError text | ineffective | error wording only |
+| `fastshaql.core.schema.filters.x_build_filter_type__mutmut_10/12` | `build_filter_type` | `field_name` arg → None / dropped | equivalent | error-label only; falls back to `prop.graphql_field_name`, which always equals the passed key |
+| `fastshaql.core.schema._gql.x_input_object/object_type/enum_type__mutmut_1/5/6/7/10/13` | `_gql` constructors | `typing.cast` strings / dead `description` default | equivalent | `cast` is a runtime identity; no caller passes `description` |
+| `fastshaql.core.schema.fields.x_wrap_field_type__mutmut_6/10/11/12` | `wrap_field_type` | `typing.cast` strings | equivalent | cast identity |
+| `fastshaql.core.execution.converter` cast sites (`_apply_scalar_fields` 19/23/24, `_finalize_entity` 9/13/14, `_group_rows_by_var`—none, `_apply_relationship_fields` 4/6, `_init_entity` 10, `_finalize_entity` 2) | converter | cast strings / arg neutralizations / list-init | equivalent | cast identity; overwritten before read; error-label fallback (`_4`/`_6`); unreachable absent-field KeyError (`_2`) |
+| `fastshaql.core.execution.converter.x_coerce_value__mutmut_4/6/7` | `coerce_value` | fall-through arm deleted / TypeError text | accepted-gap | `# pragma: no cover` defensive branch behind the `SparqlTerm` type contract; killing it means passing a non-term on purpose |
+| `fastshaql.core.execution.store` cast sites (`decode_sparql_results` 10/14/15/16, `InMemoryStore.query` 7/11/12/13/14/18/19/20) | store | `typing.cast` strings | equivalent | cast identity |
+| `fastshaql.adapters.django.x_build_graphql_view__mutmut_2/3/4/5` | `build_graphql_view` | NotImplementedError text | ineffective | raise still covered; wording only |
+| `fastshaql.core.sparql.lex.x_extract_braced_body__mutmut_6/7/49/50` | `extract_braced_body` | error text | ineffective | wording only; `match` substrings survive |
+| `fastshaql.core.sparql.lex.x_extract_braced_body__mutmut_12/13/14` | `extract_braced_body` | `body_start` initializers | equivalent | guard guarantees `{` at `open_brace`; first loop iteration overwrites the initializer before the return slice |
+| `fastshaql.core.sparql.lex.x_find_keyword__mutmut_9` | `find_keyword` | `span_end <= start` → `<` | equivalent | a zero-width search window can never match a non-empty keyword |
+| `fastshaql.core.sparql.expressions.x__render_child__mutmut_1` | `_render_child` | `indent=0` default → 1 | equivalent | dead default — both callers pass `indent` explicitly |
+| `fastshaql.core.sparql.queries.x__validate_solution_modifiers__mutmut_6/14` | `validate_solution_modifiers` | LIMIT/OFFSET error text | ineffective | wording only |
+| `fastshaql.core.kernel.context.x_lang_tags_from_accept_language__mutmut_14/17` | `lang_tags_from_accept_language` | `maxsplit` 1→none/2 | equivalent | element `[0]` of a split is unchanged by `maxsplit` |
+| `fastshaql.core.kernel.identifiers.x_raw_enum_member_name__mutmut_3/4` | `raw_enum_member_name` | TypeError text | ineffective | wording only (pragma'd arm) |
+| `fastshaql.core.kernel.io.x__expand_source__mutmut_3/4` | `_expand_source` | TypeError text | ineffective | wording only |
+
+### Residue — wording reclassifications from the wave-3 trim (parser modules, wave-1 scope)
+
+Previously killed by sentence-exact diagnostics pins; the pins are now
+identifier-substrings, so these survive. All are XX-wrap / case-flip /
+suffix mutations of warning text whose identifier-bearing prefix stays
+asserted:
+
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
+| `fastshaql.core.parser.parse.x__resolve_shape_iri__mutmut_14` | `resolve_shape_iri` | synthetic-shape warning text | ineffective | wording only; class + synthetic IRIs still asserted |
+| `fastshaql.core.parser.property_shape.x__check_derived_field_boundaries__mutmut_16` | `check_derived_field_boundaries` | warning text wrap | ineffective | wording only; `min_count=` value still asserted |
+| `fastshaql.core.parser.property_shape.x__datatype_objects__mutmut_10/11` | `datatype_objects` | error text | ineffective | wording only; shape/field prefix still asserted |
+| `fastshaql.core.parser.property_shape.x__or_datatypes__mutmut_21/23/24` | `or_datatypes` | warning text | ineffective | wording only |
+| `fastshaql.core.parser.property_shape.x_parse_property_shape__mutmut_44/115` | `parse_property_shape` | zero-capacity warning text | ineffective | wording only; declaration label still asserted |
+| `fastshaql.core.parser.node_shape.x_parse_node_shape__mutmut_40` | `parse_node_shape` | duplicate-field warning text | ineffective | wording only; field + shape still asserted |
+
+### Shielding caveat — import-time-computed tables
+
+`_OPERATOR_FIELD_SPECS` (schema/filters.py) and the `select_scan` modifier
+regexes (via `word_bounded_any`) are computed at module import, before
+mutmut arms its trampoline — forked test children inherit the already-built
+objects, so schema-level assertions can never observe mutations there.
+Direct unit calls at test time are the *only* mutation coverage for such
+tables (`unit/schema/test_filters.py`, `unit/sparql/test_lex.py`); keep
+them direct if those modules are restructured.
