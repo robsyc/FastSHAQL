@@ -521,3 +521,63 @@ objects, so schema-level assertions can never observe mutations there.
 Direct unit calls at test time are the *only* mutation coverage for such
 tables (`unit/schema/test_filters.py`, `unit/sparql/test_lex.py`); keep
 them direct if those modules are restructured.
+
+## Wave 4 — surface deletion + deep-module refactors (post-batch residue, 2026-09-08)
+
+Scope: the 313 wave-3 survivors, attacked two ways — killing tests for the
+real gaps, and **deleting the mutation surface** of settled-equivalent
+mutants (the code shapes that generate them), which both raises the score
+and simplifies the source. Score 93.7% → 94.5% (survivors 313 → 269,
+total 4,941 → 4,860); floor ratcheted to 94.3.
+
+Killed by killing tests:
+
+- `parser/targets.py` `_reject_unsupported` — the scan is subject-scoped
+  even for *unrecognized* `sh:target*` predicates: the existing bystander
+  tests used `sh:targetObjectsOf`, which is in `_KNOWN_TARGET_PREDICATES`
+  and so cannot distinguish a whole-graph predicate read; a bystander
+  `sh:targetTypo` does (wave-1b's kill of `_21` had silently rotted this
+  way — the mutant was live again).
+- `translation/field_binding.py` `bind_promoted_fields` — a selected
+  promoted field is skipped, not a stop sign: iteration is now
+  `sorted(promoted)` (deterministic output, hash-seed independent) and the
+  e2e golden `filters/scalar_and_relationship` pins the unselected sibling
+  still binding. The wave-2 "equivalent" verdict on `_3` was a mis-triage
+  (its recorded reason did not match the mutation).
+- `execution/converter.py` `coerce_value` — the closed-term contract raises
+  `TypeError` on a non-term (the `# pragma: no cover` lifted; a direct
+  unit test passes one on purpose). `_6`/`_7` reclassified ineffective
+  below (wording only).
+- `parser/property_shape.py` `parse_property_shape` — the composite-path
+  error names the property shape (a *named* shape in the fixture pins it).
+- `parser/parse.py` `parse_shapes` — the blank-node skip warning carries
+  its node argument (pinned via the record's formatted message).
+
+Surface deleted (the mutant class ceases to exist):
+
+- Every string-form `typing.cast("T", x)` became `cast(T, x)` — ruff TC006
+  (quote cast types) is disabled with the rationale recorded in
+  `pyproject.toml`: quoted cast types are string literals mutmut mutates
+  into equivalent survivors.
+- `schema/_gql.input_object`'s dead `description` parameter (no caller
+  passed it); `registry.resolve_relationship_target`'s redundant
+  `field_name` label parameter (the passed key always *is*
+  `prop.graphql_field_name` — six call sites simplified);
+  `converter._init_entity`'s relationship-init loop (always overwritten by
+  `_apply_relationship_fields` before read); `registry._expand_subclasses`'
+  `expanded.add(class_iri)` (rdflib's `transitive_subjects` yields the
+  start object itself); `sparql/expressions._render_child`'s dead
+  `indent=0` default; explicit-default kwargs dropped where the callee
+  already defaults them (`emit_type_triple`, `promoted=frozenset()`).
+
+Deep-module refactors landed in the same wave (see the architecture-review
+report); survivors in moved code carry over under new module paths —
+`core.registry` → `core.parser.visibility`, the datatype grammar →
+`core.parser.datatypes`, `translation/filters` regrouped into
+`where.py`/`exists_scope.py` (context/exists/fields/walk/extract/dispatch/
+naming/strategy rows above map accordingly).
+
+| Mutant ID | Location | Mutation | Verdict | Reason |
+|---|---|---|---|---|
+| `fastshaql.core.execution.converter.x_coerce_value__mutmut_6/7` | `coerce_value` | TypeError text | ineffective | wording only; the structural raise is pinned bare per campaign style |
+| `fastshaql.core.parser.parse.x_parse_shapes__mutmut_17` | `parse_shapes` | blank-node warning text | ineffective | wording only; the node argument is pinned (the `_16` kill above) |
