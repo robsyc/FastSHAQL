@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 # Nightly charter: the home of slow / advisory / release-gating checks that are
-# too heavy for the PR path — GraphDB evaluation, preview lint drift, and the
+# too heavy for the PR path — GraphDB Free evaluation, preview lint drift, and the
 # mutation score floor. Check commands live in the justfile; jobs install the
 # shared toolchain (.github/actions/toolchain, versions from .tool-versions) and
 # this file carries only glue (secret decode, caching, report upload).
@@ -24,7 +24,7 @@ env:
 
 jobs:
   evaluation:
-    name: GraphDB eval
+    name: GraphDB Free eval
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:

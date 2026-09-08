@@ -8,7 +8,7 @@ The suite is declarative where it can be: inputs are `.ttl` / `.graphql` / `.jso
 
 ```bash
 just test            # default suite (excludes evaluation)
-just eval            # GraphDB CE parity + perf (requires Docker)
+just eval            # GraphDB Free parity + perf (requires Docker + license)
 uv run pytest -m e2e # one tier only (unit | integration | e2e | adapter | evaluation)
 just test-cov        # with coverage
 ```
@@ -27,7 +27,7 @@ tests/
 │   ├── integration/     # ≥2 stages on real case inputs
 │   ├── e2e/             # full pipeline → golden files
 │   ├── adapters/        # FastAPI/Django HTTP shims (optional-dep gated)
-│   └── evaluation/      # full pipeline against a real triple store (GraphDB CE)
+│   └── evaluation/      # full pipeline against a real triple store (GraphDB Free)
 |
 ├── fixtures/
 │   ├── cases/           # hand-authored: shapes.ttl + data.ttl|data.trig + e2e cases (committed)
@@ -68,7 +68,7 @@ Defined by two axes — *pipeline-stages-composed* × *assertion medium* — aut
 | `unit` | one stage; programmatic/inline inputs | inline / programmatic |
 | `integration` | ≥2 pipeline stages on real case inputs | produced SPARQL inline, VariableMap |
 | `e2e` | full pipeline: GraphQL op → SPARQL → store → JSON | **golden files** (`expected.json` + `expected.sparql`) |
-| `evaluation` | full pipeline against a **real** triple store (GraphDB CE) | golden + scale (order-independent) |
+| `evaluation` | full pipeline against a **real** triple store (GraphDB Free) | golden + scale (order-independent) |
 | `adapter` | framework adapter HTTP shim (FastAPI/Django) | inline; may reuse a golden case read-only |
 
 ## Fixtures: cases vs scenarios
@@ -82,14 +82,14 @@ Both satisfy the `CaseSource` Protocol, so the same `run_case` / `run_case_on_st
 
 ## Evaluation tier (real triple store)
 
-`just eval` starts GraphDB CE via [testcontainers](https://testcontainers.com), creates one repository, and reuses the e2e golden cases — swapping `InMemoryStore` for the shipped `HttpxSparqlStore` (`fastshaql.stores.http`, `httpx` extra — test what we ship). Two axes:
+`just eval` starts GraphDB Free via [testcontainers](https://testcontainers.com), creates one repository, and reuses the e2e golden cases — swapping `InMemoryStore` for the shipped `HttpxSparqlStore` (`fastshaql.stores.http`, `httpx` extra — test what we ship). Two axes:
 
 - **parity** — real-store JSON == golden, compared order-independently via `support.goldens.canonicalize` (the outer query has no `ORDER BY`, so entity lists and multi-valued fields may permute — ADR-0010, ADR-0022).
 - **performance** — per-phase latency (translate / store / convert) and materialised row counts across each scenario's `sweep`; report-only (no thresholds), written to `evaluation-report.json` and rendered into the CI job summary.
 
 The harness consumes the `StoreSession` Protocol (`support/eval/session.py`); `graphdb.py` is the GraphDB adapter. To add a store (e.g. QLever), implement `StoreSession` in a sibling module + a session-scoped fixture — runners and the report are store-agnostic. See [ADR-0022](../docs/adr/0022-evaluation-harness.md).
 
-Requires Docker **and a GraphDB license**. GraphDB 11+ needs a license even for the Free edition — request one at <https://graphdb.ontotext.com/>. Then:
+Requires Docker **and a GraphDB license**. GraphDB 11+ needs a license even for the Free edition — request one at <https://graphdb.ontotext.com/>. GraphDB Free is the proprietary free tier (the community tier; "CE" is its pre-11.0 name): capped at two concurrent queries, one core, and five repositories — caps a serial harness never feels; clustering, enterprise security, and encryption are paid. Then:
 
 - drop the **verbatim** license file at `tests/tiers/evaluation/graphdb.license` (gitignored; or set `GRAPHDB_LICENSE_FILE`) — don't strip whitespace or reformat it, GraphDB validates the formatting strictly;
 - in CI it's the `GRAPHDB_LICENSE` secret (base64 of the binary file; the workflow decodes it to the path); when absent the run skips.
