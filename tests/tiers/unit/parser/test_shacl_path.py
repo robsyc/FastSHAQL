@@ -214,17 +214,18 @@ def test_composite_path_requires_code_identifier() -> None:
         @prefix sh: <http://www.w3.org/ns/shacl#> .
         ex:ThingShape a sh:NodeShape ;
             sh:targetClass ex:Thing ;
-            sh:property [
-                a sh:PropertyShape ;
-                sh:path ( ex:a ex:b ) ;
-                sh:datatype <http://www.w3.org/2001/XMLSchema#string> ;
-                sh:minCount 1 ;
-            ] .
+            sh:property ex:SeqProp .
+
+        ex:SeqProp a sh:PropertyShape ;
+            sh:path ( ex:a ex:b ) ;
+            sh:datatype <http://www.w3.org/2001/XMLSchema#string> ;
+            sh:minCount 1 .
         """,
         format="turtle",
     )
     with pytest.raises(
-        MissingCompositePathCodeIdentifierError, match="sh:codeIdentifier"
+        MissingCompositePathCodeIdentifierError,
+        match=r"example.org/SeqProp.*sh:codeIdentifier",
     ):
         parse_shapes(graph)
 
@@ -411,3 +412,65 @@ def test_unrecognized_path_structure_raises() -> None:
     )
     with pytest.raises(UnsupportedShaclPathError, match="Unrecognized"):
         parse_shacl_path(graph, prop)
+
+
+# --- Composite members and scoping within one graph ---
+
+
+def test_alternative_path_list_members_parse_as_composite_paths() -> None:
+    """§4.3 members are full paths — an inverse operand inside the
+    alternative list parses with its own wrapper, not just bare IRIs."""
+    graph, prop = _graph_with_path(
+        """
+        @prefix ex: <http://example.org/> .
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        ex:prop a sh:PropertyShape ;
+            sh:path [ sh:alternativePath ( [ sh:inversePath ex:a ] ex:b ) ] .
+        """
+    )
+    path = parse_shacl_path(graph, prop)
+    assert isinstance(path, AlternativePath)
+    inverse, predicate = path.alternatives
+    assert isinstance(inverse, InversePath)
+    assert inverse.path == PredicatePath(EX + "a")
+    assert predicate == PredicatePath(EX + "b")
+
+
+def test_cyclic_modifier_chain_raises() -> None:
+    """§4 acyclicity holds through cardinality modifiers too — the cycle
+    guard must reject, not recurse to a ``RecursionError``."""
+    graph, prop = _graph_with_path(
+        """
+        @prefix ex: <http://example.org/> .
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        ex:prop a sh:PropertyShape ;
+            sh:path _:cycle .
+        _:cycle sh:zeroOrMorePath _:other .
+        _:other sh:oneOrMorePath _:cycle .
+        """
+    )
+    with pytest.raises(UnsupportedShaclPathError, match="Cyclic property path"):
+        parse_shacl_path(graph, prop)
+
+
+def test_path_kind_is_scoped_to_the_property_shape() -> None:
+    """A shape's ``sh:alternativePath`` wrapper never leaks into another
+    property's path read in the same graph — the sequence stays a sequence."""
+    graph = load_shapes(
+        """
+        @prefix ex: <http://example.org/> .
+        @prefix sh: <http://www.w3.org/ns/shacl#> .
+        ex:altProp a sh:PropertyShape ;
+            sh:path [ sh:alternativePath ( ex:a ex:b ) ] .
+        ex:seqProp a sh:PropertyShape ;
+            sh:path ( ex:employer ex:locatedIn ) .
+        """
+    )
+    seq = parse_shacl_path(graph, URIRef("http://example.org/seqProp"))
+    assert isinstance(seq, SequencePath)
+    assert seq.elements == (
+        PredicatePath(EX + "employer"),
+        PredicatePath(EX + "locatedIn"),
+    )
+    alt = parse_shacl_path(graph, URIRef("http://example.org/altProp"))
+    assert isinstance(alt, AlternativePath)

@@ -6,6 +6,7 @@ Covers the scalar leaf coercion shared by every converter path.
 
 from __future__ import annotations
 
+import pytest
 from rdflib import BNode, Literal, URIRef
 from rdflib.namespace import XSD
 
@@ -38,3 +39,10 @@ def test_coerce_bnode() -> None:
 
 def test_coerce_none_returns_none() -> None:
     assert coerce_value(None) is None
+
+
+def test_coerce_non_term_raises_type_error() -> None:
+    """The closed-term contract is enforced loudly, not by falling through
+    to ``None`` — a non-term reaching the converter is a store-protocol bug."""
+    with pytest.raises(TypeError):
+        coerce_value(object())  # ty: ignore[invalid-argument-type]

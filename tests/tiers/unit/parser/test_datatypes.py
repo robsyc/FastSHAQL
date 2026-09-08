@@ -1,5 +1,5 @@
 """Datatype-set parsing — ``sh:datatype`` IRI/list forms and datatype-only
-``sh:or`` in ``core/parser/property_shape.py``.
+``sh:or`` in ``core/parser/datatypes.py``.
 
 Unit tier: rules 1-6 of the union recognition (SHACL Core §7.1.2, §7.7.3) —
 both union syntaxes normalize into one ``datatypes`` tuple, non-datatype
@@ -12,12 +12,13 @@ Order: IRI form → list form → sh:or form → inert lane → loud rejections 
 from __future__ import annotations
 
 import pytest
-from rdflib import Graph
+from rdflib import Graph, URIRef
 from rdflib.namespace import RDF, XSD
 
 from fastshaql.core.ir import LiteralSpace
 from fastshaql.core.kernel.constants import DIR_LANG_STRING
 from fastshaql.core.parser import parse_shapes
+from fastshaql.core.parser.datatypes import datatypes_from_shape
 from fastshaql.core.parser.errors import UnsupportedShapeError
 
 _PREFIXES = """
@@ -122,6 +123,35 @@ def test_both_union_syntaxes_normalize_identically() -> None:
     assert list_form.literal_space == or_form.literal_space
 
 
+def test_public_entry_normalizes_both_union_syntaxes() -> None:
+    """``datatypes_from_shape`` — the module's public entry — reads both
+    union syntaxes to the same tuple when called directly on the graph."""
+    prop_shape = URIRef("http://example.org/noteShape")
+    kwargs = {"shape_iri": prop_shape, "field_name": "note"}
+    list_form = Graph()
+    list_form.parse(
+        data=f"""{_PREFIXES}
+ex:noteShape sh:datatype ( xsd:string rdf:langString ) .
+""",
+        format="turtle",
+    )
+    or_form = Graph()
+    or_form.parse(
+        data=f"""{_PREFIXES}
+ex:noteShape sh:or ( [ sh:datatype xsd:string ] [ sh:datatype rdf:langString ] ) .
+""",
+        format="turtle",
+    )
+    assert datatypes_from_shape(list_form, prop_shape, **kwargs) == (
+        XSD.string,
+        RDF.langString,
+    )
+    assert datatypes_from_shape(or_form, prop_shape, **kwargs) == (
+        XSD.string,
+        RDF.langString,
+    )
+
+
 # --- Rule 3, inert lane: any other sh:or ---
 
 
@@ -136,6 +166,9 @@ def test_sh_or_with_extra_parameters_warns_and_is_inert(
     assert prop.literal_space is LiteralSpace.PLAIN
     inert = [r for r in caplog.records if "non-datatype constraints" in r.message]
     assert len(inert) == 1
+    # The warning names the shape and field carrying the inert ``sh:or``.
+    message = inert[0].getMessage()
+    assert "sh:or on urn:fastshaql:inline:PersonNote field 'note'" in message
 
 
 def test_sh_or_with_literal_member_is_inert() -> None:
@@ -172,14 +205,22 @@ def test_sh_or_member_with_literal_datatype_is_inert() -> None:
 
 
 def test_datatype_and_sh_or_together_raises() -> None:
-    with pytest.raises(UnsupportedShapeError, match="sh:datatype and sh:or together"):
+    """Both constraint syntaxes on one property is an unlowerable AND — the
+    error names the property (shape IRI and field) before the rule."""
+    with pytest.raises(
+        UnsupportedShapeError,
+        match=r"field 'note': sh:datatype and sh:or together is unsupported",
+    ):
         _parse_property(
             "sh:datatype xsd:string ; sh:or ( [ sh:datatype rdf:langString ] ) ;"
         )
 
 
 def test_multiple_sh_or_values_raise() -> None:
-    with pytest.raises(UnsupportedShapeError, match="multiple sh:or values"):
+    with pytest.raises(
+        UnsupportedShapeError,
+        match=r": multiple sh:or values are unsupported",
+    ):
         _parse_property(
             "sh:or ( [ sh:datatype xsd:string ] ) ;"
             " sh:or ( [ sh:datatype rdf:langString ] ) ;"
@@ -187,7 +228,11 @@ def test_multiple_sh_or_values_raise() -> None:
 
 
 def test_multiple_sh_datatype_values_raise() -> None:
-    with pytest.raises(UnsupportedShapeError, match="multiple sh:datatype values"):
+    """The at-most-one rule (§7.1.2) is cited in the error, on the property."""
+    with pytest.raises(
+        UnsupportedShapeError,
+        match=r"field 'note': multiple sh:datatype values",
+    ):
         _parse_property("sh:datatype xsd:string, rdf:langString ;")
 
 
@@ -203,6 +248,7 @@ def test_non_string_family_list_raises_naming_supported_members() -> None:
     assert "rdf:langString" in message
     assert "rdf:dirLangString" in message
     assert str(XSD.integer) in message  # the offending member, by full IRI
+    assert f"got {XSD.string} {XSD.integer}" in message  # space-joined, in order
 
 
 def test_non_string_family_sh_or_raises() -> None:
@@ -232,7 +278,35 @@ _:head rdf:first xsd:string, rdf:langString ;
 """,
         format="turtle",
     )
-    with pytest.raises(UnsupportedShapeError, match="well-formed SHACL list"):
+    with pytest.raises(
+        UnsupportedShapeError,
+        match=r"field 'note': sh:datatype is not a well-formed SHACL list",
+    ):
+        parse_shapes(graph)
+
+
+def test_malformed_sh_or_list_error_names_field() -> None:
+    """A malformed ``sh:or`` list error names the shape and field — the
+    strict-walk message carries the declaring property, not a bare list name."""
+    graph = Graph()
+    graph.parse(
+        data=f"""{_PREFIXES}
+ex:PersonShape a sh:NodeShape ;
+    sh:codeIdentifier "Person" ;
+    sh:targetClass ex:Person ;
+    sh:property [
+        sh:path ex:note ;
+        sh:or _:head
+    ] .
+_:head rdf:first [ sh:datatype xsd:string ], [ sh:datatype rdf:langString ] ;
+    rdf:rest rdf:nil .
+""",
+        format="turtle",
+    )
+    with pytest.raises(
+        UnsupportedShapeError,
+        match=r"sh:or on urn:fastshaql:inline:PersonNote field 'note'",
+    ):
         parse_shapes(graph)
 
 
@@ -269,3 +343,31 @@ def test_defaulted_field_with_union_datatypes_parses() -> None:
     )
     assert prop.datatypes == (XSD.string, RDF.langString)
     assert prop.default_expr is not None
+
+
+# --- Read scoping within one shape ---
+
+
+def test_sh_or_read_is_scoped_to_the_property() -> None:
+    """One property's ``sh:or`` never pairs with a sibling's ``sh:datatype``
+    — the together-rejection reads both from the same property shape."""
+    graph = Graph()
+    graph.parse(
+        data=f"""{_PREFIXES}
+ex:PersonShape a sh:NodeShape ;
+    sh:codeIdentifier "Person" ;
+    sh:targetClass ex:Person ;
+    sh:property [
+        sh:path ex:plain ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path ex:union ;
+        sh:or ( [ sh:datatype xsd:string ] [ sh:datatype rdf:langString ] ) ;
+    ] .
+""",
+        format="turtle",
+    )
+    person = parse_shapes(graph).by_type_name["Person"]
+    assert person.property_shapes["plain"].datatypes == (XSD.string,)
+    assert person.property_shapes["union"].datatypes == (XSD.string, RDF.langString)

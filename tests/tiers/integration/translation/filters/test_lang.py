@@ -72,7 +72,9 @@ def test_translate_required_lang_string_under_chain_steps_bind_bound(
 ) -> None:
     """S2 — a required langString under a chain lowers as steps +
     ``BIND(COALESCE)`` + ``FILTER(BOUND)``: "required" means "the chain
-    resolves"; the guard sits outside any wrap."""
+    resolves"; the guard sits outside any wrap. The byte render is pinned
+    by the ``language/en`` e2e golden; asserted here are the fragments,
+    through the full ``translate_query`` path with a chain context."""
     person = shape_with(
         relationship_registry.by_type_name["Person"],
         name=scalar_property("name", min_count=1, max_count=1, datatype=RDF.langString),
@@ -84,17 +86,10 @@ def test_translate_required_lang_string_under_chain_steps_bind_bound(
         relationship_registry,
         query_context=QueryContext(lang_tags=("en",)),
     )
-    golden = """SELECT ?iri ?name
-WHERE {
-  ?iri a <http://example.org/Person> .
-  OPTIONAL {
-    ?iri <http://example.org/name> ?_l0_name .
-    FILTER(langMatches(LANG(?_l0_name), "en"))
-  }
-  BIND(COALESCE(?_l0_name) AS ?name)
-  FILTER(BOUND(?name))
-}"""
-    assert result.query.render() == golden
+    rendered = result.query.render()
+    assert 'FILTER(langMatches(LANG(?_l0_name), "en"))' in rendered
+    assert "BIND(COALESCE(?_l0_name) AS ?name)" in rendered
+    assert "FILTER(BOUND(?name))" in rendered
 
 
 def test_translate_no_query_context_lang_unchanged(
@@ -135,76 +130,6 @@ WHERE {
   BIND(COALESCE(?_l0_name) AS ?name)
   FILTER(BOUND(?name))
   FILTER(STR(?name) = "Alice")
-}"""
-    assert result.query.render() == golden
-
-
-def test_translate_two_entry_chain_steps_in_order(
-    relationship_registry: ShapeRegistry,
-) -> None:
-    """A two-entry chain: steps in chain order, one ``COALESCE`` over both
-    — first step with a value wins the field."""
-    person = shape_with(
-        relationship_registry.by_type_name["Person"],
-        bio=scalar_property("bio", min_count=0, max_count=1, datatype=RDF.langString),
-    )
-    query = "{ persons { bio } }"
-    result = translate_query(
-        person,
-        root_field_node(query),
-        relationship_registry,
-        query_context=QueryContext(lang_tags=("en", "nl")),
-    )
-    golden = """SELECT ?iri ?bio
-WHERE {
-  ?iri a <http://example.org/Person> .
-  OPTIONAL {
-    ?iri <http://example.org/bio> ?_l0_bio .
-    FILTER(langMatches(LANG(?_l0_bio), "en"))
-  }
-  OPTIONAL {
-    ?iri <http://example.org/bio> ?_l1_bio .
-    FILTER(langMatches(LANG(?_l1_bio), "nl"))
-  }
-  BIND(COALESCE(?_l0_bio, ?_l1_bio) AS ?bio)
-}"""
-    assert result.query.render() == golden
-
-
-def test_translate_union_field_appends_untagged_terminal(
-    relationship_registry: ShapeRegistry,
-) -> None:
-    """S3 — a string-union Property under ``("en",)`` gains the implicit
-    untagged terminal as the last step (``LANG(?v) = ""``)."""
-    person = shape_with(
-        relationship_registry.by_type_name["Person"],
-        note=scalar_property(
-            "note",
-            min_count=0,
-            max_count=1,
-            datatype=None,
-            datatypes=(XSD.string, RDF.langString),
-        ),
-    )
-    query = "{ persons { note } }"
-    result = translate_query(
-        person,
-        root_field_node(query),
-        relationship_registry,
-        query_context=QueryContext(lang_tags=("en",)),
-    )
-    golden = """SELECT ?iri ?note
-WHERE {
-  ?iri a <http://example.org/Person> .
-  OPTIONAL {
-    ?iri <http://example.org/note> ?_l0_note .
-    FILTER(langMatches(LANG(?_l0_note), "en"))
-  }
-  OPTIONAL {
-    ?iri <http://example.org/note> ?_l1_note .
-    FILTER(LANG(?_l1_note) = "")
-  }
-  BIND(COALESCE(?_l0_note, ?_l1_note) AS ?note)
 }"""
     assert result.query.render() == golden
 

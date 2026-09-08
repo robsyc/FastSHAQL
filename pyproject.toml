@@ -113,9 +113,12 @@ select = [
     "T20",    # flake8-print
     "BLE",    # blind-except
     "TC",     # flake8-type-checking
-    # TC caveat: adapters/fastapi.py must never add `from __future__ import
+    # TC caveats: adapters/fastapi.py must never add `from __future__ import
     # annotations` — FastAPI resolves signature annotations at runtime, so TC
     # moving imports into TYPE_CHECKING there would silently break it.
+    # TC006 (quote cast types) is disabled below: quoted cast types are string
+    # literals mutmut mutates into equivalent survivors — a mutation-tested
+    # codebase keeps cast types as runtime objects instead.
     # --- real signal ---
     "C4",     # flake8-comprehensions
     "RET",    # flake8-return
@@ -127,9 +130,10 @@ select = [
     "PL",     # full pylint (PLE/PLW bug-catchers + PLR0913 too-many-args)
 ]
 ignore = [
-    "E501",    # line length handled by formatter
+    "E501",    # line length handled by the formatter
     "ISC001",  # conflicts with the formatter
     "TRY003",  # rich raise-messages are deliberate API in this repo
+    "TC006",   # quoted cast types are unkillable mutmut string mutations (see select)
 ]
 
 [tool.ruff.lint.per-file-ignores]

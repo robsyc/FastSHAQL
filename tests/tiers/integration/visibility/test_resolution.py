@@ -3,7 +3,7 @@
 Integration tier: conflicts and warnings that must not pollute the shared
 declarative fixture, built as inline turtle and parsed through ``parse_shapes``.
 
-Order: private override (public + protected) → schema errors (multiple, blank-node) → closed-world target → synthetic exemption → untargeted publicShape → publicNamespace warning.
+Order: private override (public + protected) → schema errors (multiple, blank-node) → closed-world target → synthetic exemption → untargeted publicShape → publicNamespace warning → declaration-read scoping.
 """
 
 from __future__ import annotations
@@ -15,7 +15,8 @@ import pytest
 
 from fastshaql.core.kernel.io import load_shapes
 from fastshaql.core.parser import parse_shapes
-from fastshaql.core.registry import Visibility, VisibilityError
+from fastshaql.core.parser.visibility import VisibilityError
+from fastshaql.core.registry import Visibility
 
 if TYPE_CHECKING:
     from rdflib import Graph
@@ -242,7 +243,7 @@ def test_synthetic_target_exempt() -> None:
 def test_public_shape_without_target_class_warns(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    with caplog.at_level("WARNING", logger="fastshaql.core.registry"):
+    with caplog.at_level("WARNING", logger="fastshaql.core.parser.visibility"):
         registry = parse_shapes(_graph(_UNTARGETED_PUBLIC_SHAPE))
 
     orphan = registry.by_type_name["Orphan"]
@@ -276,7 +277,7 @@ def test_public_shape_with_derived_target_is_rootable(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """A PUBLIC shape with ``sh:targetNode`` publishes — no demotion warning."""
-    with caplog.at_level("WARNING", logger="fastshaql.core.registry"):
+    with caplog.at_level("WARNING", logger="fastshaql.core.parser.visibility"):
         registry = parse_shapes(_graph(_DERIVED_TARGET_PUBLIC_SHAPE))
 
     variant = registry.by_type_name["Variant"]
@@ -314,11 +315,207 @@ def test_public_class_declaration_publishes_implicit_class_shape() -> None:
 def test_public_namespace_warned_and_ignored(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    with caplog.at_level("WARNING", logger="fastshaql.core.registry"):
+    with caplog.at_level("WARNING", logger="fastshaql.core.parser.visibility"):
         registry = parse_shapes(_graph(_PUBLIC_NAMESPACE))
 
     assert registry.visibility_of(registry.by_type_name["Person"]) is Visibility.PUBLIC
     assert any(
         "graphql:publicNamespace not supported" in record.message
         for record in caplog.records
+    )
+
+
+# --- Declaration-read scoping (ADR-0008: declarations live on the schema) ---
+
+
+def _minimal_shape(name: str, class_local: str) -> str:
+    return textwrap.dedent(
+        f"""
+        ex:{name}Shape a sh:NodeShape ;
+            sh:codeIdentifier "{name}" ;
+            sh:targetClass ex:{class_local} ;
+            sh:property [
+                sh:path ex:label ;
+                sh:datatype xsd:string ;
+                sh:minCount 1 ;
+                sh:maxCount 1
+            ] .
+        """
+    )
+
+
+_STRAY_DECLARATIONS = (
+    _PREFIXES
+    + textwrap.dedent(
+        """
+        ex:ApiSchema a graphql:Schema ;
+            graphql:publicShape ex:PersonShape ;
+            graphql:protectedShape ex:AuditLogShape .
+
+        # Declarations from a non-schema resource are inert — only the
+        # graphql:Schema's own edges are read.
+        ex:Stray
+            graphql:publicShape ex:CatShape ;
+            graphql:protectedShape ex:DogShape ;
+            graphql:privateShape ex:PersonShape ;
+            graphql:publicClass ex:Cat ;
+            graphql:protectedClass ex:Dog .
+        """
+    )
+    + _PERSON_SHAPE
+    + _minimal_shape("AuditLog", "AuditLog")
+    + _minimal_shape("Cat", "Cat")
+    + _minimal_shape("Dog", "Dog")
+)
+
+
+def test_declarations_are_read_from_the_schema_only() -> None:
+    """Visibility declarations on any subject other than the schema are
+    ignored; precedence (private > public > protected) holds for the
+    schema's own declarations."""
+    registry = parse_shapes(_graph(_STRAY_DECLARATIONS))
+
+    assert registry.visibility_of(registry.by_type_name["Person"]) is Visibility.PUBLIC
+    assert registry.visibility_of(registry.by_type_name["AuditLog"]) is (
+        Visibility.PROTECTED
+    )
+    assert registry.visibility_of(registry.by_type_name["Cat"]) is Visibility.EXCLUDED
+    assert registry.visibility_of(registry.by_type_name["Dog"]) is Visibility.EXCLUDED
+
+
+_CLASS_CLOSURE_SCOPING = (
+    _PREFIXES
+    + textwrap.dedent(
+        """
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+        ex:ApiSchema a graphql:Schema ;
+            graphql:publicClass ex:Animal ;
+            graphql:protectedClass ex:Vehicle .
+
+        ex:Car rdfs:subClassOf ex:Vehicle .
+        """
+    )
+    + _minimal_shape("Animal", "Animal")
+    + _minimal_shape("Car", "Car")
+)
+
+
+def test_class_declarations_publish_declared_class_and_protect_subclasses() -> None:
+    """A ``publicClass``/``protectedClass`` declaration covers the declared
+    class itself and its ``rdfs:subClassOf`` descendants — reading only
+    those two predicates."""
+    registry = parse_shapes(_graph(_CLASS_CLOSURE_SCOPING))
+
+    assert registry.visibility_of(registry.by_type_name["Animal"]) is Visibility.PUBLIC
+    assert registry.visibility_of(registry.by_type_name["Car"]) is (
+        Visibility.PROTECTED
+    )
+
+
+_CLASS_CLOSURE_PREDICATE_DISCIPLINE = (
+    _PREFIXES
+    + textwrap.dedent(
+        """
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+        ex:ApiSchema a graphql:Schema ;
+            graphql:publicClass ex:Animal .
+
+        ex:Dog rdfs:subClassOf ex:Animal .
+        ex:Car rdfs:subClassOf ex:Vehicle .
+        ex:Cat ex:similarTo ex:Animal .
+        """
+    )
+    + _minimal_shape("Dog", "Dog")
+    + _minimal_shape("Cat", "Cat")
+    + _minimal_shape("Car", "Car")
+)
+
+
+def test_class_closure_expands_only_subclass_edges() -> None:
+    """Only ``rdfs:subClassOf`` grows a class closure: a non-subclass edge
+    to the declared class excludes, and an unrelated ``subClassOf`` edge
+    joins no foreign closure."""
+    registry = parse_shapes(_graph(_CLASS_CLOSURE_PREDICATE_DISCIPLINE))
+
+    assert registry.visibility_of(registry.by_type_name["Dog"]) is Visibility.PUBLIC
+    assert registry.visibility_of(registry.by_type_name["Cat"]) is Visibility.EXCLUDED
+    assert registry.visibility_of(registry.by_type_name["Car"]) is Visibility.EXCLUDED
+
+
+_SCHEMA_HUNT_SCOPING = (
+    _PREFIXES
+    + textwrap.dedent(
+        """
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+        ex:ApiSchema a graphql:Schema ; graphql:publicShape ex:PersonShape .
+
+        # A resource merely referencing the Schema class is not a second schema.
+        ex:Note rdfs:seeAlso graphql:Schema .
+        """
+    )
+    + _PERSON_SHAPE
+)
+
+
+def test_schema_hunt_reads_only_rdf_type_edges() -> None:
+    """Schemas are resources typed ``graphql:Schema`` — a ``seeAlso`` link to
+    the class does not multiply them."""
+    registry = parse_shapes(_graph(_SCHEMA_HUNT_SCOPING))
+
+    assert registry.visibility_of(registry.by_type_name["Person"]) is Visibility.PUBLIC
+
+
+def test_public_namespace_warning_reads_only_schema_edges(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The publicNamespace warning fires on the schema's own edges only —
+    neither a stray resource's declaration nor unrelated schema objects
+    trigger it."""
+    turtle = (
+        _PREFIXES
+        + textwrap.dedent(
+            """
+            ex:Stray graphql:publicNamespace ex:SomeNs .
+
+            ex:ApiSchema a graphql:Schema ; graphql:publicShape ex:PersonShape .
+            """
+        )
+        + _PERSON_SHAPE
+    )
+    with caplog.at_level("WARNING", logger="fastshaql.core.parser.visibility"):
+        registry = parse_shapes(_graph(turtle))
+
+    assert registry.visibility_of(registry.by_type_name["Person"]) is Visibility.PUBLIC
+    assert not any("publicNamespace" in record.message for record in caplog.records)
+
+
+_ALL_OBJECTS_POLLUTION = (
+    _PREFIXES
+    + textwrap.dedent(
+        """
+        # publicClass pointing at a shape IRI and privateShape pointing at a
+        # class IRI: neither mis-declaration may leak the shape into the
+        # protected sets via an unscoped object read.
+        ex:ApiSchema a graphql:Schema ;
+            graphql:publicClass ex:GhostShape ;
+            graphql:privateShape ex:Widget .
+        """
+    )
+    + _minimal_shape("Ghost", "Other")
+    + _minimal_shape("Widget", "Widget")
+)
+
+
+def test_mis_scoped_class_and_shape_objects_stay_excluded() -> None:
+    """A schema object that is a shape IRI (via ``publicClass``) or a class
+    IRI (via ``privateShape``) reaches no visibility set it did not declare:
+    both shapes stay excluded."""
+    registry = parse_shapes(_graph(_ALL_OBJECTS_POLLUTION))
+
+    assert registry.visibility_of(registry.by_type_name["Ghost"]) is Visibility.EXCLUDED
+    assert registry.visibility_of(registry.by_type_name["Widget"]) is (
+        Visibility.EXCLUDED
     )

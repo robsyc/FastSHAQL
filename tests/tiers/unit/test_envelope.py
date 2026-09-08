@@ -7,14 +7,17 @@ the orjson response serialization seam shared by both adapters.
 from __future__ import annotations
 
 import orjson
+from graphql import GraphQLArgument, GraphQLField, GraphQLSchema
 
 from fastshaql.core.kernel.envelope import (
     GraphqlHttpRequest,
     RequestError,
     dump_graphql_json,
+    execute_graphql_http,
     graphql_error_payload,
     parse_graphql_http_request,
 )
+from fastshaql.core.schema._gql import STRING, object_type
 
 _JSON = "application/json"
 
@@ -120,3 +123,63 @@ def test_dump_graphql_json_emits_raw_utf8() -> None:
 def test_error_payload_serializes_to_response_bytes() -> None:
     raw = dump_graphql_json(graphql_error_payload("nope"))
     assert orjson.loads(raw) == {"errors": [{"message": "nope"}]}
+
+
+# --- execute_graphql_http (the full adapter contract) ---
+
+
+def _schema() -> GraphQLSchema:
+    return GraphQLSchema(
+        query=object_type(
+            "Query",
+            {
+                "hello": GraphQLField(STRING, resolve=lambda _src, _info: "world"),
+                "echo": GraphQLField(
+                    STRING,
+                    args={"value": GraphQLArgument(STRING)},
+                    resolve=lambda _src, _info, value: value,
+                ),
+            },
+        )
+    )
+
+
+async def test_execute_returns_200_with_data() -> None:
+    status, body = await execute_graphql_http(
+        _schema(), content_type=_JSON, body=_body(query="{ hello }"), context_value=None
+    )
+    assert status == 200
+    assert orjson.loads(body) == {"data": {"hello": "world"}}
+
+
+async def test_execute_request_error_serializes_message() -> None:
+    status, body = await execute_graphql_http(
+        _schema(),
+        content_type="text/plain",
+        body=_body(query="{ hello }"),
+        context_value=None,
+    )
+    assert status == 415
+    assert orjson.loads(body) == {"errors": [{"message": "Unsupported Content-Type"}]}
+
+
+async def test_execute_threads_variables_to_the_operation() -> None:
+    body = _body(
+        query="query Q($v: String!) { echo(value: $v) }", variables={"v": "hi"}
+    )
+    status, raw = await execute_graphql_http(
+        _schema(), content_type=_JSON, body=body, context_value=None
+    )
+    assert status == 200
+    assert orjson.loads(raw) == {"data": {"echo": "hi"}}
+
+
+async def test_execute_threads_operation_name_among_multiple_operations() -> None:
+    body = _body(
+        query='query A { hello } query B { echo(value: "chosen") }', operationName="B"
+    )
+    status, raw = await execute_graphql_http(
+        _schema(), content_type=_JSON, body=body, context_value=None
+    )
+    assert status == 200
+    assert orjson.loads(raw) == {"data": {"echo": "chosen"}}

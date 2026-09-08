@@ -16,7 +16,7 @@ import re
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
 
 # SPARQL 1.2 §19 grammar fragments (docs/references/sparql12/query.html).
 # ECHAR [180]: '\' then one of  t b n r f " ' \. Spec-exact: the ``\\`` arm in
@@ -70,8 +70,9 @@ _PROTECTED_ARMS = (
     rf"|(?P<comment>{_COMMENT})"
 )
 _PROTECTED_TOKEN = re.compile(_PROTECTED_ARMS)
-# Prefix expansion additionally recognises the prefixed-name arm.
-EXPAND_TOKEN = re.compile(_PROTECTED_ARMS + "|" + _PREFIXED_NAME)
+# A prefixed name in code position (the prefix-expansion substitution token —
+# protected regions are excluded by construction via the code-span walk).
+PREFIXED_NAME = re.compile(_PREFIXED_NAME)
 # Comment matcher for whitespace/comment skipping (§19.4) — narrower than the
 # full protected-token matcher, which also spans strings and IRIREFs.
 _COMMENT_RE = re.compile(_COMMENT)
@@ -164,6 +165,25 @@ def find_keyword(text: str, keyword: str, start: int = 0) -> int | None:
 def code_spans(text: str) -> list[tuple[int, int]]:
     """Return ``(start, end)`` spans of code (non-protected) regions in *text*."""
     return list(_iter_code(text))
+
+
+def map_code_spans(text: str, fn: Callable[[str], str]) -> str:
+    """Apply *fn* to each code (non-protected) region, rebuilding *text*.
+
+    The canonical protected-region transform (SPARQL 1.2 §19): string
+    literals, IRIREFs, and comments pass through verbatim — substitution can
+    only touch code position. Focus-node substitution (translation) and
+    prefix expansion (parser) both lower through this one guarantee, so the
+    walk is exhaustively tested once, here.
+    """
+    parts: list[str] = []
+    pos = 0
+    for start, end in _iter_code(text):
+        parts.append(text[pos:start])
+        parts.append(fn(text[start:end]))
+        pos = end
+    parts.append(text[pos:])
+    return "".join(parts)
 
 
 def extract_braced_body(text: str, open_brace: int) -> tuple[str, int]:

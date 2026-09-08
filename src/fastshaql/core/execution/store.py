@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import threading
 import time
+from collections.abc import Iterable
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol, cast, runtime_checkable
@@ -12,11 +13,12 @@ from typing import TYPE_CHECKING, Any, Protocol, cast, runtime_checkable
 import orjson
 from rdflib import BNode, Graph, Literal, URIRef
 from rdflib.plugins.sparql.results.jsonresults import parseJsonTerm
+from rdflib.query import ResultRow
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator
+    from collections.abc import Iterator
 
-    from rdflib.query import Result, ResultRow
+    from rdflib.query import Result
 
     from fastshaql.core.kernel.context import QueryContext
 
@@ -52,7 +54,7 @@ def decode_sparql_results(raw: bytes) -> list[SparqlRow]:
     data: Any = orjson.loads(raw)
     bindings: list[dict[str, Any]] = data["results"]["bindings"]
     rows = [{k: parseJsonTerm(v) for k, v in binding.items()} for binding in bindings]
-    return cast("list[SparqlRow]", rows)
+    return cast(list[SparqlRow], rows)
 
 
 @runtime_checkable
@@ -92,8 +94,8 @@ class InMemoryStore(SparqlStore):
     async def query(self, sparql: str) -> list[SparqlRow]:
         """Execute via ``rdflib.Graph.query()`` and return row dicts."""
         result = await asyncio.to_thread(self._locked_query, sparql)
-        rows = cast("Iterable[ResultRow]", result)
-        return [cast("SparqlRow", row.asdict()) for row in rows]
+        rows = cast(Iterable[ResultRow], result)
+        return [cast(SparqlRow, row.asdict()) for row in rows]
 
     def _locked_query(self, sparql: str) -> Result:
         with self._lock:

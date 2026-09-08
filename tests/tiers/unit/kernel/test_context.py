@@ -119,6 +119,19 @@ def test_duplicate_tag_replaced_by_higher_weight_occurrence() -> None:
     )
 
 
+def test_q_less_duplicate_ties_at_default_weight_one() -> None:
+    """A q-less duplicate of an earlier ``q=0.5`` occurrence replaces it at
+    the default weight 1.0 — exactly tying the q-less ``en``, which wins on
+    first-seen position. A default other than 1.0 would hoist ``fr`` above it."""
+    assert lang_tags_from_accept_language("fr;q=0.5, en, fr") == ("en", "fr")
+
+
+def test_q_less_entry_ties_explicit_q_one() -> None:
+    """The default weight is 1.0 exactly (RFC 9110 §5.3.1) — a q-less entry
+    ties an explicit ``q=1``, it does not outrank it."""
+    assert lang_tags_from_accept_language("fr;q=1, en") == ("fr", "en")
+
+
 def test_duplicate_equal_weights_keep_first_seen() -> None:
     assert lang_tags_from_accept_language("en;q=0.5, fr;q=0.5, en;q=0.5") == (
         "en",
@@ -164,3 +177,9 @@ def test_untagged_sentinel_never_synthesized() -> None:
 )
 def test_malformed_header_yields_empty_chain(header: str) -> None:
     assert lang_tags_from_accept_language(header) == ()
+
+
+def test_empty_segment_between_entries_does_not_stop_the_scan() -> None:
+    """An empty segment (``"en,,fr"``) is skipped, not a scan terminator —
+    entries after it still resolve."""
+    assert lang_tags_from_accept_language("en,,fr") == ("en", "fr")

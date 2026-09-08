@@ -14,10 +14,10 @@ from fastshaql.core.ir import NodeShapeIR, PropertyShapeIR, ValueType
 from fastshaql.core.kernel.constants import IRI_FIELD
 
 from .field_binding import (
+    FieldBindings,
     begin_relationship_selection,
     bind_scalar_field,
     complete_relationship_selection,
-    field_is_bound,
 )
 
 if TYPE_CHECKING:
@@ -48,10 +48,18 @@ def translate_selection(
     selection: FieldNode,
     shape: NodeShapeIR,
     scope: TranslationScope,
-    promoted: frozenset[str] = frozenset(),
+    bindings: FieldBindings | None = None,
 ) -> list[Pattern]:
-    """Translate a single field selection into SPARQL graph pattern(s)."""
+    """Translate a single field selection into SPARQL graph pattern(s).
+
+    *bindings* carries this level's promotion state (ADR-0009); the field is
+    recorded as selected and its bound-ness consulted there. Child selections
+    recurse without it — promotion scope is per level.
+    """
+    if bindings is None:
+        bindings = FieldBindings()
     field_name = selection.name.value
+    bindings.note_selected(field_name)
     if field_name == IRI_FIELD:
         scope.fields[IRI_FIELD] = scope.subject
         return []
@@ -65,18 +73,17 @@ def translate_selection(
     match prop.value_type:
         case ValueType.RELATIONSHIP:
             return _translate_relationship_selection(
-                selection, prop, scope, field_name, promoted
+                selection, prop, scope, field_name, bindings
             )
         # ``case`` fall-through below the last arm is unreachable: the
         # ValueType union is closed (no wildcard arm).
         case ValueType.ENUM | ValueType.SCALAR:  # pragma: no branch — closed union
-            bound = field_is_bound(prop, field_name, promoted)
             _, patterns = bind_scalar_field(
                 field_name,
                 prop,
                 scope,
                 project=True,
-                bound=bound,
+                bound=bindings.field_is_bound(prop, field_name),
             )
             return patterns
 
@@ -86,26 +93,23 @@ def _translate_relationship_selection(
     prop: PropertyShapeIR,
     scope: TranslationScope,
     field_name: str,
-    promoted: frozenset[str],
+    bindings: FieldBindings,
 ) -> list[Pattern]:
     """Translate a relationship field selection and recurse into child fields."""
-    child_shape = scope.registry.resolve_relationship_target(
-        prop, field_name=field_name
-    )
+    child_shape = scope.registry.resolve_relationship_target(prop)
     child_subject, join_patterns, child_scope = begin_relationship_selection(
         field_name, prop, scope
     )
     child_patterns: list[Pattern] = list(join_patterns)
     for child_selection in iter_field_selections(selection):
         child_patterns.extend(
-            translate_selection(child_selection, child_shape, child_scope, frozenset())
+            translate_selection(child_selection, child_shape, child_scope)
         )
-    bound = field_is_bound(prop, field_name, promoted)
     return complete_relationship_selection(
         field_name,
         child_subject,
         child_scope,
         scope,
         child_patterns,
-        bound=bound,
+        bound=bindings.field_is_bound(prop, field_name),
     )

@@ -202,7 +202,7 @@ def scalar_bind_patterns(
     the all-row-keeping bag; list fields take a single union filter instead.
     A defaulted property (``sh:defaultValue``, ADR-0015) keeps the
     default as the **last** ``COALESCE`` argument — the ``BIND`` always
-    binds, so *bound* is irrelevant on that arm (SD-6).
+    binds, so *bound* is irrelevant on that arm.
     """
     if prop.default_expr is None:
         patterns = _values_or_path_core(

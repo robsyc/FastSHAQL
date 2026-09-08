@@ -106,6 +106,12 @@ mutate:
 	uv run mutmut export-cicd-stats
 	uv run python tests/support/mutation/floor.py
 
+# mutation testing from scratch
+[group('tests')]
+mutate-clean:
+	rm -rf mutants
+	just mutate
+
 # regenerate the shields endpoint badges into badges/ (needs mutate's stats)
 [group('tests')]
 badges:

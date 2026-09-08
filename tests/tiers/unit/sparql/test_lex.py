@@ -11,14 +11,32 @@ Order: find_keyword → code_spans → extract_braced_body → skip_ws_and_comme
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from fastshaql.core.sparql.lex import (
     code_spans,
     extract_braced_body,
     find_keyword,
+    map_code_spans,
     skip_ws_and_comments,
+    word_bounded_any,
 )
+
+# --- word_bounded_any ---
+
+
+def test_word_bounded_any_matches_members_as_standalone_tokens() -> None:
+    # The alternation powers the head/top-level modifier scans in
+    # select_scan; only import-time usage exercises it, so pin the fragment
+    # directly: members match as whole tokens, never inside identifiers.
+    rx = re.compile(word_bounded_any(("AS", "LIMIT")), re.IGNORECASE)
+    assert rx.search("?v AS ?w")
+    assert rx.search("x LIMIT 1")
+    assert rx.search("xaslimit") is None
+    assert rx.search("?limit") is None
+
 
 # --- find_keyword ---
 
@@ -80,6 +98,20 @@ def test_code_spans_fully_protected_text() -> None:
     assert code_spans('"only a string"') == []
 
 
+# --- map_code_spans ---
+
+
+def test_map_code_spans_transforms_code_regions_only() -> None:
+    assert map_code_spans(
+        '?this :p "ex:a" # comment ex:b', lambda code: code.upper()
+    ) == ('?THIS :P "ex:a" # comment ex:b')
+
+
+def test_map_code_spans_empty_and_fully_protected_pass_through() -> None:
+    assert map_code_spans("", str.upper) == ""
+    assert map_code_spans('"only a string"', str.upper) == '"only a string"'
+
+
 # --- extract_braced_body ---
 
 
@@ -105,6 +137,13 @@ def test_extract_braced_body_missing_opener_raises() -> None:
         extract_braced_body("a", 0)
 
 
+def test_extract_braced_body_empty_text_raises() -> None:
+    # Index 0 into empty text is out of range — still the missing-opener
+    # ValueError, never an IndexError.
+    with pytest.raises(ValueError, match="opening brace"):
+        extract_braced_body("", 0)
+
+
 # --- skip_ws_and_comments ---
 
 
@@ -115,6 +154,12 @@ def test_skip_ws_and_comments_advances_past_ws_and_comment() -> None:
 
 def test_skip_ws_and_comments_stops_at_code() -> None:
     assert skip_ws_and_comments("no ws", 0) == 0
+
+
+def test_skip_ws_and_comments_stops_at_non_ws_code_char() -> None:
+    # Only the four SPARQL whitespace chars are skippable — any other code
+    # character (here ``X``) is a stop, even ahead of a real keyword.
+    assert skip_ws_and_comments("X SELECT", 0) == 0
 
 
 def test_skip_ws_and_comments_stops_at_string_literal() -> None:

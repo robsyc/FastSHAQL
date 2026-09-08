@@ -15,7 +15,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from rdflib import Graph, URIRef
+from rdflib import BNode, Graph, Literal, URIRef
+from rdflib.namespace import SH
 
 from fastshaql.core.kernel.io import load_shapes
 from fastshaql.core.parser.node_expr import UnsupportedShapeError
@@ -151,6 +152,27 @@ def test_parse_shacl_prefixes_skips_incomplete_declaration() -> None:
     assert parse_shacl_prefixes(graph, node) == {
         "xsd": "http://www.w3.org/2001/XMLSchema#"
     }
+
+
+def test_parse_shacl_prefixes_reads_only_declare_edges() -> None:
+    """Prefix resolution walks ``sh:declare`` edges of the node's
+    ``sh:prefixes`` — annotations and unrelated declarations elsewhere in
+    the graph never contribute."""
+    graph = Graph()
+    node, prefixes, decl = BNode("expr"), BNode("prefixes"), BNode("decl")
+    graph.add((node, SH.prefixes, prefixes))
+    graph.add((prefixes, SH.declare, decl))
+    graph.add((decl, SH.prefix, Literal("foo")))
+    graph.add((decl, SH.namespace, URIRef("http://example.org/ns#")))
+    annotated = BNode("annotated")
+    graph.add((prefixes, URIRef("http://example.org/note"), annotated))
+    graph.add((annotated, SH.prefix, Literal("p")))
+    graph.add((annotated, SH.namespace, URIRef("http://example.org/other#")))
+    unrelated, decl2 = BNode("unrelated"), BNode("decl2")
+    graph.add((unrelated, SH.declare, decl2))
+    graph.add((decl2, SH.prefix, Literal("bar")))
+    graph.add((decl2, SH.namespace, URIRef("http://example.org/bar#")))
+    assert parse_shacl_prefixes(graph, node) == {"foo": "http://example.org/ns#"}
 
 
 # --- parse_shacl_prefixes: prefixes-duplicates (SHACL-SPARQL §2.2.1) ---

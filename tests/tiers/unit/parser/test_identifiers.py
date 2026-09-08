@@ -5,7 +5,8 @@ Unit tier: ``local_name`` extraction for schemes without ``#`` or ``/``,
 ``enum_member_names`` collision suffixing, and parse-time ``sh:codeIdentifier``
 validation (SHACL 1.2 §8.4).
 
-Order: local_name → enum member names → sh:codeIdentifier validation.
+Order: local_name → enum member names → sh:codeIdentifier validation →
+reserved names → Python-keyword escapes.
 """
 
 from __future__ import annotations
@@ -15,7 +16,12 @@ from rdflib import Graph, URIRef
 from rdflib.term import Literal, Node
 
 from fastshaql.core.ir.shacl_path import PredicatePath
-from fastshaql.core.kernel.identifiers import enum_member_names, local_name
+from fastshaql.core.kernel.identifiers import (
+    enum_member_names,
+    local_name,
+    mangle_enum_member_name,
+    raw_enum_member_name,
+)
 from fastshaql.core.parser.errors import UnsupportedShapeError
 from fastshaql.core.parser.util import (
     InvalidCodeIdentifierError,
@@ -36,6 +42,30 @@ SUBJECT = URIRef("http://example.org/ThingShape")
 def test_local_name_non_split_returns_full_string(iri: str) -> None:
     """An IRI without ``#`` or ``/`` — ``local_name`` returns the full string."""
     assert local_name(URIRef(iri)) == iri
+
+
+@pytest.mark.parametrize(
+    ("iri", "expected"),
+    [("#frag", "frag"), ("/root", "root")],
+    ids=["fragment_at_start", "slash_at_start"],
+)
+def test_local_name_separator_at_position_zero(iri: str, expected: str) -> None:
+    """A separator at index 0 is still a separator — the local name is the
+    remainder after it, not the whole (relative) IRI."""
+    assert local_name(URIRef(iri)) == expected
+
+
+@pytest.mark.parametrize("raw", ["true", "false", "null"])
+def test_mangle_reserved_word_gains_underscore_prefix(raw: str) -> None:
+    """The reserved-word check is case-insensitive on the mangled (uppercased)
+    result — ``true``/``false``/``null`` escape as ``_TRUE``/``_FALSE``/``_NULL``."""
+    assert mangle_enum_member_name(raw) == f"_{raw.upper()}"
+
+
+def test_raw_enum_member_name_iri_uses_local_name() -> None:
+    """An IRI member's source name is its local name (literals use the lexical
+    form — the split happens here, not in mangling)."""
+    assert raw_enum_member_name(URIRef("http://example.org/ns#Alpha")) == "Alpha"
 
 
 def test_enum_member_names_no_collision_matches_mangling() -> None:
@@ -65,6 +95,12 @@ def test_enum_member_names_duplicate_terms_get_suffixed() -> None:
     """Duplicate terms (SHACL-legal, membership-insensitive) get distinct names
     mapping to the same internal value; serialization is first-name-wins."""
     assert enum_member_names((Literal("<"), Literal("<"))) == ["_", "_2"]
+
+
+def test_enum_member_names_collision_on_plain_base_uses_underscore_joiner() -> None:
+    """A colliding base without a trailing ``_`` suffixes as ``_2`` — one
+    underscore; the collapsing joiner applies only to trailing-``_`` bases."""
+    assert enum_member_names((Literal("A"), Literal("A"))) == ["A", "A_2"]
 
 
 # --- sh:codeIdentifier validation (parser/util/identifiers.py) ---
@@ -161,3 +197,30 @@ def test_property_field_name_rejects_reserved_dunder(
 def test_graphql_type_name_single_underscore_stays_legal() -> None:
     """``_``-prefix is GraphQL-legal — only the reserved ``__`` prefix rejects."""
     assert graphql_type_name(code_identifier="_Foo", iri=SUBJECT) == "_Foo"
+
+
+# --- Python-keyword escapes (finalize_graphql_name) ---
+
+
+def test_graphql_type_name_escapes_python_keyword() -> None:
+    """A type name landing on a Python keyword gets the ``_`` suffix —
+    GraphQL allows it, Python resolvers/serializers need the escape."""
+    assert graphql_type_name(code_identifier="class", iri=SUBJECT) == "class_"
+
+
+def test_property_field_name_escapes_python_keyword_from_local_name() -> None:
+    """A predicate local name that is a keyword escapes the same way —
+    both field-name derivation paths share the escape."""
+    assert (
+        property_graphql_field_name(
+            path=PredicatePath(URIRef("http://example.org/class")),
+            code_identifier=None,
+            prop_shape=SUBJECT,
+        )
+        == "class_"
+    )
+
+
+def test_graphql_type_name_non_keyword_passes_through_unchanged() -> None:
+    """Ordinary names never gain the suffix."""
+    assert graphql_type_name(code_identifier="Person", iri=SUBJECT) == "Person"

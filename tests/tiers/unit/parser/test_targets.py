@@ -18,6 +18,7 @@ from fastshaql.core.ir.node_expr import (
 )
 from fastshaql.core.parser import parse_shapes
 from fastshaql.core.parser.errors import UnsupportedShapeError
+from fastshaql.core.parser.targets import parse_target
 
 EX = URIRef("http://example.org/")
 
@@ -353,3 +354,97 @@ def test_implicit_class_target_mixed_rejects(declarations: str) -> None:
     graph = _shapes_graph(declarations)
     with pytest.raises(UnsupportedShapeError, match="implicit class target"):
         parse_shapes(graph)
+
+
+# --- Declaration scoping (one shape's target read never leaks to another) ---
+
+
+def test_target_declaration_reads_are_scoped_to_the_shape() -> None:
+    """``sh:targetNode`` on one shape never becomes another shape's target —
+    a target-less shape stays traversal-only (``has_target`` is False)."""
+    graph = _shapes_graph(
+        """
+        ex:AlphaShape a sh:NodeShape ;
+            sh:codeIdentifier "Alpha" ;
+            sh:targetNode ex:Alpha .
+
+        ex:BetaShape a sh:NodeShape ;
+            sh:codeIdentifier "Beta" ;
+            sh:property [
+                sh:path ex:label ;
+                sh:datatype xsd:string ;
+            ] .
+        """
+    )
+    beta = parse_shapes(graph).by_type_name["Beta"]
+    assert beta.target_expr is None
+    assert beta.target_class is None
+    assert beta.has_target is False
+
+
+def test_unsupported_target_scan_is_scoped_to_parsed_shapes() -> None:
+    """The loud-rejection scan reads the shape under parse — an unsupported
+    ``sh:target*`` predicate on a non-shape resource is nobody's declaration."""
+    graph = _shapes_graph(
+        """
+        ex:ThingShape a sh:NodeShape ;
+            sh:codeIdentifier "Thing" ;
+            sh:targetClass ex:Thing .
+
+        ex:Orphan sh:targetObjectsOf ex:knows .
+        """
+    )
+    registry = parse_shapes(graph)
+    assert set(registry.by_type_name) == {"Thing"}
+
+
+def test_explicit_target_node_is_not_class_indexed() -> None:
+    """Only the implicit class target sets ``implicit_class`` (ADR-0016) — an
+    explicit ``sh:targetNode`` shape is never class-indexed, whatever its
+    expression computes."""
+    graph = _shapes_graph(
+        """
+        ex:ThingShape a sh:NodeShape ;
+            sh:codeIdentifier "Thing" ;
+            sh:targetNode ex:Alpha .
+        """
+    )
+    thing = parse_shapes(graph).by_type_name["Thing"]
+    assert thing.implicit_class is False
+    assert thing.indexed_class is None
+
+
+def test_unrecognized_sh_target_predicate_on_a_bystander_is_not_scoped_in() -> None:
+    """The scan's known-list matters too: ``sh:targetObjectsOf`` is known (it
+    rejects by name when on a shape), so only an *unrecognized* ``sh:target*``
+    predicate on a bystander distinguishes a shape-scoped predicate read from
+    a whole-graph one."""
+    graph = _shapes_graph(
+        """
+        ex:bystander sh:targetTypo ex:knows .
+
+        ex:ThingShape a sh:NodeShape ;
+            sh:codeIdentifier "Thing" ;
+            sh:targetClass ex:Thing .
+        """
+    )
+    assert "Thing" in parse_shapes(graph).by_type_name
+
+
+def test_class_valued_object_on_another_predicate_is_not_an_implicit_target() -> None:
+    """Implicit-class detection reads ``rdf:type`` objects only — an
+    ``rdfs:Class`` IRI appearing as the object of an unrelated predicate is
+    not a target declaration."""
+    graph = _shapes_graph(
+        """
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+        ex:ThingShape a sh:NodeShape ;
+            sh:codeIdentifier "Thing" ;
+            sh:targetNode ex:Alpha ;
+            rdfs:seeAlso rdfs:Class .
+        """
+    )
+    _target_class, target_expr, implicit = parse_target(graph, EX + "ThingShape")
+    assert implicit is False
+    assert not isinstance(target_expr, InstancesOfNodeExpr)

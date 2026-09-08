@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from rdflib import SH
 
-from ...sparql.lex import EXPAND_TOKEN
+from ...sparql.lex import PREFIXED_NAME, map_code_spans
 from ..errors import UnsupportedShapeError
 
 if TYPE_CHECKING:
@@ -81,12 +81,9 @@ def expand_sparql_prefixes(text: str, prefixes: dict[str, str]) -> str:
         return text
 
     def _replace(match: re.Match[str]) -> str:
-        prefix = match.group("prefix")
-        if prefix is None:
-            return match.group(0)  # protected region: string, IRIREF, or comment
-        namespace = prefixes.get(prefix)
+        namespace = prefixes.get(match.group("prefix"))
         if namespace is None:
             return match.group(0)
         return f"<{namespace}{match.group('local')}>"
 
-    return EXPAND_TOKEN.sub(_replace, text)
+    return map_code_spans(text, lambda code: PREFIXED_NAME.sub(_replace, code))

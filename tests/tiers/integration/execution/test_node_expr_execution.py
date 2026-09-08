@@ -189,8 +189,8 @@ async def test_defaulted_filter_shape_passing_conjunct_binds_value() -> None:
 
 async def test_defaulted_filter_shape_failing_conjunct_keeps_row() -> None:
     """A candidate failing the conjuncts is *not in the default's output*
-    (node-expr §4.2.5) — the field falls to null on its non-null contract
-    (SD-6): the entity row survives at the SPARQL layer, surfacing as a
+    (node-expr §4.2.5) — the field falls to null on its non-null contract:
+    the entity row survives at the SPARQL layer, surfacing as a
     loud GraphQL error that nulls the query via non-null propagation —
     not the pre-fix silent drop (``{"thing": []}`` with no error)."""
     schema = _schema(
@@ -251,7 +251,7 @@ async def test_defaulted_if_missing_else_true_condition_binds_default() -> None:
 async def test_defaulted_if_missing_else_false_condition_keeps_row() -> None:
     """The same default on a condition-false entity: empty if-output (the
     missing else is the empty list, node-expr §4.1.6) → no default → the
-    non-null contract errors loudly (SD-6) and the entity row survives —
+    non-null contract errors loudly and the entity row survives —
     never a silently dropped row from a mis-scoped condition ``FILTER``."""
     schema = _schema(
         """sh:property [

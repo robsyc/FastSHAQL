@@ -58,10 +58,11 @@ Each row in the table below is a **deep module** — one public entry point hidi
 
 Module boundaries are enforced by [tach](https://docs.gauge.sh/) (`just architecture`, `tach.toml`): the DAG below, plus pinned public interfaces at exactly three seams — the root package (three entry points), `fastshaql.core` (the advanced surface), and `fastshaql.adapters` (the two builders). Regenerate with `just module-graph` after changing `tach.toml`.
 
+<!-- module-graph:start -->
+
 ```mermaid
 graph TD
     fastshaql.core.ir --> fastshaql.core.kernel
-    fastshaql.core.registry --> fastshaql.core.kernel
     fastshaql.core.registry --> fastshaql.core.ir
     fastshaql.core.parser --> fastshaql.core.kernel
     fastshaql.core.parser --> fastshaql.core.ir
@@ -92,6 +93,8 @@ graph TD
     fastshaql.core.kernel
 ```
 
+<!-- module-graph:end -->
+
 ### `src/fastshaql/` — package root
 
 The public facade (`__init__.py` — the three entry points, CONTEXT.md "Public API"), the composition root, and the optional-dependency leaves:
@@ -111,7 +114,7 @@ No FastAPI / Django imports live here. Every entry point in the table above is i
 ```
 src/fastshaql/core/
 │
-├── registry.py             # ShapeRegistry + visibility resolution (resolve_visibility, VisibilityMap — ADR-0008)
+├── registry.py             # ShapeRegistry — the frozen post-parse lookup; serves the VisibilityMap resolved by parser/visibility.py (ADR-0008)
 |
 ├── kernel/                 # Shared leaves — consumed by every core stage
 │   ├── constants.py        # Shared constants (IRI_FIELD, synthetic URN prefixes, etc.)
@@ -133,7 +136,9 @@ src/fastshaql/core/
 │   ├── parse.py            # parse_shapes — three-pass parse + cross-ref resolution
 │   ├── node_shape.py       # Parse sh:NodeShape → NodeShapeIR
 │   ├── targets.py          # Parse sh:target* declarations — one per shape (ADR-0016)
+│   ├── visibility.py       # resolve_visibility — parse pass 3: graphql:Schema declarations → VisibilityMap (ADR-0008)
 │   ├── property_shape.py   # Parse sh:PropertyShape → PropertyShapeIR — sh:class/sh:node
+│   ├── datatypes.py        # Parse the datatype set — sh:datatype IRI/list + datatype-only sh:or (Core §7.1.2, §7.7.3)
 │   ├── shacl_in.py         # Parse sh:in → homogeneous term tuple
 │   ├── shacl_path.py       # Parse sh:path → ShaclPropertyPath (full grammar)
 │   ├── errors.py           # UnsupportedShapeError — the parser-wide loud-rejection error
@@ -173,16 +178,10 @@ src/fastshaql/core/
 │   ├── joins.py            # relationship_join_patterns, relationship_type_patterns
 │   ├── scope.py            # TranslationScope — mutable per-level scope state
 │   ├── filters/            # where argument → expression AST; promotion pre-scan
-│   │   ├── walk.py         # walk_where + PromotionCollector
-│   │   ├── extract.py      # extract_where/pagination args, compute_promoted_fields
-│   │   ├── context.py      # concrete contexts (RootFilterContext vs ExistsContext)
-│   │   ├── fields.py       # translate_fields — where argument → patterns/expressions
-│   │   ├── dispatch.py     # translate_where_filter (root where → patterns)
-│   │   ├── exists.py       # FILTER EXISTS block construction
+│   │   ├── where.py        # walk_where + PromotionCollector; argument extraction; translate_fields; translate_where_filter dispatch (ADR-0009)
+│   │   ├── exists_scope.py # FilterContext protocol + Root/Exists strategies; FILTER EXISTS builder; _rf_ naming
 │   │   ├── operators.py    # operator → expression AST; AND/OR combining
-│   │   ├── literals.py     # GraphQL value → rdflib Literal coercion
-│   │   ├── naming.py       # EXISTS-internal variable names
-│   │   └── strategy.py     # FilterContext protocol — the strategy interface (depended on)
+│   │   └── literals.py     # GraphQL value → rdflib Literal coercion
 │   ├── paths.py            # map_shacl_path_to_sparql_path
 │   └── variables.py        # VariableAllocator, VariableMap, TranslationResult
 │

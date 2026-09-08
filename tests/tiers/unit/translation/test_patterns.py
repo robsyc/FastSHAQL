@@ -178,7 +178,7 @@ def test_defaulted_scalar_emits_optional_coalesce() -> None:
 def test_defaulted_scalar_bound_still_optional_coalesce() -> None:
     """``bound`` is irrelevant for defaulted fields — a ``minCount 1`` default
     field must NOT emit a mandatory path triple (it would drop the very
-    entities the default serves, SD-6); the ``BIND`` guarantees the value
+    entities the default serves); the ``BIND`` guarantees the value
     variable, so no outer wrap either way."""
     prop = defaulted_property(
         "recordSource",

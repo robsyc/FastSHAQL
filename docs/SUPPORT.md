@@ -98,7 +98,7 @@ Unknown or missing datatypes fall back to `String`/`StringFilter`; `rdf:dirLangS
 
 Hosts (Core §3.3): `sh:values` and `sh:defaultValue` at property level — at most one each, predicate paths only — and `sh:targetNode` at shape level. One shared expression grammar serves all hosts, but per-host boundaries differ: `sh:defaultValue` is scalar-only (multi-valued arms, relationships, list cardinality, missing datatype reject) and non-relationship `sh:values` requires `sh:datatype`.
 
-Value semantics: the spec (§6.8.2) unions path values with `sh:values` output and falls back to `sh:defaultValue` only when both are empty. fastshaql **replaces** the path triple with the derived emission — no real shapes graph asserts both — and lowers the default scalar-only, non-null at any `minCount` (SD-6) ([ADR-0015](adr/0015-derived-fields-node-expressions.md)).
+Value semantics: the spec (§6.8.2) unions path values with `sh:values` output and falls back to `sh:defaultValue` only when both are empty. fastshaql **replaces** the path triple with the derived emission — no real shapes graph asserts both — and lowers the default scalar-only, non-null at any `minCount` ([ADR-0015](adr/0015-derived-fields-node-expressions.md)).
 
 | Function | Disposition | Interpretation |
 |---|---|---|

@@ -80,18 +80,16 @@ def test_translate_optional_relationship_wraps_child_subtree(
 ) -> None:
     field_node = _root_field("{ persons { name employer { name } } }")
     result = translate_query(person_shape, field_node, relationship_registry)
-    assert result.query.render() == (
-        """SELECT ?iri ?name ?employer_iri ?employer_name
-WHERE {
-  ?iri a <http://example.org/Person> .
-  ?iri <http://example.org/name> ?name .
-  OPTIONAL {
-    ?iri <http://example.org/employer> ?employer_iri .
-    ?employer_iri a <http://example.org/Company> .
-    ?employer_iri <http://example.org/name> ?employer_name .
-  }
-}"""
-    )
+    # The byte render is pinned by the enums/relationship_overlay e2e
+    # golden; the integration contract is the OPTIONAL wrapping the whole
+    # child subtree, plus the variable-map wiring.
+    rendered = result.query.render()
+    optional_start = rendered.index("OPTIONAL {")
+    optional_end = rendered.index("}", optional_start)
+    optional_block = rendered[optional_start:optional_end]
+    assert "?iri <http://example.org/employer> ?employer_iri ." in optional_block
+    assert "?employer_iri a <http://example.org/Company> ." in optional_block
+    assert "?employer_iri <http://example.org/name> ?employer_name ." in optional_block
     employer_iri, employer_map = result.var_map.relationships["employer"]
     assert employer_iri == Variable("employer_iri")
     assert employer_map.fields == {"name": Variable("employer_name")}

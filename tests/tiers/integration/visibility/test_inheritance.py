@@ -11,7 +11,7 @@ import pytest
 from rdflib import Graph
 
 from fastshaql.core.parser import parse_shapes
-from fastshaql.core.registry import VisibilityError
+from fastshaql.core.parser.visibility import VisibilityError
 
 _PREFIXES = textwrap.dedent(
     """

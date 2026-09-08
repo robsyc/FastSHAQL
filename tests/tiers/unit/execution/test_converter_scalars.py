@@ -120,6 +120,30 @@ def test_convert_rows_groups_multiple_entities_independently() -> None:
     ]
 
 
+def test_convert_rows_row_without_subject_keeps_later_groups() -> None:
+    """A row missing the subject binding (decode omits unbound vars) is
+    skipped, never a scan terminator — entities after it still convert."""
+    shape = node_shape(
+        "Thing",
+        property_shapes={
+            "label": scalar_property("label", min_count=1, max_count=1),
+        },
+    )
+    rows: list[SparqlRow] = [
+        {"label": Literal("orphan")},
+        {
+            "iri": URIRef("http://example.org/thing-1"),
+            "label": Literal("Alpha"),
+        },
+        {
+            "iri": URIRef("http://example.org/thing-2"),
+            "label": Literal("Beta"),
+        },
+    ]
+    result = convert_rows(rows, shape, flat_var_map(label="label"), empty_registry())
+    assert result == [{"label": "Alpha"}, {"label": "Beta"}]
+
+
 def test_convert_rows_omits_iri_when_not_in_var_map(
     relationship_registry: ShapeRegistry,
 ) -> None:
