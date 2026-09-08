@@ -7,13 +7,7 @@ the orjson response serialization seam shared by both adapters.
 from __future__ import annotations
 
 import orjson
-from graphql import (
-    GraphQLArgument,
-    GraphQLField,
-    GraphQLObjectType,
-    GraphQLSchema,
-    GraphQLString,
-)
+from graphql import GraphQLArgument, GraphQLField, GraphQLSchema
 
 from fastshaql.core.kernel.envelope import (
     GraphqlHttpRequest,
@@ -23,6 +17,7 @@ from fastshaql.core.kernel.envelope import (
     graphql_error_payload,
     parse_graphql_http_request,
 )
+from fastshaql.core.schema._gql import STRING, object_type
 
 _JSON = "application/json"
 
@@ -135,15 +130,13 @@ def test_error_payload_serializes_to_response_bytes() -> None:
 
 def _schema() -> GraphQLSchema:
     return GraphQLSchema(
-        query=GraphQLObjectType(
+        query=object_type(
             "Query",
             {
-                "hello": GraphQLField(
-                    GraphQLString, resolve=lambda _src, _info: "world"
-                ),
+                "hello": GraphQLField(STRING, resolve=lambda _src, _info: "world"),
                 "echo": GraphQLField(
-                    GraphQLString,
-                    args={"value": GraphQLArgument(GraphQLString)},
+                    STRING,
+                    args={"value": GraphQLArgument(STRING)},
                     resolve=lambda _src, _info, value: value,
                 ),
             },
