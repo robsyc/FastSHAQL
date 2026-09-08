@@ -72,7 +72,9 @@ def test_translate_required_lang_string_under_chain_steps_bind_bound(
 ) -> None:
     """S2 — a required langString under a chain lowers as steps +
     ``BIND(COALESCE)`` + ``FILTER(BOUND)``: "required" means "the chain
-    resolves"; the guard sits outside any wrap."""
+    resolves"; the guard sits outside any wrap. The byte render is pinned
+    by the ``language/en`` e2e golden; asserted here are the fragments,
+    through the full ``translate_query`` path with a chain context."""
     person = shape_with(
         relationship_registry.by_type_name["Person"],
         name=scalar_property("name", min_count=1, max_count=1, datatype=RDF.langString),
@@ -84,17 +86,10 @@ def test_translate_required_lang_string_under_chain_steps_bind_bound(
         relationship_registry,
         query_context=QueryContext(lang_tags=("en",)),
     )
-    golden = """SELECT ?iri ?name
-WHERE {
-  ?iri a <http://example.org/Person> .
-  OPTIONAL {
-    ?iri <http://example.org/name> ?_l0_name .
-    FILTER(langMatches(LANG(?_l0_name), "en"))
-  }
-  BIND(COALESCE(?_l0_name) AS ?name)
-  FILTER(BOUND(?name))
-}"""
-    assert result.query.render() == golden
+    rendered = result.query.render()
+    assert 'FILTER(langMatches(LANG(?_l0_name), "en"))' in rendered
+    assert "BIND(COALESCE(?_l0_name) AS ?name)" in rendered
+    assert "FILTER(BOUND(?name))" in rendered
 
 
 def test_translate_no_query_context_lang_unchanged(

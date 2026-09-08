@@ -82,6 +82,28 @@ def test_bind_promoted_fields_skips_selected_field() -> None:
     )
 
 
+def test_bind_promoted_fields_emits_in_name_order() -> None:
+    """Promoted-field emission is sorted by field name — deterministic
+    pattern order whatever the set's iteration order (the SPARQL sequence
+    is observable)."""
+    shape = NodeShapeIR(
+        iri=URIRef("http://example.org/PersonShape"),
+        graphql_type_name="Person",
+        property_shapes={
+            "name": scalar_property("name", min_count=0, max_count=1),
+            "age": scalar_property("age", min_count=0, max_count=1),
+        },
+    )
+    bindings = FieldBindings(promoted=frozenset({"name", "age"}))
+    rendered = "\n".join(
+        pattern.render(0)
+        for pattern in bindings.bind_promoted_fields(shape, _empty_scope())
+    )
+    assert rendered.index("<http://example.org/age>") < rendered.index(
+        "<http://example.org/name>"
+    )
+
+
 # --- Promoted-bound invariant ---
 
 

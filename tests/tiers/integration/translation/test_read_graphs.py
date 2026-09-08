@@ -30,47 +30,22 @@ def test_translate_read_graphs_emits_from_clauses(
         minimal_registry,
         query_context=QueryContext(read_graphs=("urn:ex:g1", "urn:ex:g2")),
     )
-    golden = """SELECT ?iri ?label
-FROM <urn:ex:g1>
-FROM <urn:ex:g2>
-WHERE {
-  ?iri a <http://example.org/Thing> .
-  ?iri <http://example.org/label> ?label .
-}"""
-    assert result.query.render() == golden
+    # The byte render is pinned by the named_graphs e2e goldens; the
+    # integration contract is the dataset clauses themselves, in order.
+    lines = result.query.render().splitlines()
+    assert lines[1:3] == ["FROM <urn:ex:g1>", "FROM <urn:ex:g2>"]
 
 
 def test_translate_no_read_graphs_unchanged(
     minimal_registry: ShapeRegistry,
 ) -> None:
+    """Without ``read_graphs`` (default ``()``) the query carries no dataset
+    clause — the store's own default graph applies (ADR-0011)."""
     shape = minimal_registry.by_type_name["Thing"]
-    query = "{ things { label } }"
-    result = translate_query(shape, root_field_node(query), minimal_registry)
-    golden = """SELECT ?iri ?label
-WHERE {
-  ?iri a <http://example.org/Thing> .
-  ?iri <http://example.org/label> ?label .
-}"""
-    assert result.query.render() == golden
-
-
-def test_translate_empty_read_graphs_unchanged(
-    minimal_registry: ShapeRegistry,
-) -> None:
-    shape = minimal_registry.by_type_name["Thing"]
-    query = "{ things { label } }"
     result = translate_query(
-        shape,
-        root_field_node(query),
-        minimal_registry,
-        query_context=QueryContext(read_graphs=()),
+        shape, root_field_node("{ things { label } }"), minimal_registry
     )
-    golden = """SELECT ?iri ?label
-WHERE {
-  ?iri a <http://example.org/Thing> .
-  ?iri <http://example.org/label> ?label .
-}"""
-    assert result.query.render() == golden
+    assert "FROM" not in result.query.render()
 
 
 def test_translate_read_graphs_rejects_injection_attempt(

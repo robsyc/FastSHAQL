@@ -288,6 +288,10 @@ def test_select_values_this_without_data_block_defers() -> None:
     # Malformed VALUES binding-shaped var list (?this, no ``{`` at all):
     # deferred to the store — a real violation needs a data block to bind.
     validate_select_prebinding("?s ?p ?o . VALUES ?this")
+    # With a second var after ?this: still deferred. The var list must not
+    # be scanned at all when the data block is absent (?this not being the
+    # span's final character makes the defer observable).
+    validate_select_prebinding("?s ?p ?o . VALUES ?this ?x")
 
 
 # --- scanner anchoring edges (mutation-hardening batch) ---

@@ -898,6 +898,27 @@ def test_property_description_defaults_to_english() -> None:
     assert parsed.description == "A label."
 
 
+def test_parse_shapes_description_language_default_is_english() -> None:
+    """The facade-level default (``"en"``) is contract, matching the
+    node/property-level defaults: ``parse_shapes`` without an override reads
+    the English description (ADR-0007) — the lexical fallback would pick
+    ``de``."""
+    graph = _shapes_graph(
+        """
+        @prefix ex:   <http://example.org/> .
+        @prefix sh:   <http://www.w3.org/ns/shacl#> .
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+        ex:ThingShape a sh:NodeShape ;
+            sh:codeIdentifier "Thing" ;
+            sh:targetClass ex:Thing ;
+            rdfs:comment "Hello"@en , "Hallo"@de .
+        """
+    )
+    registry = parse_shapes(graph)
+    assert registry.by_type_name["Thing"].description == "Hello"
+
+
 def test_blank_node_shape_skip_keeps_later_shapes(caplog) -> None:
     """Skipping a blank-node shape is per-shape: shapes after it in document
     order still parse (Core §3.1.6 adjacency — the skip must not end the
