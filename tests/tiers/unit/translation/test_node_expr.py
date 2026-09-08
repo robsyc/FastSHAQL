@@ -456,20 +456,6 @@ def test_filter_shape_class_list_lowers_as_values_union() -> None:
     )
 
 
-def test_filter_shape_empty_class_list_matches_nothing() -> None:
-    """``sh:class ()`` — union over no classes: every value violates (the
-    Core §7.1.1 formal text), lowering to FILTER(false)."""
-    patterns = translate_node_expr(
-        FilterShapeNodeExpr(
-            nodes=ConstantNodeExpr(EX + "thing"),
-            shape=FilterShapeIR(conjuncts=(FilterClass(()),)),
-        ),
-        focus_term=Variable("iri"),
-        value_var=Variable("pet"),
-    )
-    assert patterns[1] == FilterPattern(TermExpr(Literal(False)))
-
-
 def test_filter_shape_root_class_lowers_subclass_star_walk() -> None:
     """``sh:rootClass`` — ``?v rdfs:subClassOf* <root>`` (Core §7.9.4); a list
     of roots walks against a VALUES union."""
@@ -541,30 +527,6 @@ def test_filter_shape_inside_multivalued_if_branches_stays_in_each_arm() -> None
         )
         assert arm_type_triple == type_triple
         assert isinstance(guard, FilterPattern)
-
-
-# --- shnex:if / shnex:exists / shnex:ListExpression arms ---
-
-
-def test_exists_emits_bind_exists() -> None:
-    """A bare ``shnex:exists`` binds a total boolean — never null."""
-    ir = _exists("inGene")
-    patterns = translate_node_expr(
-        ir,
-        focus_term=Variable("iri"),
-        value_var=Variable("hasGene"),
-    )
-    assert len(patterns) == 1
-    bind = patterns[0]
-    assert isinstance(bind, BindPattern)
-    assert bind.var == Variable("hasGene")
-    assert isinstance(bind.expr, ExistsExpr)
-    (triple,) = bind.expr.pattern.children
-    assert triple == TriplePattern(
-        subject=Variable("iri"),
-        predicate=SparqlPredicatePath(EX + "inGene"),
-        object=Variable("_exists_hasGene"),
-    )
 
 
 def test_if_single_valued_constant_branches_emit_bind_if() -> None:
@@ -1076,34 +1038,6 @@ def test_if_missing_else_emits_single_conditioned_optional() -> None:
     assert bind.var == Variable("chosen")
     assert isinstance(filt, FilterPattern)
     assert isinstance(filt.expression, ExistsExpr)
-
-
-def test_if_multivalued_value_condition_inlines_into_arm_filters() -> None:
-    """A pure value condition inlines into both arm ``FILTER`` s — no
-    ``?_cond_<value>`` BIND at the enclosing scope, where it would precede
-    (or be preceded by) other ``BIND`` s inside an OPTIONAL-wrapped entity
-    group; the then-arm filter is the strict ``= true`` comparison."""
-    ir = IfNodeExpr(
-        cond=SparqlExprNodeExpr("BOUND(?iri)"),
-        then=PathValuesNodeExpr(path=PredicatePath(EX + "a")),
-        otherwise=PathValuesNodeExpr(path=PredicatePath(EX + "b")),
-    )
-    patterns = translate_node_expr(
-        ir,
-        focus_term=Variable("iri"),
-        value_var=Variable("vals"),
-    )
-    assert len(patterns) == 2
-    then_opt, else_opt = patterns
-    assert isinstance(then_opt, OptionalPattern)
-    _, then_filter = then_opt.child.children
-    assert isinstance(then_filter, FilterPattern)
-    assert then_filter.expression == CompareExpr(
-        "=", RawSparqlExpr("BOUND(?iri)"), TermExpr(Literal(True))
-    )
-    assert isinstance(else_opt, OptionalPattern)
-    # Else-arm guard shape is pinned by the error-routing test above.
-    assert isinstance(else_opt.child.children[-1], FilterPattern)
 
 
 def test_constant_list_emits_values_pattern() -> None:

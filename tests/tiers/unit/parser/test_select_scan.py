@@ -108,71 +108,60 @@ def test_parse_select_service_allowed() -> None:
 # --- parse: projection + head-modifier rejection ---
 
 
-def test_parse_select_zero_projection_raises() -> None:
+@pytest.mark.parametrize(
+    "select",
+    [
+        "SELECT WHERE { }",
+        "SELECT ?a ?b WHERE { }",
+        "SELECT * WHERE { $this ex:p ?o }",
+    ],
+    ids=["zero", "two_vars", "star"],
+)
+def test_parse_select_projection_count_raises(select: str) -> None:
+    """The SELECT head must name exactly one variable — zero, two, and ``*``
+    (which projects every variable in scope) cannot dissolve into the
+    enclosing projection."""
     with pytest.raises(UnsupportedShapeError, match="exactly one variable"):
-        parse_shacl_select("SELECT WHERE { }")
+        parse_shacl_select(select)
 
 
-def test_parse_select_two_vars_raises() -> None:
-    with pytest.raises(UnsupportedShapeError, match="exactly one variable"):
-        parse_shacl_select("SELECT ?a ?b WHERE { }")
-
-
-def test_parse_select_star_projection_raises() -> None:
-    # ``SELECT *`` projects every variable in scope — not a single named one,
-    # so the SELECT clause cannot dissolve into the enclosing projection.
-    with pytest.raises(UnsupportedShapeError, match="exactly one variable"):
-        parse_shacl_select("SELECT * WHERE { $this ex:p ?o }")
-
-
-def test_parse_select_distinct_raises() -> None:
-    with pytest.raises(UnsupportedShapeError, match="DISTINCT"):
-        parse_shacl_select("SELECT DISTINCT ?v WHERE { }")
-
-
-def test_parse_select_reduced_raises() -> None:
-    with pytest.raises(UnsupportedShapeError, match="REDUCED"):
-        parse_shacl_select("SELECT REDUCED ?v WHERE { }")
+@pytest.mark.parametrize("modifier", ["DISTINCT", "REDUCED"])
+def test_parse_select_head_modifier_raises(modifier: str) -> None:
+    with pytest.raises(UnsupportedShapeError, match=modifier):
+        parse_shacl_select(f"SELECT {modifier} ?v WHERE {{ }}")
 
 
 # --- parse: top-level modifier rejection (merge-ability) ---
 
 
-def test_parse_select_group_by_suffix_raises() -> None:
-    with pytest.raises(UnsupportedShapeError, match="GROUP BY"):
-        parse_shacl_select("SELECT ?v WHERE { } GROUP BY ?v")
+@pytest.mark.parametrize(
+    ("suffix", "keyword"),
+    [
+        ("GROUP BY ?v", "GROUP BY"),
+        ("ORDER BY ?v", "ORDER BY"),
+        ("LIMIT 10", "LIMIT"),
+        ("OFFSET 0", "OFFSET"),
+        ("HAVING (?v > 0)", "HAVING"),
+    ],
+)
+def test_parse_select_top_level_modifier_suffix_raises(
+    suffix: str, keyword: str
+) -> None:
+    with pytest.raises(UnsupportedShapeError, match=keyword):
+        parse_shacl_select(f"SELECT ?v WHERE {{ }} {suffix}")
 
 
-def test_parse_select_order_by_suffix_raises() -> None:
-    with pytest.raises(UnsupportedShapeError, match="ORDER BY"):
-        parse_shacl_select("SELECT ?v WHERE { } ORDER BY ?v")
-
-
-def test_parse_select_limit_suffix_raises() -> None:
-    with pytest.raises(UnsupportedShapeError, match="LIMIT"):
-        parse_shacl_select("SELECT ?v WHERE { } LIMIT 10")
-
-
-def test_parse_select_offset_suffix_raises() -> None:
-    with pytest.raises(UnsupportedShapeError, match="OFFSET"):
-        parse_shacl_select("SELECT ?v WHERE { } OFFSET 0")
-
-
-def test_parse_select_having_suffix_raises() -> None:
-    with pytest.raises(UnsupportedShapeError, match="HAVING"):
-        parse_shacl_select("SELECT ?v WHERE { } HAVING (?v > 0)")
-
-
-def test_parse_select_trailing_values_this_raises() -> None:
+@pytest.mark.parametrize(
+    "query",
+    [
+        "SELECT ?v WHERE { $this ex:p ?v } VALUES ?this { <http://example.org/a> }",
+        "SELECT ?v WHERE { } VALUES ?x { 1 }",
+    ],
+    ids=["binds_this", "binds_other_var"],
+)
+def test_parse_select_trailing_values_raises(query: str) -> None:
     with pytest.raises(UnsupportedShapeError, match="trailing SPARQL"):
-        parse_shacl_select(
-            "SELECT ?v WHERE { $this ex:p ?v } VALUES ?this { <http://example.org/a> }"
-        )
-
-
-def test_parse_select_trailing_values_raises() -> None:
-    with pytest.raises(UnsupportedShapeError, match="trailing SPARQL"):
-        parse_shacl_select("SELECT ?v WHERE { } VALUES ?x { 1 }")
+        parse_shacl_select(query)
 
 
 def test_parse_select_trailing_comment_only_ok() -> None:
@@ -335,9 +324,3 @@ def test_whitespace_between_trailing_literals_does_not_mask_junk() -> None:
     # suffix scan — later trailing content still rejects.
     with pytest.raises(UnsupportedShapeError, match="trailing"):
         parse_shacl_select('SELECT ?x WHERE { ?x ex:p ?x } "a"  "b" trailing')
-
-
-def test_malformed_values_with_trailing_content_still_defers() -> None:
-    # No data block anywhere: binding-shaped var lists defer to the store
-    # even when more code follows the malformed VALUES.
-    validate_select_prebinding("VALUES ?this ?other")

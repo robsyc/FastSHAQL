@@ -5,12 +5,13 @@ from __future__ import annotations
 import dataclasses
 from typing import TYPE_CHECKING, cast
 
-from rdflib import URIRef
+from rdflib import Graph, URIRef
 from rdflib.namespace import XSD
 
 from fastshaql.core.ir.node_shape import NodeShapeIR
 from fastshaql.core.ir.property_shape import PropertyShapeIR
 from fastshaql.core.ir.shacl_path import PredicatePath
+from fastshaql.core.kernel.io import load_shapes
 from fastshaql.core.registry import ShapeRegistry
 
 if TYPE_CHECKING:
@@ -20,7 +21,39 @@ if TYPE_CHECKING:
 
 EX = URIRef("http://example.org/")
 
+PREFIXES = """
+@prefix ex: <http://example.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+"""
+"""Turtle prefix header prepended by the inline-Turtle helpers below."""
+
 _UNSET = object()
+
+
+def graph_with_values(body: str) -> tuple[Graph, URIRef]:
+    """Load ``PREFIXES + body`` and return the graph with the ``ex:prop`` focus.
+
+    The ``sh:values``-carrying property-shape fixture shared by the
+    node-expression unit tests: *body* is body-only Turtle (extra ``@prefix``
+    lines may sit at its top).
+    """
+    return load_shapes(PREFIXES + body), EX + "prop"
+
+
+def thing_shape(properties: str) -> str:
+    """Turtle for one ``Thing``-targeting node shape wrapping *properties*.
+
+    One or more ``sh:property […]`` blocks, each ending ``] ;`` or ``] .``
+    (prefixed by :data:`PREFIXES`).
+    """
+    return f"""{PREFIXES}
+        ex:Shape a sh:NodeShape ;
+            sh:codeIdentifier "Thing" ;
+            sh:targetClass ex:Thing ;
+            {properties}
+    """
 
 
 def _resolve_datatypes(

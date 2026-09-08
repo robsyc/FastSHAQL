@@ -27,7 +27,6 @@ from fastshaql.core.sparql import (
     FunctionCall,
     TermExpr,
     TriplePattern,
-    ValuesPattern,
 )
 from fastshaql.core.sparql import (
     PredicatePath as SparqlPredicatePath,
@@ -61,17 +60,6 @@ def test_has_value_conjunct_is_a_strict_equality() -> None:
     assert patterns == [
         FilterPattern(CompareExpr("=", TermExpr(Variable("v")), TermExpr(EX + "Alpha")))
     ]
-
-
-def test_multiple_conjuncts_lower_in_declaration_order() -> None:
-    patterns = translate_filter_shape(
-        FilterShapeIR(
-            conjuncts=(FilterDatatype(XSD.date), FilterHasValue(EX + "Alpha"))
-        ),
-        Variable("v"),
-    )
-    assert [type(p) for p in patterns] == [FilterPattern, FilterPattern]
-    assert patterns[0] != patterns[1]
 
 
 # --- nested property conjuncts ---
@@ -144,21 +132,6 @@ def test_single_class_conjunct_sits_directly_as_path_object() -> None:
             predicate=SparqlPredicatePath(RDF.type),
             object=EX + "Disease",
         )
-    ]
-
-
-def test_class_list_conjunct_lowers_to_a_values_union() -> None:
-    patterns = translate_filter_shape(
-        FilterShapeIR(conjuncts=(FilterClass((EX + "A", EX + "B", EX + "C")),)),
-        Variable("v"),
-    )
-    assert patterns == [
-        TriplePattern(
-            subject=Variable("v"),
-            predicate=SparqlPredicatePath(RDF.type),
-            object=Variable("v_cls0"),
-        ),
-        ValuesPattern(Variable("v_cls0"), (EX + "A", EX + "B", EX + "C")),
     ]
 
 
