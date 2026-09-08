@@ -188,6 +188,20 @@ def test_django_graphiql_disabled(minimal_schema, minimal_store) -> None:
     assert response.status_code == 405
 
 
+def test_django_ide_defaults_to_enabled(minimal_schema, minimal_store) -> None:
+    """The public default serves GraphiQL on GET without opting in."""
+    client = _mount(
+        build_graphql_view(
+            minimal_schema, lambda _r: ResolverContext(store=minimal_store)
+        )
+    )
+
+    response = client.get("/graphql/")
+
+    assert response.status_code == 200
+    assert "graphiql" in response.content.decode().lower()
+
+
 def test_django_get_context_reads_request_headers(minimal_schema) -> None:
     """get_context receives the request: headers are readable for per-request
     context — here Accept-Language resolved into the language chain."""

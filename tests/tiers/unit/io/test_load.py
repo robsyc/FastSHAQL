@@ -17,7 +17,7 @@ from rdflib import Graph, Literal, URIRef
 from rdflib.compare import isomorphic
 from rdflib.namespace import RDF
 
-from fastshaql.core.kernel.io import load_shapes
+from fastshaql.core.kernel.io import _merge_source, load_shapes
 from fastshaql.core.parser import parse_shapes
 from support.cases import CASES_ROOT
 
@@ -204,6 +204,25 @@ def test_load_shapes_file_url(tmp_path: Path) -> None:
     file = _write_ttl(tmp_path, "shapes.ttl", "fromurl")
     graph = load_shapes(f"file://{file}")
     assert (URIRef("http://example.org/fromurl"), P, V) in graph
+
+
+@pytest.mark.parametrize(
+    "url", ["http://example.org/s.ttl", "https://example.org/s.ttl"]
+)
+def test_http_url_merges_as_location_not_inline_data(
+    monkeypatch: pytest.MonkeyPatch, url: str
+) -> None:
+    """``http(s)://`` sources parse as locations (positional ``source``),
+    never as inline data — asserted via a parse spy, so no network is touched."""
+    calls: list[tuple[tuple[object, ...], dict[str, object]]] = []
+
+    def fake_parse(self: Graph, *args: object, **kwargs: object) -> Graph:
+        calls.append((args, kwargs))
+        return self
+
+    monkeypatch.setattr(Graph, "parse", fake_parse)
+    _merge_source(Graph(), url, format=None)
+    assert calls == [((url,), {"format": None})]
 
 
 def test_load_shapes_rejects_invalid_type() -> None:

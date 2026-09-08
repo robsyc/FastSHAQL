@@ -210,6 +210,22 @@ async def test_fastapi_graphiql_disabled(minimal_schema, minimal_store) -> None:
     assert response.status_code == 405
 
 
+async def test_fastapi_ide_defaults_to_enabled(minimal_schema, minimal_store) -> None:
+    """The public default serves GraphiQL on GET without opting in."""
+    app = FastAPI()
+    app.include_router(
+        build_graphql_router(
+            minimal_schema, lambda: ResolverContext(store=minimal_store)
+        )
+    )
+
+    async with _client(app) as client:
+        response = await client.get("/graphql")
+
+    assert response.status_code == 200
+    assert "graphiql" in response.text.lower()
+
+
 # --- Dependency injection ---
 
 

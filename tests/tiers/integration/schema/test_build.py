@@ -35,6 +35,8 @@ def test_build_schema_from_minimal_fixture(minimal_registry: ShapeRegistry) -> N
     schema = build_schema(minimal_registry)
     query = schema.query_type
     assert query is not None
+    # The root type name is public SDL surface (introspection, codegen).
+    assert query.name == "Query"
 
     thing = query.fields["thing"]
     required, is_list, base = field_shape(thing.type)

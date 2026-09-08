@@ -230,6 +230,29 @@ def test_exists_expr_renders_group_pattern() -> None:
     assert ExistsExpr(pattern=pattern).render() == EXISTS_SINGLE_TRIPLE_SPARQL
 
 
+def test_compare_expr_threads_indent_into_exists_operand() -> None:
+    """A populated ``EXISTS`` operand needs the caller's indent to render its
+    body — dropping it crashes rather than mis-rendering."""
+    expr = CompareExpr(
+        op="=",
+        left=ExistsExpr(
+            pattern=GroupPattern(
+                children=(
+                    TriplePattern(
+                        subject=Variable("iri"),
+                        predicate=PredicatePath(RDF_TYPE),
+                        object=EX + "Thing",
+                    ),
+                )
+            )
+        ),
+        right=TermExpr(Literal(True)),
+    )
+    rendered = expr.render(indent=2)
+    assert "EXISTS {" in rendered
+    assert rendered.endswith("    } = true")
+
+
 def test_exists_expr_renders_empty_group() -> None:
     """An empty ``GroupPattern`` inside ``EXISTS`` renders as ``EXISTS {}``."""
     assert ExistsExpr(pattern=GroupPattern(children=())).render() == "EXISTS {}"

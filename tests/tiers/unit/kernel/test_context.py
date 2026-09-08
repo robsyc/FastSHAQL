@@ -126,6 +126,12 @@ def test_q_less_duplicate_ties_at_default_weight_one() -> None:
     assert lang_tags_from_accept_language("fr;q=0.5, en, fr") == ("en", "fr")
 
 
+def test_q_less_entry_ties_explicit_q_one() -> None:
+    """The default weight is 1.0 exactly (RFC 9110 §5.3.1) — a q-less entry
+    ties an explicit ``q=1``, it does not outrank it."""
+    assert lang_tags_from_accept_language("fr;q=1, en") == ("fr", "en")
+
+
 def test_duplicate_equal_weights_keep_first_seen() -> None:
     assert lang_tags_from_accept_language("en;q=0.5, fr;q=0.5, en;q=0.5") == (
         "en",

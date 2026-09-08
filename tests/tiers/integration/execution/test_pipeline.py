@@ -122,9 +122,11 @@ async def test_execute_records_metrics_when_attached(
     metrics = ExecutionMetrics()
     ctx = ResolverContext(store=store, metrics=metrics)
     await execute_query(shape, field_node, minimal_registry, ctx)
-    assert metrics.translate_ms >= 0.0
-    assert metrics.store_ms >= 0.0
-    assert metrics.convert_ms >= 0.0
+    # Strictly positive: every phase does real work here, and the dataclass
+    # defaults are 0.0 — a `>=` assert would pass with metrics never wired.
+    assert metrics.translate_ms > 0.0
+    assert metrics.store_ms > 0.0
+    assert metrics.convert_ms > 0.0
 
 
 async def test_execute_query_context_lang_no_match_drops_field_keeps_entity(

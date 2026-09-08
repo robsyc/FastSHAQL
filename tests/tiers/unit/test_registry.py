@@ -127,3 +127,20 @@ def test_explicit_self_instances_of_target_is_not_class_indexed() -> None:
     assert shape.indexed_class is None
     registry = ShapeRegistry([shape])
     assert EX + "ThingShape" not in registry.by_target_class
+
+
+def test_unindexed_shape_does_not_stop_class_indexing() -> None:
+    """An unindexed shape is skipped, not a terminator — later shapes still
+    land in ``by_target_class``."""
+    registry = ShapeRegistry(
+        [
+            dataclasses.replace(
+                node_shape("ExprThing", target_class=None),
+                target_expr=InstancesOfNodeExpr(classes=(EX + "Thing",)),
+            ),
+            node_shape("ClassThing"),
+        ]
+    )
+    assert registry.by_target_class == {
+        EX + "ClassThing": registry.by_type_name["ClassThing"]
+    }
