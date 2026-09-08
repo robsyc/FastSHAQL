@@ -1,5 +1,5 @@
 """Datatype-set parsing — ``sh:datatype`` IRI/list forms and datatype-only
-``sh:or`` in ``core/parser/property_shape.py``.
+``sh:or`` in ``core/parser/datatypes.py``.
 
 Unit tier: rules 1-6 of the union recognition (SHACL Core §7.1.2, §7.7.3) —
 both union syntaxes normalize into one ``datatypes`` tuple, non-datatype
@@ -12,12 +12,13 @@ Order: IRI form → list form → sh:or form → inert lane → loud rejections 
 from __future__ import annotations
 
 import pytest
-from rdflib import Graph
+from rdflib import Graph, URIRef
 from rdflib.namespace import RDF, XSD
 
 from fastshaql.core.ir import LiteralSpace
 from fastshaql.core.kernel.constants import DIR_LANG_STRING
 from fastshaql.core.parser import parse_shapes
+from fastshaql.core.parser.datatypes import datatypes_from_shape
 from fastshaql.core.parser.errors import UnsupportedShapeError
 
 _PREFIXES = """
@@ -122,6 +123,35 @@ def test_both_union_syntaxes_normalize_identically() -> None:
     assert list_form.literal_space == or_form.literal_space
 
 
+def test_public_entry_normalizes_both_union_syntaxes() -> None:
+    """``datatypes_from_shape`` — the module's public entry — reads both
+    union syntaxes to the same tuple when called directly on the graph."""
+    prop_shape = URIRef("http://example.org/noteShape")
+    kwargs = {"shape_iri": prop_shape, "field_name": "note"}
+    list_form = Graph()
+    list_form.parse(
+        data=f"""{_PREFIXES}
+ex:noteShape sh:datatype ( xsd:string rdf:langString ) .
+""",
+        format="turtle",
+    )
+    or_form = Graph()
+    or_form.parse(
+        data=f"""{_PREFIXES}
+ex:noteShape sh:or ( [ sh:datatype xsd:string ] [ sh:datatype rdf:langString ] ) .
+""",
+        format="turtle",
+    )
+    assert datatypes_from_shape(list_form, prop_shape, **kwargs) == (
+        XSD.string,
+        RDF.langString,
+    )
+    assert datatypes_from_shape(or_form, prop_shape, **kwargs) == (
+        XSD.string,
+        RDF.langString,
+    )
+
+
 # --- Rule 3, inert lane: any other sh:or ---
 
 
@@ -179,7 +209,7 @@ def test_datatype_and_sh_or_together_raises() -> None:
     error names the property (shape IRI and field) before the rule."""
     with pytest.raises(
         UnsupportedShapeError,
-        match=r"sh:datatype/sh:or on urn:fastshaql:inline:PersonNote field 'note'",
+        match=r"field 'note': sh:datatype and sh:or together is unsupported",
     ):
         _parse_property(
             "sh:datatype xsd:string ; sh:or ( [ sh:datatype rdf:langString ] ) ;"
@@ -201,7 +231,7 @@ def test_multiple_sh_datatype_values_raise() -> None:
     """The at-most-one rule (§7.1.2) is cited in the error, on the property."""
     with pytest.raises(
         UnsupportedShapeError,
-        match=r"sh:datatype/sh:or on urn:fastshaql:inline:PersonNote field 'note'",
+        match=r"field 'note': multiple sh:datatype values",
     ):
         _parse_property("sh:datatype xsd:string, rdf:langString ;")
 
@@ -250,7 +280,7 @@ _:head rdf:first xsd:string, rdf:langString ;
     )
     with pytest.raises(
         UnsupportedShapeError,
-        match=r"sh:datatype/sh:or on urn:fastshaql:inline:PersonNote field 'note'",
+        match=r"field 'note': sh:datatype is not a well-formed SHACL list",
     ):
         parse_shapes(graph)
 
