@@ -28,24 +28,19 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
 # Concrete scalar singletons (graphql-core types these as GraphQLNamedType).
-ID: GraphQLScalarType = cast("GraphQLScalarType", GraphQLID)
-BOOLEAN: GraphQLScalarType = cast("GraphQLScalarType", GraphQLBoolean)
-INT: GraphQLScalarType = cast("GraphQLScalarType", GraphQLInt)
-FLOAT: GraphQLScalarType = cast("GraphQLScalarType", GraphQLFloat)
-STRING: GraphQLScalarType = cast("GraphQLScalarType", GraphQLString)
+ID: GraphQLScalarType = cast(GraphQLScalarType, GraphQLID)
+BOOLEAN: GraphQLScalarType = cast(GraphQLScalarType, GraphQLBoolean)
+INT: GraphQLScalarType = cast(GraphQLScalarType, GraphQLInt)
+FLOAT: GraphQLScalarType = cast(GraphQLScalarType, GraphQLFloat)
+STRING: GraphQLScalarType = cast(GraphQLScalarType, GraphQLString)
 
 
 def input_object(
     name: str,
     fields: Callable[[], Mapping[str, object]] | Mapping[str, object],
-    *,
-    description: str | None = None,
 ) -> GraphQLInputObjectType:
     """Construct a ``GraphQLInputObjectType`` without the cast noise."""
-    return cast(
-        "GraphQLInputObjectType",
-        GraphQLInputObjectType(name, fields, description=description),
-    )
+    return cast(GraphQLInputObjectType, GraphQLInputObjectType(name, fields))
 
 
 def object_type(
@@ -56,11 +51,11 @@ def object_type(
 ) -> GraphQLObjectType:
     """Construct a ``GraphQLObjectType`` without the cast noise."""
     return cast(
-        "GraphQLObjectType",
+        GraphQLObjectType,
         GraphQLObjectType(name, fields, description=description),
     )
 
 
 def enum_type(name: str, values: Mapping[str, object]) -> GraphQLEnumType:
     """Construct a ``GraphQLEnumType`` without the cast noise."""
-    return cast("GraphQLEnumType", GraphQLEnumType(name, values))
+    return cast(GraphQLEnumType, GraphQLEnumType(name, values))

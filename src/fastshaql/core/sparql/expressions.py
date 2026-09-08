@@ -34,7 +34,7 @@ def _render_child(
     child: Expression,
     *,
     wrap_type: type[Expression],
-    indent: int = 0,
+    indent: int,
 ) -> str:
     """Render *child*, wrapping in parens when it is an instance of *wrap_type*."""
     rendered = child.render(indent)

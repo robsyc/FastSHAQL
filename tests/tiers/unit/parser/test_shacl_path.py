@@ -214,17 +214,18 @@ def test_composite_path_requires_code_identifier() -> None:
         @prefix sh: <http://www.w3.org/ns/shacl#> .
         ex:ThingShape a sh:NodeShape ;
             sh:targetClass ex:Thing ;
-            sh:property [
-                a sh:PropertyShape ;
-                sh:path ( ex:a ex:b ) ;
-                sh:datatype <http://www.w3.org/2001/XMLSchema#string> ;
-                sh:minCount 1 ;
-            ] .
+            sh:property ex:SeqProp .
+
+        ex:SeqProp a sh:PropertyShape ;
+            sh:path ( ex:a ex:b ) ;
+            sh:datatype <http://www.w3.org/2001/XMLSchema#string> ;
+            sh:minCount 1 .
         """,
         format="turtle",
     )
     with pytest.raises(
-        MissingCompositePathCodeIdentifierError, match="sh:codeIdentifier"
+        MissingCompositePathCodeIdentifierError,
+        match=r"example.org/SeqProp.*sh:codeIdentifier",
     ):
         parse_shapes(graph)
 

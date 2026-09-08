@@ -42,7 +42,7 @@ def wrap_field_type(base: GraphQLNullableType, kind: FieldKind) -> GraphQLOutput
     if kind.is_list:
         inner: GraphQLOutputType = GraphQLList(GraphQLNonNull(base))
         return GraphQLNonNull(inner) if kind.is_required else inner
-    return GraphQLNonNull(base) if kind.is_required else cast("GraphQLOutputType", base)
+    return GraphQLNonNull(base) if kind.is_required else cast(GraphQLOutputType, base)
 
 
 def build_field(

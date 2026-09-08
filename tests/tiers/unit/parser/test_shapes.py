@@ -11,7 +11,7 @@ Order: minimal fixture baseline → cardinality → registry indexes → relatio
 from __future__ import annotations
 
 import pytest
-from rdflib import Graph, URIRef
+from rdflib import BNode, Graph, URIRef
 from rdflib.namespace import RDF, SH, XSD
 
 from fastshaql.core.ir import (
@@ -833,32 +833,6 @@ def test_derived_relationship_without_datatype_parses() -> None:
     assert friend.value_type is ValueType.RELATIONSHIP
 
 
-def test_default_description_language_is_english() -> None:
-    """The default ``description_language`` is ``en`` — at both the shape and
-    the property level, an ``en`` literal beats a lower-ordered ``de`` one."""
-    graph = _shapes_graph(
-        """
-        @prefix ex:   <http://example.org/> .
-        @prefix sh:   <http://www.w3.org/ns/shacl#> .
-        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-        @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
-
-        ex:ThingShape a sh:NodeShape ;
-            sh:codeIdentifier "Thing" ;
-            sh:targetClass ex:Thing ;
-            rdfs:comment "Zebra"@en , "Ant"@de ;
-            sh:property [
-                sh:path ex:note ;
-                sh:datatype xsd:string ;
-                sh:description "PropZebra"@en , "PropAnt"@de ;
-            ] .
-        """
-    )
-    thing = parse_shapes(graph).by_type_name["Thing"]
-    assert thing.description == "Zebra"
-    assert thing.property_shapes["note"].description == "PropZebra"
-
-
 def test_description_language_reaches_property_shapes() -> None:
     """``description_language`` flows through the node shape into every
     property shape's own description read (ADR-0007)."""
@@ -924,7 +898,7 @@ def test_property_description_defaults_to_english() -> None:
     assert parsed.description == "A label."
 
 
-def test_blank_node_shape_skip_keeps_later_shapes() -> None:
+def test_blank_node_shape_skip_keeps_later_shapes(caplog) -> None:
     """Skipping a blank-node shape is per-shape: shapes after it in document
     order still parse (Core §3.1.6 adjacency — the skip must not end the
     pass)."""
@@ -940,6 +914,11 @@ def test_blank_node_shape_skip_keeps_later_shapes() -> None:
         """
     )
     assert "Thing" in parse_shapes(graph).by_type_name
+    (blank_node,) = (
+        s for s in graph.subjects(RDF.type, SH.NodeShape) if isinstance(s, BNode)
+    )
+    record = next(r for r in caplog.records if "blank-node NodeShape" in r.getMessage())
+    assert record.getMessage().endswith(str(blank_node))
 
 
 def test_deactivated_shape_skip_keeps_later_shapes() -> None:

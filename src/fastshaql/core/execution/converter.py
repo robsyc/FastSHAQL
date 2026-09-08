@@ -37,7 +37,7 @@ def coerce_value(term: SparqlTerm | None) -> object:
             return term.toPython()
         case IdentifiedNode():
             return str(term)
-        case _:  # pragma: no cover — all SparqlTerm subtypes matched above
+        case _:
             raise TypeError(f"Unsupported SPARQL term type: {type(term)!r}")
 
 
@@ -72,10 +72,8 @@ def _init_entity(shape: NodeShapeIR, var_map: VariableMap) -> dict[str, object]:
         prop = shape.property_shapes.get(field_name)
         if prop is not None and prop.kind.is_list:
             entity[field_name] = list[object]()
-    for rel_name in var_map.relationships:
-        prop = shape.property_shapes[rel_name]
-        if prop.kind.is_list:
-            entity[rel_name] = list[object]()
+    # relationship keys need no init — _apply_relationship_fields always
+    # assigns them (an empty list for childless list relationships)
     return entity
 
 
@@ -104,7 +102,7 @@ def _apply_scalar_fields(
             else:
                 value = coerce_value(term)
             if is_list:
-                cast("list[object]", entity[field_name]).append(value)
+                cast(list[object], entity[field_name]).append(value)
             else:
                 entity[field_name] = value
 
@@ -118,7 +116,7 @@ def _apply_relationship_fields(
 ) -> None:
     for rel_name, (child_subject_var, child_map) in var_map.relationships.items():
         prop = shape.property_shapes[rel_name]
-        child_shape = registry.resolve_relationship_target(prop, field_name=rel_name)
+        child_shape = registry.resolve_relationship_target(prop)
         child_key = str(child_subject_var)
         child_order, child_groups = _group_rows_by_var(entity_rows, child_key)
 
@@ -146,7 +144,7 @@ def _finalize_entity(
         if isinstance(values, list) and field_name in shape.property_shapes:
             prop = shape.property_shapes[field_name]
             if prop.kind.is_list and prop.value_type is not ValueType.RELATIONSHIP:
-                entity[field_name] = _dedup_list_values(cast("list[object]", values))
+                entity[field_name] = _dedup_list_values(cast(list[object], values))
     return entity
 
 

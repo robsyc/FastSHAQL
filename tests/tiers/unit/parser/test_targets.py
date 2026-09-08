@@ -414,13 +414,14 @@ def test_explicit_target_node_is_not_class_indexed() -> None:
     assert thing.indexed_class is None
 
 
-def test_unsupported_target_predicate_on_a_non_shape_is_not_scoped_in() -> None:
-    """Target rejection scans the shape's own predicates: an unsupported
-    ``sh:target*`` predicate carried by some unrelated resource must not
-    reject a clean shape."""
+def test_unrecognized_sh_target_predicate_on_a_bystander_is_not_scoped_in() -> None:
+    """The scan's known-list matters too: ``sh:targetObjectsOf`` is known (it
+    rejects by name when on a shape), so only an *unrecognized* ``sh:target*``
+    predicate on a bystander distinguishes a shape-scoped predicate read from
+    a whole-graph one."""
     graph = _shapes_graph(
         """
-        ex:bystander sh:targetObjectsOf ex:knows .
+        ex:bystander sh:targetTypo ex:knows .
 
         ex:ThingShape a sh:NodeShape ;
             sh:codeIdentifier "Thing" ;

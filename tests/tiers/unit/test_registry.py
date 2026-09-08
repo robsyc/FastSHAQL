@@ -33,7 +33,7 @@ def test_resolve_relationship_target_missing_iri(relationship_registry) -> None:
         value_shape_iri=None,
     )
     with pytest.raises(ValueError, match="no resolved value_shape_iri"):
-        relationship_registry.resolve_relationship_target(broken, field_name="employer")
+        relationship_registry.resolve_relationship_target(broken)
 
 
 def test_resolve_relationship_target_unknown_shape() -> None:

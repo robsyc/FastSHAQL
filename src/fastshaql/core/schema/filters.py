@@ -118,7 +118,7 @@ def build_filter_type(
         for name, prop in shape.property_shapes.items():
             match prop.value_type:
                 case ValueType.RELATIONSHIP:
-                    target = registry.resolve_relationship_target(prop, field_name=name)
+                    target = registry.resolve_relationship_target(prop)
                     result[name] = _input_field(filter_types[target.graphql_type_name])
                 case ValueType.ENUM:
                     type_name = enum_type_name(
