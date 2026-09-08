@@ -58,10 +58,11 @@ Each row in the table below is a **deep module** — one public entry point hidi
 
 Module boundaries are enforced by [tach](https://docs.gauge.sh/) (`just architecture`, `tach.toml`): the DAG below, plus pinned public interfaces at exactly three seams — the root package (three entry points), `fastshaql.core` (the advanced surface), and `fastshaql.adapters` (the two builders). Regenerate with `just module-graph` after changing `tach.toml`.
 
+<!-- module-graph:start -->
+
 ```mermaid
 graph TD
     fastshaql.core.ir --> fastshaql.core.kernel
-    fastshaql.core.registry --> fastshaql.core.kernel
     fastshaql.core.registry --> fastshaql.core.ir
     fastshaql.core.parser --> fastshaql.core.kernel
     fastshaql.core.parser --> fastshaql.core.ir
@@ -91,6 +92,8 @@ graph TD
     fastshaql.core.sparql
     fastshaql.core.kernel
 ```
+
+<!-- module-graph:end -->
 
 ### `src/fastshaql/` — package root
 

@@ -24,8 +24,8 @@ path = "fastshaql.core.ir"
 depends_on = ["fastshaql.core.kernel"]
 
 [[modules]]
-path = "fastshaql.core.registry" # ShapeRegistry + visibility resolution (merged module)
-depends_on = ["fastshaql.core.kernel", "fastshaql.core.ir"]
+path = "fastshaql.core.registry" # ShapeRegistry — the post-parse lookup (visibility resolution lives in parser/visibility.py)
+depends_on = ["fastshaql.core.ir"]
 
 [[modules]]
 path = "fastshaql.core.parser" # single module: internal cycles

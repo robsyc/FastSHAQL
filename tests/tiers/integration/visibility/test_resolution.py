@@ -15,7 +15,8 @@ import pytest
 
 from fastshaql.core.kernel.io import load_shapes
 from fastshaql.core.parser import parse_shapes
-from fastshaql.core.registry import Visibility, VisibilityError
+from fastshaql.core.parser.visibility import VisibilityError
+from fastshaql.core.registry import Visibility
 
 if TYPE_CHECKING:
     from rdflib import Graph
@@ -242,7 +243,7 @@ def test_synthetic_target_exempt() -> None:
 def test_public_shape_without_target_class_warns(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    with caplog.at_level("WARNING", logger="fastshaql.core.registry"):
+    with caplog.at_level("WARNING", logger="fastshaql.core.parser.visibility"):
         registry = parse_shapes(_graph(_UNTARGETED_PUBLIC_SHAPE))
 
     orphan = registry.by_type_name["Orphan"]
@@ -276,7 +277,7 @@ def test_public_shape_with_derived_target_is_rootable(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """A PUBLIC shape with ``sh:targetNode`` publishes — no demotion warning."""
-    with caplog.at_level("WARNING", logger="fastshaql.core.registry"):
+    with caplog.at_level("WARNING", logger="fastshaql.core.parser.visibility"):
         registry = parse_shapes(_graph(_DERIVED_TARGET_PUBLIC_SHAPE))
 
     variant = registry.by_type_name["Variant"]
@@ -314,7 +315,7 @@ def test_public_class_declaration_publishes_implicit_class_shape() -> None:
 def test_public_namespace_warned_and_ignored(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    with caplog.at_level("WARNING", logger="fastshaql.core.registry"):
+    with caplog.at_level("WARNING", logger="fastshaql.core.parser.visibility"):
         registry = parse_shapes(_graph(_PUBLIC_NAMESPACE))
 
     assert registry.visibility_of(registry.by_type_name["Person"]) is Visibility.PUBLIC
@@ -484,7 +485,7 @@ def test_public_namespace_warning_reads_only_schema_edges(
         )
         + _PERSON_SHAPE
     )
-    with caplog.at_level("WARNING", logger="fastshaql.core.registry"):
+    with caplog.at_level("WARNING", logger="fastshaql.core.parser.visibility"):
         registry = parse_shapes(_graph(turtle))
 
     assert registry.visibility_of(registry.by_type_name["Person"]) is Visibility.PUBLIC

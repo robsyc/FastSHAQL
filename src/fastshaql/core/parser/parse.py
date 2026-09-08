@@ -23,14 +23,11 @@ from rdflib import RDF, SH, URIRef
 from fastshaql.core.ir import NodeShapeIR, PropertyShapeIR
 from fastshaql.core.kernel.constants import SYNTHETIC_SHAPE_PREFIX
 from fastshaql.core.kernel.identifiers import local_name
-from fastshaql.core.registry import (
-    ShapeRegistry,
-    index_by_target_class,
-    resolve_visibility,
-)
+from fastshaql.core.registry import ShapeRegistry, index_by_target_class
 
 from .node_shape import parse_node_shape
 from .util import SH_SHAPE_CLASS, graphql_type_name, is_deactivated
+from .visibility import resolve_visibility
 
 if TYPE_CHECKING:
     from rdflib import Graph
