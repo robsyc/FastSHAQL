@@ -40,49 +40,8 @@ WHERE {
     )
 
 
-def test_select_query_render_from_default_single_graph() -> None:
-    query = SelectQuery(
-        projection=(Variable("iri"),),
-        where=GroupPattern(children=(_type_triple(),)),
-        from_default=(URIRef("urn:ex:g"),),
-    )
-    assert query.render() == (
-        """SELECT ?iri
-FROM <urn:ex:g>
-WHERE {
-  ?iri a <http://example.org/Person> .
-}"""
-    )
-
-
-def test_select_query_render_from_default_multiple_graphs() -> None:
-    query = SelectQuery(
-        projection=(Variable("iri"),),
-        where=GroupPattern(children=(_type_triple(),)),
-        from_default=(URIRef("urn:ex:g1"), URIRef("urn:ex:g2")),
-    )
-    assert query.render() == (
-        """SELECT ?iri
-FROM <urn:ex:g1>
-FROM <urn:ex:g2>
-WHERE {
-  ?iri a <http://example.org/Person> .
-}"""
-    )
-
-
-def test_select_query_render_from_default_empty_unchanged() -> None:
-    query = SelectQuery(
-        projection=(Variable("iri"),),
-        where=GroupPattern(children=(_type_triple(),)),
-        from_default=(),
-    )
-    assert query.render() == (
-        """SELECT ?iri
-WHERE {
-  ?iri a <http://example.org/Person> .
-}"""
-    )
+# FROM-clause rendering (single, multiple, empty) is pinned end-to-end by the
+# named_graphs golden cases (scope_single, merge_multiple, no_iris).
 
 
 def test_select_query_render_as_subquery_with_modifiers() -> None:

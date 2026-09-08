@@ -67,11 +67,6 @@ def cardinality_registry() -> ShapeRegistry:
 
 
 @pytest.fixture
-def visibility_shapes_graph() -> Graph:
-    return graph_for("visibility")
-
-
-@pytest.fixture
 def visibility_registry() -> ShapeRegistry:
     return registry_for("visibility")
 
@@ -87,18 +82,8 @@ def relationship_registry() -> ShapeRegistry:
 
 
 @pytest.fixture
-def relationship_data_graph() -> Graph:
-    return data_graph_for("relationships")
-
-
-@pytest.fixture
 def filters_data_graph() -> Graph:
     return data_graph_for("filters")
-
-
-@pytest.fixture
-def filters_shapes_graph() -> Graph:
-    return graph_for("filters")
 
 
 @pytest.fixture

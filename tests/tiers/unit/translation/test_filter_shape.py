@@ -125,7 +125,10 @@ def test_each_property_conjunct_gets_a_distinct_value_variable() -> None:
         ),
         Variable("v"),
     )
-    assert [p.object for p in patterns] == [Variable("v_p0"), Variable("v_p1")]
+    assert [p.object for p in patterns if isinstance(p, TriplePattern)] == [
+        Variable("v_p0"),
+        Variable("v_p1"),
+    ]
 
 
 # --- class unions ---
@@ -187,7 +190,7 @@ def test_nested_property_conjuncts_advance_counter_through_depth() -> None:
         ),
         Variable("v"),
     )
-    assert [p.object for p in patterns] == [
+    assert [p.object for p in patterns if isinstance(p, TriplePattern)] == [
         Variable("v_p0"),
         Variable("v_p0_p1"),
     ]

@@ -8,6 +8,8 @@ Order: bind classification → promoted-field binding.
 
 from __future__ import annotations
 
+from typing import cast
+
 from rdflib import RDF, URIRef, Variable
 
 from fastshaql.core.ir.node_expr import SelectNodeExpr
@@ -140,7 +142,9 @@ def test_promoted_relationship_registers_fresh_empty_child_var_map(
     patterns = bind_promoted_fields(
         person, scope, promoted=frozenset({"employer"}), selected=frozenset()
     )
-    child_var = patterns[0].object
+    first = patterns[0]
+    assert isinstance(first, TriplePattern)
+    child_var = cast("Variable", first.object)
     assert scope.relationships["employer"] == (
         child_var,
         VariableMap(subject_var=child_var, fields={}, relationships={}),

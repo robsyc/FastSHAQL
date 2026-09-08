@@ -132,7 +132,7 @@ gx:GeneShape a sh:NodeShape ;
         sh:values ( "Onco500" "RareDx" ) ;
     ] ;
     # Asserted path + default (value-nodes step 3): g1 asserts "v2", the rest
-    # fall back to "v1". minCount 1 is deliberate —"the path stays
+    # fall back to "v1". minCount 1 is deliberate — "the path stays
     # optional under minCount 1" needs an end-to-end witness (the default
     # serves entities the path misses, so they must not be dropped).
     sh:property [

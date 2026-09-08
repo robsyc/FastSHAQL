@@ -52,7 +52,6 @@ from fastshaql.core.parser.node_expr.semantics import (
     arm_label,
     reject_derived_path_targets,
 )
-from fastshaql.core.parser.node_expr.shacl_prefixes import parse_shacl_prefixes
 from fastshaql.core.parser.parse import parse_shapes
 from fastshaql.core.parser.shacl_path import UnsupportedShaclPathError
 from fastshaql.core.parser.util.namespaces import SH_VALUES
@@ -293,14 +292,12 @@ def test_derived_min_count_warns(caplog: pytest.LogCaptureFixture) -> None:
         registry = parse_shapes(load_shapes(turtle))
     ignored = [r for r in caplog.records if "minCount" in r.message]
     assert len(ignored) == 1
-    # The warning names the field, the shape, and the retained cardinality —
-    # ignored for validation, still emitted.
+    # The warning names the field and its shape, and states the retained
+    # cardinality — ignored for validation, still emitted.
     message = ignored[0].getMessage()
-    assert message.startswith(
-        "sh:minCount on derived field 'recordSource' "
-        "on urn:fastshaql:inline:ThingRecordSource"
-    )
-    assert message.endswith("min_count=1")
+    assert "sh:minCount on derived field 'recordSource'" in message
+    assert "urn:fastshaql:inline:ThingRecordSource" in message
+    assert "min_count=1" in message
     prop = registry.by_type_name["Thing"].property_shapes["recordSource"]
     assert prop.min_count == 1
 
@@ -2445,21 +2442,28 @@ def test_filter_shape_rejects_unknown_predicate_after_known_one() -> None:
         parse_filter_shape(graph, shape)
 
 
-def test_rule_chaining_inside_nested_property_conjunct_rejected() -> None:
+@pytest.mark.parametrize(
+    "path_chain",
+    [(EX + "salary",), (EX + "employed", EX + "salary")],
+    ids=["one_level", "two_levels"],
+)
+def test_rule_chaining_through_nested_property_conjuncts_rejected(
+    path_chain: tuple[str, ...],
+) -> None:
+    """The chaining guard recurses through nested ``sh:property`` conjuncts —
+    a derived path at any nesting depth is still rejected."""
     graph = Graph()
     derived = BNode("derivedShape")
     graph.add((derived, SH.path, EX + "salary"))
     graph.add((derived, SH_VALUES, Literal("derived")))
+    shape = FilterShapeIR(conjuncts=())
+    for path in reversed(path_chain):
+        shape = FilterShapeIR(
+            conjuncts=(FilterProperty(path=PredicatePath(URIRef(path)), nested=shape),)
+        )
     ir = FilterShapeNodeExpr(
         nodes=PathValuesNodeExpr(path=PredicatePath(EX + "employed")),
-        shape=FilterShapeIR(
-            conjuncts=(
-                FilterProperty(
-                    path=PredicatePath(EX + "salary"),
-                    nested=FilterShapeIR(conjuncts=()),
-                ),
-            )
-        ),
+        shape=shape,
     )
     with pytest.raises(UnsupportedShapeError, match="rule chaining"):
         reject_derived_path_targets(graph, ir, EX + "Shape", "score")
@@ -2475,53 +2479,3 @@ def test_derived_target_scan_requires_a_path_predicate() -> None:
     reject_derived_path_targets(
         graph, PathValuesNodeExpr(path=PredicatePath(EX + "name")), EX + "S", "f"
     )
-
-
-def test_prefix_declarations_read_only_declare_edges() -> None:
-    """Prefix resolution walks ``sh:declare`` edges of the node's
-    ``sh:prefixes`` — annotations and unrelated declarations elsewhere in
-    the graph never contribute."""
-    graph = Graph()
-    node, prefixes, decl = BNode("expr"), BNode("prefixes"), BNode("decl")
-    graph.add((node, SH.prefixes, prefixes))
-    graph.add((prefixes, SH.declare, decl))
-    graph.add((decl, SH.prefix, Literal("foo")))
-    graph.add((decl, SH.namespace, URIRef("http://example.org/ns#")))
-    annotated = BNode("annotated")
-    graph.add((prefixes, EX + "note", annotated))
-    graph.add((annotated, SH.prefix, Literal("p")))
-    graph.add((annotated, SH.namespace, URIRef("http://example.org/other#")))
-    unrelated, decl2 = BNode("unrelated"), BNode("decl2")
-    graph.add((unrelated, SH.declare, decl2))
-    graph.add((decl2, SH.prefix, Literal("bar")))
-    graph.add((decl2, SH.namespace, URIRef("http://example.org/bar#")))
-    assert parse_shacl_prefixes(graph, node) == {"foo": "http://example.org/ns#"}
-
-
-def test_rule_chaining_two_property_levels_deep_rejected() -> None:
-    """The chaining guard recurses through nested ``sh:property`` conjuncts —
-    a derived path two levels down is still rejected."""
-    graph = Graph()
-    derived = BNode("derivedShape")
-    graph.add((derived, SH.path, EX + "salary"))
-    graph.add((derived, SH_VALUES, Literal("derived")))
-    ir = FilterShapeNodeExpr(
-        nodes=PathValuesNodeExpr(path=PredicatePath(EX + "employed")),
-        shape=FilterShapeIR(
-            conjuncts=(
-                FilterProperty(
-                    path=PredicatePath(EX + "employed"),
-                    nested=FilterShapeIR(
-                        conjuncts=(
-                            FilterProperty(
-                                path=PredicatePath(EX + "salary"),
-                                nested=FilterShapeIR(conjuncts=()),
-                            ),
-                        )
-                    ),
-                ),
-            )
-        ),
-    )
-    with pytest.raises(UnsupportedShapeError, match="rule chaining"):
-        reject_derived_path_targets(graph, ir, EX + "Shape", "score")

@@ -23,6 +23,7 @@ from fastshaql.core.sparql import (
     FilterPattern,
     GroupPattern,
     NotExpr,
+    Pattern,
     PredicatePath,
     TermExpr,
     TriplePattern,
@@ -78,7 +79,9 @@ def test_combinator_branch_empty_relationship_filter_is_noop(
 def test_branch_with_patterns_and_expr_wraps_in_exists() -> None:
     """A filter branch carrying both join patterns and an expression becomes
     one ``EXISTS { patterns FILTER(expr) }`` — the group keeps them scoped."""
-    patterns = [TriplePattern(Variable("s"), PredicatePath(EX + "p"), Variable("o"))]
+    patterns: list[Pattern] = [
+        TriplePattern(Variable("s"), PredicatePath(EX + "p"), Variable("o"))
+    ]
     expr = TermExpr(Literal(1))
     assert _branch_to_expression(patterns, expr) == ExistsExpr(
         GroupPattern((patterns[0], FilterPattern(expr)))
@@ -91,7 +94,9 @@ def test_branch_without_patterns_returns_expr_directly() -> None:
 
 
 def test_branch_without_expr_is_a_noop() -> None:
-    patterns = [TriplePattern(Variable("s"), PredicatePath(EX + "p"), Variable("o"))]
+    patterns: list[Pattern] = [
+        TriplePattern(Variable("s"), PredicatePath(EX + "p"), Variable("o"))
+    ]
     assert _branch_to_expression(patterns, None) is None
 
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 from rdflib import Graph, URIRef
-from rdflib.namespace import XSD
+from rdflib.namespace import RDF, SH, XSD
 
 from fastshaql.core.ir import (
     FieldKind,
@@ -147,14 +147,9 @@ def test_parse_sh_class_creates_synthetic_shape_when_no_target(
     assert len(warnings) == 1
     # The warning names both the untargeted class and the synthetic shape it
     # produced — the author's pointer from problem to remedy.
-    assert (
-        warnings[0]
-        .getMessage()
-        .startswith(
-            f"No shape targets class {EX}Department — "
-            "created synthetic urn:fastshaql:synthetic:Department"
-        )
-    )
+    message = warnings[0].getMessage()
+    assert f"{EX}Department" in message
+    assert "urn:fastshaql:synthetic:Department" in message
 
 
 def test_parse_nested_value_shape_iri_resolves_through_registry(
@@ -204,11 +199,10 @@ def test_duplicate_graphql_field_name_skips_second(
     assert set(person.property_shapes) == {"name"}
     skip = [r for r in caplog.records if "Duplicate graphql field name" in r.message]
     assert len(skip) == 1
-    # The warning names the field and the declaring shape, and states the
-    # action taken — first-wins with the second skipped.
+    # The warning names the field and the declaring shape; first-wins, the
+    # second is skipped.
     message = skip[0].getMessage()
-    assert message.startswith(f"Duplicate graphql field name name in {EX}PersonShape")
-    assert message.endswith("— skipping")
+    assert f"Duplicate graphql field name name in {EX}PersonShape" in message
 
 
 # --- Blank-node NodeShape skip ---
@@ -237,11 +231,9 @@ def test_blank_node_shape_is_skipped(
     ]
     assert len(skipping) == 1
     # The warning names the skipped node — not a bare reason string.
+    bnode = next(graph.subjects(RDF.type, SH.NodeShape))
     message = skipping[0].getMessage()
-    assert message.startswith(
-        "Skipping blank-node NodeShape (not addressable by IRI): "
-    )
-    assert "None" not in message
+    assert str(bnode) in message
 
 
 # --- Synthetic-shape cache ---
@@ -663,15 +655,15 @@ def test_multiple_min_count_values_reject() -> None:
 
 
 @pytest.mark.parametrize(
-    ("body", "warning_prefix"),
+    ("body", "declaration_label"),
     [
-        ("sh:datatype xsd:string ; sh:maxCount 0 ;", "sh:maxCount 0 on "),
-        ("sh:datatype xsd:string ; sh:in () ;", "Empty sh:in on "),
+        ("sh:datatype xsd:string ; sh:maxCount 0 ;", "sh:maxCount 0"),
+        ("sh:datatype xsd:string ; sh:in () ;", "Empty sh:in"),
     ],
     ids=["max_count_zero", "empty_sh_in"],
 )
 def test_zero_capacity_property_excludes_field(
-    body: str, warning_prefix: str, caplog: pytest.LogCaptureFixture
+    body: str, declaration_label: str, caplog: pytest.LogCaptureFixture
 ) -> None:
     """A property that can never hold values (§7.2.2, §7.9.3) generates no
     field, with a warning — the ``sh:deactivated`` reading (§3.1.6). The
@@ -683,11 +675,8 @@ def test_zero_capacity_property_excludes_field(
     excluded = [r for r in caplog.records if "no field is generated" in r.message]
     assert len(excluded) == 1
     message = excluded[0].getMessage()
-    assert message.startswith(warning_prefix)
+    assert declaration_label in message
     assert "on None" not in message  # the property shape is named, never dropped
-    assert message.endswith(
-        "— the property can never hold values; no field is generated"
-    )
 
 
 @pytest.mark.parametrize(

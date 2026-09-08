@@ -117,7 +117,7 @@ def test_path_is_still_required_field() -> None:
 
 
 def test_defaulted_field_is_required_at_any_min_count() -> None:
-    """`kind`` — the single nullability home: a defaulted field
+    """``kind`` is the single nullability home: a defaulted field
     is non-null at any ``minCount`` (the ``COALESCE``
     always binds; the schema build just consumes ``kind``)."""
     prop = defaulted_property("source", default_expr=_CONST, min_count=0, max_count=1)
