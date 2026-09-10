@@ -1,6 +1,6 @@
 SELECT ?iri ?summary
 WHERE {
-  ?iri a <http://example.org/genomics/Gene> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/genomics/Gene> .
   OPTIONAL {
     ?iri <http://example.org/genomics/transcribes>/<http://example.org/genomics/description> ?_l0_summary .
     FILTER(langMatches(LANG(?_l0_summary), "en"))

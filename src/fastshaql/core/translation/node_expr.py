@@ -39,7 +39,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import assert_never
 
-from rdflib import RDF, RDFS, Literal, URIRef, Variable
+from rdflib import Literal, URIRef, Variable
 
 from fastshaql.core.ir.node_expr import (
     ConstantListNodeExpr,
@@ -74,34 +74,14 @@ from fastshaql.core.sparql import (
     contain_row_eliminating,
 )
 from fastshaql.core.sparql.lex import THIS_REF, map_code_spans
-from fastshaql.core.sparql.paths import (
-    PredicatePath as SparqlPredicatePath,
-)
-from fastshaql.core.sparql.paths import (
-    SequencePath as SparqlSequencePath,
-)
-from fastshaql.core.sparql.paths import (
-    ZeroOrMorePath as SparqlZeroOrMorePath,
-)
 from fastshaql.core.sparql.terms import RenderTerm, render_term
 
 from .filter_shape import translate_filter_shape
+from .paths import SHACL_INSTANCE_PATH as _SHACL_INSTANCE_PATH
 from .paths import map_shacl_path_to_sparql_path
 
 _TRUE = Literal(True)
 _FALSE = Literal(False)
-
-_SHACL_INSTANCE_PATH = SparqlSequencePath(
-    (
-        SparqlPredicatePath(RDF.type),
-        SparqlZeroOrMorePath(SparqlPredicatePath(RDFS.subClassOf)),
-    )
-)
-"""``rdf:type/rdfs:subClassOf*`` — the subclass-closing instance path.
-
-SHACL instances of a class are nodes typed with the class or any subclass
-(Core §1.1); the closure reads the queried graphs only — the spec's §6.3
-shapes-graph ``rdfs:subClassOf`` lookup is a documented deviation (ADR-0016)."""
 
 
 def _substitute_focus_var(text: str, focus_term: RenderTerm) -> str:

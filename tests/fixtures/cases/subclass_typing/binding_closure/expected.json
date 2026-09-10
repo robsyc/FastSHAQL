@@ -1,0 +1,24 @@
+{
+  "data": {
+    "asset": [
+      {
+        "label": "Mona Lisa",
+        "heldBy": {
+          "name": "Bank"
+        }
+      },
+      {
+        "label": "David",
+        "heldBy": {
+          "name": "Museum"
+        }
+      },
+      {
+        "label": "Ledger",
+        "heldBy": {
+          "name": "Bank"
+        }
+      }
+    ]
+  }
+}

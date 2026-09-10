@@ -1,9 +1,9 @@
 SELECT ?iri
 WHERE {
-  ?iri a <http://example.org/clinical/Patient> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/clinical/Patient> .
   ?iri <http://example.org/clinical/hasCondition> ?hasCondition_iri .
   FILTER(EXISTS {
-    ?hasCondition_iri a <http://example.org/clinical/Condition> .
+    ?hasCondition_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/clinical/Condition> .
     ?hasCondition_iri a ?cls .
     FILTER NOT EXISTS { ?hasCondition_iri a ?sub . ?sub <http://www.w3.org/2000/01/rdf-schema#subClassOf>+ ?cls . FILTER(?sub != ?cls) }
     BIND(STR(?cls) AS ?label)

@@ -4,12 +4,29 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from rdflib import RDF, RDFS
+
 import fastshaql.core.ir.shacl_path as shacl
 import fastshaql.core.sparql.paths as sparql
 
 if TYPE_CHECKING:
     from fastshaql.core.ir.shacl_path import ShaclPropertyPath
     from fastshaql.core.sparql.paths import SparqlPropertyPath
+
+
+SHACL_INSTANCE_PATH = sparql.SequencePath(
+    (
+        sparql.PredicatePath(RDF.type),
+        sparql.ZeroOrMorePath(sparql.PredicatePath(RDFS.subClassOf)),
+    )
+)
+"""``rdf:type/rdfs:subClassOf*`` — the SHACL-instance path behind every
+typing emission (ADR-0025): ``sh:targetClass`` roots (Core §3.1.3.2),
+``sh:class`` bindings (§7.1.1), ``shnex:instancesOf`` (node-expr §4.5.1),
+and filter-shape class conjuncts. SHACL instances of a class are nodes
+typed with the class or any subclass (§1.1); the closure reads the
+queried graphs only — the spec's §6.3 shapes-graph ``rdfs:subClassOf``
+lookup is a documented deviation (ADR-0016)."""
 
 
 def map_shacl_path_to_sparql_path(path: ShaclPropertyPath) -> SparqlPropertyPath:

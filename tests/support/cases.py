@@ -37,6 +37,7 @@ CASES: dict[str, tuple[str, ...]] = {
     "minimal": ("smoke",),
     "cardinality": ("full",),
     "relationships": ("nested", "recursive", "full"),
+    "subclass_typing": ("root_closure", "binding_closure", "filter_shape_closure"),
     "filters": (
         "scalar_eq",
         "scalar_gt",

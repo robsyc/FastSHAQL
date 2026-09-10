@@ -1,5 +1,5 @@
 SELECT ?iri ?comparator
 WHERE {
-  ?iri a <http://example.org/Quantity> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Quantity> .
   ?iri <http://example.org/comparator> ?comparator .
 }

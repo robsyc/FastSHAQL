@@ -1,14 +1,14 @@
 SELECT ?iri ?inGene_iri ?inGene_assayVersion
 WHERE {
-  ?iri a <http://example.org/genomics/Variant> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/genomics/Variant> .
   ?iri <http://example.org/genomics/inGene> ?inGene_iri .
-  ?inGene_iri a <http://example.org/genomics/Gene> .
+  ?inGene_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/genomics/Gene> .
   OPTIONAL {
     ?inGene_iri <http://example.org/genomics/assayVersion> ?_dv_inGene_assayVersion .
   }
   BIND(COALESCE(?_dv_inGene_assayVersion, "v1") AS ?inGene_assayVersion)
   FILTER(EXISTS {
-    ?inGene_iri a <http://example.org/genomics/Gene> .
+    ?inGene_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/genomics/Gene> .
     OPTIONAL {
       ?inGene_iri <http://example.org/genomics/assayVersion> ?_dv__rf_inGene_assayVersion .
     }

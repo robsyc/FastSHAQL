@@ -406,7 +406,12 @@ def test_filter_shape_lowering_conjuncts() -> None:
     )
     assert patterns[1] == TriplePattern(
         subject=Variable("candidate"),
-        predicate=SparqlPredicatePath(RDF.type),
+        predicate=SparqlSequencePath(
+            (
+                SparqlPredicatePath(RDF.type),
+                SparqlZeroOrMorePath(SparqlPredicatePath(RDFS.subClassOf)),
+            )
+        ),
         object=EX + "Person",
     )
 
@@ -445,13 +450,23 @@ def test_filter_shape_class_list_lowers_as_values_union() -> None:
     )
     assert patterns[1] == TriplePattern(
         subject=Variable("pet"),
-        predicate=SparqlPredicatePath(RDF.type),
+        predicate=SparqlSequencePath(
+            (
+                SparqlPredicatePath(RDF.type),
+                SparqlZeroOrMorePath(SparqlPredicatePath(RDFS.subClassOf)),
+            )
+        ),
         object=Variable("pet_cls0"),
     )
     assert patterns[2] == ValuesPattern(Variable("pet_cls0"), (EX + "Cat", EX + "Dog"))
     assert patterns[3] == TriplePattern(
         subject=Variable("pet"),
-        predicate=SparqlPredicatePath(RDF.type),
+        predicate=SparqlSequencePath(
+            (
+                SparqlPredicatePath(RDF.type),
+                SparqlZeroOrMorePath(SparqlPredicatePath(RDFS.subClassOf)),
+            )
+        ),
         object=EX + "Pet",
     )
 
@@ -514,7 +529,12 @@ def test_filter_shape_inside_multivalued_if_branches_stays_in_each_arm() -> None
     assert len(patterns) == 2
     type_triple = TriplePattern(
         subject=Variable("links"),
-        predicate=SparqlPredicatePath(RDF.type),
+        predicate=SparqlSequencePath(
+            (
+                SparqlPredicatePath(RDF.type),
+                SparqlZeroOrMorePath(SparqlPredicatePath(RDFS.subClassOf)),
+            )
+        ),
         object=EX + "Target",
     )
     for arm, predicate in zip(patterns, ("goodLink", "badLink"), strict=True):

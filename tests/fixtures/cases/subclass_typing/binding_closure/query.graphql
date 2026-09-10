@@ -1,0 +1,8 @@
+query SubclassTypingBindingClosure {
+  asset {
+    label
+    heldBy {
+      name
+    }
+  }
+}

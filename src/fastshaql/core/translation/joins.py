@@ -8,13 +8,18 @@ subject (ADR-0015). Callers never re-spread the source decision.
 
 from __future__ import annotations
 
-from rdflib import RDF, Variable
+from typing import TYPE_CHECKING
 
-from fastshaql.core.ir import PropertyShapeIR, ValueSource
-from fastshaql.core.sparql import Pattern, PredicatePath, TriplePattern
+from fastshaql.core.ir import ValueSource
+from fastshaql.core.sparql import Pattern, TriplePattern
 
 from .node_expr import translate_node_expr
-from .paths import map_shacl_path_to_sparql_path
+from .paths import SHACL_INSTANCE_PATH, map_shacl_path_to_sparql_path
+
+if TYPE_CHECKING:
+    from rdflib import Variable
+
+    from fastshaql.core.ir import PropertyShapeIR
 
 
 def relationship_join_patterns(
@@ -60,7 +65,8 @@ def relationship_type_patterns(
     subject: Variable,
     prop: PropertyShapeIR,
 ) -> list[Pattern]:
-    """Emit the child ``rdf:type`` constraint triple for a relationship subject."""
+    """Emit the child's SHACL-instance typing path for a relationship
+    subject (ADR-0025) — ``None`` when the binding carries no class."""
     if prop.value_class is None:
         return []
-    return [TriplePattern(subject, PredicatePath(RDF.type), prop.value_class)]
+    return [TriplePattern(subject, SHACL_INSTANCE_PATH, prop.value_class)]
