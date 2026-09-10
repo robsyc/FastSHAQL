@@ -1,9 +1,9 @@
-"""Evaluation parity — hand-authored golden cases against GraphDB CE.
+"""Evaluation parity — hand-authored golden cases across the store matrix.
 
-Reuses the declarative case sets (``CASES``) but swaps ``InMemoryStore`` for an
-``HttpxSparqlStore`` backed by a testcontainers GraphDB instance. JSON assertions
-are order-independent (ADR-0010; canonical compare via ``support.goldens``).
-See ADR-0022.
+Reuses the declarative case sets (``CASES``) verbatim: each store gets the
+same data and query, compared order-independently against the in-memory
+goldens (ADR-0010/0022). Outcomes land in the report's parity matrix; known
+divergences xfail at collection and record as ``divergence``.
 """
 
 from __future__ import annotations
@@ -13,10 +13,12 @@ from typing import TYPE_CHECKING
 import pytest
 
 from support.cases import CASES, CaseSet
-from support.runners import run_case_on_store
+from support.eval.parity import check_parity
 
 if TYPE_CHECKING:
-    from support.eval.graphdb import GraphDbSession
+    from fastshaql.core.execution.store import SparqlStore
+    from support.eval.session import StoreSession
+    from support.eval.stores import StoreSpec
 
 pytest.importorskip("testcontainers")
 
@@ -29,11 +31,13 @@ PARITY_CASES: tuple[tuple[str, tuple[str, ...]], ...] = tuple(CASES.items())
     ids=[f"{name}/{case}" for name, cases in PARITY_CASES for case in cases],
 )
 async def test_case_parity(
-    graphdb_session: GraphDbSession,
-    graphdb_store,
+    store_spec: StoreSpec,
+    store_session: StoreSession,
+    store: SparqlStore,
     fixture_name: str,
     case: str,
 ) -> None:
     case_set = CaseSet(fixture_name)
-    graphdb_session.load_graph(case_set.load_data())
-    await run_case_on_store(case_set, case, graphdb_store)
+    await check_parity(
+        store_spec, store_session, store, case_set, [case], case_set.load_data()
+    )

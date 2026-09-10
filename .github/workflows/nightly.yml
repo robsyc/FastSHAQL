@@ -13,34 +13,44 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Nightly charter: the home of slow / advisory / release-gating checks that are
-# too heavy for the PR path — GraphDB Free evaluation, preview lint drift, and the
-# mutation score floor. Check commands live in the justfile; jobs install the
-# shared toolchain (.github/actions/toolchain, versions from .tool-versions) and
-# this file carries only glue (secret decode, caching, report upload).
-
-env:
-  EVAL_REPORT_PATH: evaluation-report.json
+# Nightly charter: the home of slow or advisory checks
+# that are too heavy or not suited for the PR path
 
 jobs:
   evaluation:
-    name: GraphDB Free eval
+    name: "eval: ${{ matrix.store.label }}"
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        store:
+          - name: oxigraph
+            label: "Oxigraph (OSS)"
+          - name: fuseki
+            label: "Fuseki (OSS)"
+          - name: qlever
+            label: "QLever (OSS)"
+          - name: graphdb
+            label: "GraphDB Free"
+    env:
+      EVAL_STORE: ${{ matrix.store.name }}
+      EVAL_REPORT_PATH: evaluation-report-${{ matrix.store.name }}.json
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Write GraphDB license
+        if: matrix.store.name == 'graphdb'
         env:
           GRAPHDB_LICENSE: ${{ secrets.GRAPHDB_LICENSE }}
         # Secret is base64 of the binary license; decode to the file verbatim.
-        # (GNU base64 -d ignores line wrapping; empty secret -> empty file -> conftest skips.)
+        # (GNU base64 -d ignores line wrapping; empty secret -> empty file -> adapter skips.)
         run: printf '%s' "$GRAPHDB_LICENSE" | base64 -d > tests/tiers/evaluation/graphdb.license
 
       - uses: ./.github/actions/toolchain
 
       - name: Run evaluation tests
-        # Conftest skips cleanly when the license file is absent/empty (secret unset).
+        # The GraphDB leg skips cleanly when the license file is absent/empty
         run: just eval
 
       - name: Write workflow summary
@@ -51,7 +61,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: evaluation-report
+          name: evaluation-report-${{ matrix.store.name }}
           path: ${{ env.EVAL_REPORT_PATH }}
           retention-days: 14
           if-no-files-found: ignore

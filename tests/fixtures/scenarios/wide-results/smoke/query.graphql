@@ -1,0 +1,19 @@
+query WideResults {
+  row {
+    iri
+    code
+    name
+    description
+    category
+    quantity
+    sequence
+    weight
+    version
+    tag
+    hasPart {
+      iri
+      partCode
+      partName
+    }
+  }
+}

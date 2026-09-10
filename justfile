@@ -89,7 +89,7 @@ test *args:
 test-cov:
 	uv run pytest --cov --cov-report=term-missing
 
-# run the evaluation tier (requires Docker and a GraphDB license, else skipped)
+# run the evaluation tier across the store matrix
 [group('tests')]
 eval *args:
 	uv run pytest -m evaluation -s {{args}}

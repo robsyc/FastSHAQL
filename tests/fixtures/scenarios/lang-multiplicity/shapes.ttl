@@ -1,0 +1,20 @@
+# Language-multiplicity fixture (ADR-0012): one langString title per document
+# per language. The smoke case resolves through a preference chain — every
+# chain step is another OPTIONAL+FILTER over the same multiplicity of literals.
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+ex:DocShape a sh:NodeShape ;
+    sh:codeIdentifier "Doc" ;
+    sh:targetClass ex:Doc ;
+    # Cardinality is over the chain-resolved value (ADR-0012); the asserted
+    # lang-tagged literals are deliberately multiple — their multiplicity is
+    # this scenario's scale axis.
+    sh:property [
+        sh:path ex:title ;
+        sh:codeIdentifier "title" ;
+        sh:datatype rdf:langString ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] .

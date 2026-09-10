@@ -173,10 +173,13 @@ class CaseSource(Protocol):
     """Minimal read interface ``run_case`` / ``run_case_on_store`` need.
 
     Both ``CaseSet`` (hand-authored) and ``support.scenarios.Scenario``
-    (generated) satisfy this structurally.
+    (generated) satisfy this structurally. ``name`` is read-only: consumers
+    never rebind it, and a settable member would shut frozen classes like
+    ``Scenario`` out of the protocol.
     """
 
-    name: str
+    @property
+    def name(self) -> str: ...
 
     def shapes_path(self) -> Path: ...
 
@@ -246,8 +249,8 @@ class CaseSet:
         # Read-only: parse committed data.trig/data.ttl if present, else an empty dataset.
         # (Scenario data is generated via ``support.scenarios`` — never written here.)
         # ``default_union=True`` makes the bare no-``FROM`` default graph the union of
-        # all graphs — matching GraphDB (the parity target) and the majority of stores.
-        # Explicit ``FROM`` isolates regardless (ADR-0011). See
+        # all graphs — the union contract of the evaluation matrix's union stores
+        # (GraphDB, QLever). Explicit ``FROM`` isolates regardless (ADR-0011). See
         # ``test_named_graph_isolation.py`` for the truth-table evidence.
         ds = Dataset(default_union=True)
         path = self.data_path()

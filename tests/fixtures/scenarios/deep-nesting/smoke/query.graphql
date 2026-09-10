@@ -1,0 +1,18 @@
+query DeepNesting {
+  node {
+    iri
+    label
+    hasChild {
+      iri
+      label
+      hasChild {
+        iri
+        label
+        hasChild {
+          iri
+          label
+        }
+      }
+    }
+  }
+}

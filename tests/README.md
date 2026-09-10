@@ -8,7 +8,7 @@ The suite is declarative where it can be: inputs are `.ttl` / `.graphql` / `.jso
 
 ```bash
 just test            # default suite (excludes evaluation)
-just eval            # GraphDB Free parity + perf (requires Docker + license)
+just eval            # store-matrix parity + perf (requires Docker)
 uv run pytest -m e2e # one tier only (unit | integration | e2e | adapter | evaluation)
 just test-cov        # with coverage
 ```
@@ -27,7 +27,7 @@ tests/
 │   ├── integration/     # ≥2 stages on real case inputs
 │   ├── e2e/             # full pipeline → golden files
 │   ├── adapters/        # FastAPI/Django HTTP shims (optional-dep gated)
-│   └── evaluation/      # full pipeline against a real triple store (GraphDB Free)
+│   └── evaluation/      # full pipeline against the store matrix
 |
 ├── fixtures/
 │   ├── cases/           # hand-authored: shapes.ttl + data.ttl|data.trig + e2e cases (committed)
@@ -52,9 +52,15 @@ tests/
     ├── badges.py             # shields endpoint badges (run via `just badges`)
     ├── release_notes.py      # CHANGELOG section extractor (run via `just release-notes`)
     └── eval/            # evaluation-only (consumed solely by tiers/evaluation/)
-        ├── session.py   # StoreSession Protocol — the store contract
-        ├── graphdb.py   # GraphDbSession — the GraphDB adapter
-        └── report.py    # EvalReport — JSON sidecar + CI summary renderer
+        ├── session.py   # StoreSession Protocol + shared adapter plumbing
+        ├── stores.py    # STORES registry + EVAL_STORE selection
+        ├── oxigraph.py  # Oxigraph adapter
+        ├── fuseki.py    # Fuseki adapter
+        ├── qlever.py    # QLever adapter
+        ├── graphdb.py   # GraphDB Free adapter (license-gated)
+        ├── divergences.py  # KNOWN_DIVERGENCES registry
+        ├── parity.py    # check_parity — case outcomes into the report
+        └── report.py    # JSON sidecar + CI summary renderer
 ```
 
 Most entries at the `support/` root are shared across ≥2 tiers; the exceptions are the CI/release scripts (`badges.py`, `release_notes.py`), the adapter-tier `django_conf/`, and `support/eval/`, the only evaluation-specific subgroup.
@@ -68,7 +74,7 @@ Defined by two axes — *pipeline-stages-composed* × *assertion medium* — aut
 | `unit` | one stage; programmatic/inline inputs | inline / programmatic |
 | `integration` | ≥2 pipeline stages on real case inputs | produced SPARQL inline, VariableMap |
 | `e2e` | full pipeline: GraphQL op → SPARQL → store → JSON | **golden files** (`expected.json` + `expected.sparql`) |
-| `evaluation` | full pipeline against a **real** triple store (GraphDB Free) | golden + scale (order-independent) |
+| `evaluation` | full pipeline against the **store matrix** | golden + scale (order-independent) |
 | `adapter` | framework adapter HTTP shim (FastAPI/Django) | inline; may reuse a golden case read-only |
 
 ## Fixtures: cases vs scenarios
@@ -80,21 +86,25 @@ Both satisfy the `CaseSource` Protocol, so the same `run_case` / `run_case_on_st
 
 > "pytest fixture" is never abbreviated to "fixture" in prose — that overloads the fixture-set meaning above.
 
-## Evaluation tier (real triple store)
+## Evaluation tier (the store matrix)
 
-`just eval` starts GraphDB Free via [testcontainers](https://testcontainers.com), creates one repository, and reuses the e2e golden cases — swapping `InMemoryStore` for the shipped `HttpxSparqlStore` (`fastshaql.stores.http`, `httpx` extra — test what we ship). Two axes:
+`just eval` runs the e2e golden cases and generated scenarios against a matrix of real triple stores via [testcontainers](https://testcontainers.com) — swapping `InMemoryStore` for the shipped `HttpxSparqlStore`. `EVAL_STORE` (comma-separated) selects the legs; the default is the license-free set (`oxigraph`, `fuseki`, `qlever`), with `graphdb` as the opt-in license-gated leg. Images, license tiers, and loading mechanics live with the adapters (`support/eval/*.py`) and are restated per run in the report's store table.
 
-- **parity** — real-store JSON == golden, compared order-independently via `support.goldens.canonicalize` (the outer query has no `ORDER BY`, so entity lists and multi-valued fields may permute — ADR-0010, ADR-0022).
-- **performance** — per-phase latency (translate / store / convert) and materialised row counts across each scenario's `sweep`; report-only (no thresholds), written to `evaluation-report.json` and rendered into the CI job summary.
+Two axes:
 
-The harness consumes the `StoreSession` Protocol (`support/eval/session.py`); `graphdb.py` is the GraphDB adapter. To add a store (e.g. QLever), implement `StoreSession` in a sibling module + a session-scoped fixture — runners and the report are store-agnostic. See [ADR-0022](../docs/adr/0022-evaluation-harness.md).
+- **parity** — real-store JSON == golden, compared order-independently via `support.goldens.canonicalize` (the outer query has no `ORDER BY`, so entity lists and multi-valued fields may permute — ADR-0010, ADR-0022). Outcomes land per case in the report's parity matrix.
+- **performance** — whole-operation latency per sample (`total` split into `core` and the translate / store / http / decode / convert phases; definitions in `support/eval/report.py`) and materialised row counts across each scenario's `sweep`, median + p95; report-only (no thresholds), written to `evaluation-report.json` and rendered into the CI job summary.
 
-Requires Docker **and a GraphDB license**. GraphDB 11+ needs a license even for the Free edition — request one at <https://graphdb.ontotext.com/>. GraphDB Free is the proprietary free tier (the community tier; "CE" is its pre-11.0 name): capped at two concurrent queries, one core, and five repositories — caps a serial harness never feels; clustering, enterprise security, and encryption are paid. Then:
+**Known divergences.** Comparison is never normalized — the matrix exists to surface portability gaps, not to be green everywhere. A store legitimately deviating on a case (e.g. the no-`FROM` default-graph contract, ADR-0011) gets an entry in `support/eval/divergences.py` (`KNOWN_DIVERGENCES`), which xfails that case at collection and records it as `divergence` in the report instead of `fail`. A healed divergence surfaces as XPASS.
+
+The harness consumes the `StoreSession` Protocol (`support/eval/session.py`); each adapter module owns its container lifecycle behind `start()` and is registered in `support/eval/stores.py` (`STORES`). To add a store: implement `StoreSession` in a sibling module, register a `StoreSpec` — runners, fixtures, and the report are store-agnostic. See [ADR-0022](../docs/adr/0022-evaluation-harness.md).
+
+The GraphDB Free leg additionally needs a license — GraphDB 11+ requires one even for the Free edition; request it at <https://graphdb.ontotext.com/>. GraphDB Free is the proprietary free tier (the community tier; "CE" is its pre-11.0 name): capped at two concurrent queries, one core, and five repositories — caps a serial harness never feels; clustering, enterprise security, and encryption are paid. Then:
 
 - drop the **verbatim** license file at `tests/tiers/evaluation/graphdb.license` (gitignored; or set `GRAPHDB_LICENSE_FILE`) — don't strip whitespace or reformat it, GraphDB validates the formatting strictly;
-- in CI it's the `GRAPHDB_LICENSE` secret (base64 of the binary file; the workflow decodes it to the path); when absent the run skips.
+- in CI it's the `GRAPHDB_LICENSE` secret (base64 of the binary file; the workflow decodes it to the path); when absent that matrix leg skips while the OSS legs run.
 
-Not PR-gated; nightly in CI ([.github/workflows/nightly.yml](../.github/workflows/nightly.yml)) plus `workflow_dispatch`.
+Nightly CI runs one job per store ([.github/workflows/nightly.yml](../.github/workflows/nightly.yml)), each uploading its own report artifact; also `workflow_dispatch`.
 
 ## Coverage
 

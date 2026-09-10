@@ -1,0 +1,21 @@
+# Recursive tree: ex:Node points at ex:Node via ex:hasChild, so the shape is
+# its own relationship target — nested selections regroup rows at every level.
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:NodeShape a sh:NodeShape ;
+    sh:codeIdentifier "Node" ;
+    sh:targetClass ex:Node ;
+    sh:property [
+        sh:path ex:label ;
+        sh:codeIdentifier "label" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:hasChild ;
+        sh:codeIdentifier "hasChild" ;
+        sh:class ex:Node ;
+    ] .

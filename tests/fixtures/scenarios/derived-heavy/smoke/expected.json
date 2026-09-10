@@ -1,0 +1,30 @@
+{
+  "data": {
+    "thing": [
+      {
+        "iri": "http://example.org/derived-heavy/e5c7e3ef28cc",
+        "givenName": "Given-e0",
+        "familyName": "Family-e0",
+        "shortName": "Short-e0",
+        "review": "review-e0",
+        "label": "Short-e0",
+        "fullName": "Given-e0 Family-e0",
+        "curationStatus": "curated",
+        "isReviewed": true,
+        "source": "Fastshaql"
+      },
+      {
+        "iri": "http://example.org/derived-heavy/6271b2a29c1f",
+        "givenName": "Given-e1",
+        "familyName": "Family-e1",
+        "shortName": "Short-e1",
+        "review": null,
+        "label": "Short-e1",
+        "fullName": "Given-e1 Family-e1",
+        "curationStatus": "unreviewed",
+        "isReviewed": false,
+        "source": "Fastshaql"
+      }
+    ]
+  }
+}

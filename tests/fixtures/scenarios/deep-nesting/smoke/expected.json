@@ -1,0 +1,116 @@
+{
+  "data": {
+    "node": [
+      {
+        "iri": "http://example.org/deep-nesting/6b76e8cdf33a",
+        "label": "label-e0-d0",
+        "hasChild": [
+          {
+            "iri": "http://example.org/deep-nesting/d4aced8f04fb",
+            "label": "label-e0-d1",
+            "hasChild": [
+              {
+                "iri": "http://example.org/deep-nesting/4fc9d3b0c83f",
+                "label": "label-e0-d2",
+                "hasChild": [
+                  {
+                    "iri": "http://example.org/deep-nesting/ec0cfa8fdd08",
+                    "label": "label-e0-d3"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/deep-nesting/d4aced8f04fb",
+        "label": "label-e0-d1",
+        "hasChild": [
+          {
+            "iri": "http://example.org/deep-nesting/4fc9d3b0c83f",
+            "label": "label-e0-d2",
+            "hasChild": [
+              {
+                "iri": "http://example.org/deep-nesting/ec0cfa8fdd08",
+                "label": "label-e0-d3",
+                "hasChild": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/deep-nesting/4fc9d3b0c83f",
+        "label": "label-e0-d2",
+        "hasChild": [
+          {
+            "iri": "http://example.org/deep-nesting/ec0cfa8fdd08",
+            "label": "label-e0-d3",
+            "hasChild": []
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/deep-nesting/ec0cfa8fdd08",
+        "label": "label-e0-d3",
+        "hasChild": []
+      },
+      {
+        "iri": "http://example.org/deep-nesting/c753a2aa666e",
+        "label": "label-e1-d0",
+        "hasChild": [
+          {
+            "iri": "http://example.org/deep-nesting/c450f7f9b2d7",
+            "label": "label-e1-d1",
+            "hasChild": [
+              {
+                "iri": "http://example.org/deep-nesting/b4a37395c71d",
+                "label": "label-e1-d2",
+                "hasChild": [
+                  {
+                    "iri": "http://example.org/deep-nesting/8fb034fbae28",
+                    "label": "label-e1-d3"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/deep-nesting/c450f7f9b2d7",
+        "label": "label-e1-d1",
+        "hasChild": [
+          {
+            "iri": "http://example.org/deep-nesting/b4a37395c71d",
+            "label": "label-e1-d2",
+            "hasChild": [
+              {
+                "iri": "http://example.org/deep-nesting/8fb034fbae28",
+                "label": "label-e1-d3",
+                "hasChild": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/deep-nesting/b4a37395c71d",
+        "label": "label-e1-d2",
+        "hasChild": [
+          {
+            "iri": "http://example.org/deep-nesting/8fb034fbae28",
+            "label": "label-e1-d3",
+            "hasChild": []
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/deep-nesting/8fb034fbae28",
+        "label": "label-e1-d3",
+        "hasChild": []
+      }
+    ]
+  }
+}

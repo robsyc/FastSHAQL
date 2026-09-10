@@ -2,7 +2,8 @@
 
 Each scenario's small-scale anchor data is validated against its committed
 ``expected.json`` via the in-memory store — the correctness floor for generated
-data. Full-scale parity/perf against GraphDB lives in ``tests/tiers/evaluation/``.
+data. Full-scale parity/perf against the store matrix lives in
+``tests/tiers/evaluation/``.
 """
 
 from __future__ import annotations

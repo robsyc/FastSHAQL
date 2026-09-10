@@ -15,7 +15,7 @@ just hooks  # install the git hooks (lefthook; see lefthook.yml)
 
 All tasks are [just](https://github.com/casey/just) recipes — **run `just` to list them and use them consistently** (each recipe carries its own doc comment in the justfile); `just ci` is the pre-push gate. Policy the recipes can't tell you:
 
-- `just eval` needs Docker **and a GraphDB license**; otherwise the tier is silently skipped (details in [tests/README.md](tests/README.md)).
+- `just eval` needs Docker — the license-free store matrix runs for any contributor; the `graphdb` leg (include it via `EVAL_STORE`) additionally needs a GraphDB license, else it skips (details in [tests/README.md](tests/README.md)). Note `EVAL_STORE=graphdb` *replaces* the default set, it doesn't add to it.
 - `just complexity` ratchets cognitive complexity against the committed `complexipy-snapshot.json`; a *passing* run rewrites the snapshot (auto-shrink) — accept an intentional increase with `just complexity-update`.
 - `just mutate` gates on the committed mutation-score floor (`mutmut-floor.json`); the run is incremental from the cached `mutants/` directory. mutmut 3.x's copy step never deletes files removed from the source, so a stale `mutants/` tree can poison a fresh run — `just mutate-clean` is the complete reset. After adding tests, only a full run yields truthful stats, and a plain `mutmut run` may return the *previous* run's results verbatim ("0.00 mutations/second") without noticing the new tests — run `just mutate-clean` whenever the score must reflect current tests.
 
@@ -53,7 +53,7 @@ The codebase maps directly to external specifications (SHACL 1.2, SPARQL 1.2, Gr
 
 ## Testing
 
-`just test` runs the default suite; a single tier: `just test -m e2e`. The triple-store evaluation tier (`just eval`) requires Docker and a license — see below.
+`just test` runs the default suite; a single tier: `just test -m e2e`. The store-matrix evaluation tier (`just eval`) requires Docker; a license only for the GraphDB Free leg.
 
 The full test reference — directory layout, the tier model, fixtures (cases vs scenarios), the evaluation harness, the `demo/`↔`tests/` boundary, and coverage mechanics — lives in [tests/README.md](tests/README.md). Tier markers are auto-stamped from the test directory, and coverage runs in CI with branch coverage.
 
@@ -67,7 +67,7 @@ The deliverable is **100% accounted-for, not 100% executed**: every uncovered li
 
 ## CI
 
-CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same `just` recipes you run locally: each job installs the shared toolchain via a local composite action ([.github/actions/toolchain](.github/actions/toolchain/action.yml)) — uv and just versions come from [.tool-versions](.tool-versions), the single source of truth — then invokes `just <recipe>`; workflows only pick recipes and carry glue (artifacts). Nightly ([nightly.yml](.github/workflows/nightly.yml)): triple-store evaluation (GraphDB community), advisory preview-lint drift, and the mutation score floor; its `badges` job regenerates the coverage/mutants/complexity endpoint badges and pushes them to the `badges` branch.
+CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same `just` recipes you run locally: each job installs the shared toolchain via a local composite action ([.github/actions/toolchain](.github/actions/toolchain/action.yml)) — uv and just versions come from [.tool-versions](.tool-versions), the single source of truth — then invokes `just <recipe>`; workflows only pick recipes and carry glue (artifacts). Nightly ([nightly.yml](.github/workflows/nightly.yml)): store-matrix evaluation (one job per store), advisory preview-lint drift, and the mutation score floor; its `badges` job regenerates the coverage/mutants/complexity endpoint badges and pushes them to the `badges` branch.
 
 ## Demo / benchmarking environment
 
