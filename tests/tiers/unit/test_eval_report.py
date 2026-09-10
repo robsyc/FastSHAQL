@@ -183,8 +183,19 @@ def test_load_json_rejects_foreign_version(tmp_path) -> None:
         EvalReport.load_json(path)
 
 
-def test_get_report_reads_commit_from_environment(monkeypatch) -> None:
+def test_get_report_commit_prefers_github_sha(monkeypatch) -> None:
     reset_report()
+    monkeypatch.setenv("GITHUB_SHA", "feed1234")
+    monkeypatch.setenv("EVAL_COMMIT", "deadbeef00")
+    from support.eval.report import get_report
+
+    assert get_report().commit == "feed1234"
+    reset_report()
+
+
+def test_get_report_commit_falls_back_to_eval_commit(monkeypatch) -> None:
+    reset_report()
+    monkeypatch.delenv("GITHUB_SHA", raising=False)
     monkeypatch.setenv("EVAL_COMMIT", "feed1234")
     from support.eval.report import get_report
 
