@@ -32,7 +32,13 @@ from typing import TYPE_CHECKING
 import httpx
 from rdflib import ConjunctiveGraph
 
-from support.eval.session import StoreSession, poll_until
+from support.eval.session import (
+    StoreSession,
+    poll_until,
+    sparql_triple_count,
+    triple_total,
+    verify_loaded,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -112,6 +118,13 @@ class QleverSession(StoreSession):
             timeout=60,
             what="qlever server",
         )
+        # Union default graph = the whole rebuilt index, so the plain COUNT
+        # must equal the quads written (each quad is one index entry).
+        verify_loaded(
+            "qlever",
+            triple_total(graph),
+            sparql_triple_count(self._client, self.query_endpoint),
+        )
 
     def close(self) -> None:
         """Close the long-lived HTTP client (call from the session teardown)."""
@@ -144,10 +157,14 @@ def start() -> Iterator[QleverSession]:
                 f"http://{container.get_container_host_ip()}"
                 f":{container.get_exposed_port(7001)}/"
             )
-            yield QleverSession(
+            session = QleverSession(
                 container=container,
                 data_dir=data_dir,
                 query_endpoint=query_endpoint,
             )
+            try:
+                yield session
+            finally:
+                session.close()
         finally:
             container.stop()

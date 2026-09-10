@@ -22,7 +22,13 @@ from typing import TYPE_CHECKING
 
 import httpx
 
-from support.eval.session import StoreSession, check, gsp_payloads
+from support.eval.session import (
+    StoreSession,
+    check,
+    gsp_payloads,
+    gsp_triple_count,
+    verify_loaded,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -51,13 +57,18 @@ class FusekiSession(StoreSession):
             f"{self.base_url}/mem/update", data={"update": "DROP SILENT ALL"}
         )
         check(response)
-        for target, turtle in gsp_payloads(graph):
+        for target, turtle, expected in gsp_payloads(graph):
             response = self._client.put(
                 f"{self.base_url}/mem/data?{target}",
                 content=turtle.encode(),
                 headers={"Content-Type": "text/turtle"},
             )
             check(response)
+            verify_loaded(
+                "fuseki",
+                expected,
+                gsp_triple_count(self._client, f"{self.base_url}/mem/data", target),
+            )
 
     def close(self) -> None:
         """Close the long-lived HTTP client (call from the session teardown)."""
@@ -84,6 +95,12 @@ def start() -> Iterator[FusekiSession]:
             f"http://{container.get_container_host_ip()}"
             f":{container.get_exposed_port(3030)}"
         )
-        yield FusekiSession(base_url=base_url, query_endpoint=f"{base_url}/mem/query")
+        session = FusekiSession(
+            base_url=base_url, query_endpoint=f"{base_url}/mem/query"
+        )
+        try:
+            yield session
+        finally:
+            session.close()
     finally:
         container.stop()

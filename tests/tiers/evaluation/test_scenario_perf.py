@@ -92,7 +92,7 @@ async def _sample_flow(
             samples["total"].append(wall_ms)
             # Residual per sample (not difference of percentiles): graphql-core
             # parse/validate/resolve-dispatch/format around execute_query.
-            samples["core"].append(wall_ms - metrics.total_ms)
+            samples["core"].append(wall_ms - metrics.execute_ms)
             samples["translate"].append(metrics.translate_ms)
             # The store round trip window: rdflib execution for the in-memory
             # baseline, http+decode for HTTP stores.

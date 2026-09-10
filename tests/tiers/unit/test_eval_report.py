@@ -155,6 +155,34 @@ def test_render_markdown_perf_without_parity() -> None:
     assert "_No perf data recorded._" not in md
 
 
+def test_render_markdown_perf_shows_scenario_notes() -> None:
+    """A registered scenario's notes render under its heading (CI summaries
+    are self-describing); fabricated names render bare."""
+    from support.scenarios import SCENARIOS
+
+    report = EvalReport()
+    report.add_perf(
+        store="in-memory",
+        scenario="cartesian",
+        scale="N10",
+        rows=1,
+        entities=1,
+        phases=_flat_phases(),
+    )
+    md = render_markdown(report)
+    assert f"*{SCENARIOS['cartesian'].notes}*" in md
+
+    report.add_perf(
+        store="in-memory",
+        scenario="stub-scenario",
+        scale="N10",
+        rows=1,
+        entities=1,
+        phases=_flat_phases(),
+    )
+    assert "### stub-scenario" in render_markdown(report)
+
+
 def test_report_roundtrip_json(tmp_path) -> None:
     report = _perf_report()
     path = tmp_path / "report.json"
@@ -174,6 +202,13 @@ def test_report_roundtrip_json(tmp_path) -> None:
     ]
     assert loaded.perf[0].timings_ms.store == PercentileTimings(p50=8.0, p95=9.5)
     assert loaded.perf[0].timings_ms.http == PercentileTimings(p50=5.0, p95=6.0)
+
+
+def test_report_roundtrip_empty_report(tmp_path) -> None:
+    """A run where nothing recorded (every leg skipped) still round-trips."""
+    path = tmp_path / "report.json"
+    EvalReport().write_json(path)
+    assert EvalReport.load_json(path) == EvalReport()
 
 
 def test_load_json_rejects_foreign_version(tmp_path) -> None:

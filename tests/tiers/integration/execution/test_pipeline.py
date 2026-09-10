@@ -128,8 +128,8 @@ async def test_execute_records_metrics_when_attached(
     assert metrics.translate_ms > 0.0
     assert metrics.store_ms > 0.0
     assert metrics.convert_ms > 0.0
-    # total_ms wraps the whole call: the phases are contained in it.
-    assert metrics.total_ms >= (
+    # execute_ms wraps the whole call: the phases are contained in it.
+    assert metrics.execute_ms >= (
         metrics.translate_ms + metrics.store_ms + metrics.convert_ms
     )
 
@@ -210,6 +210,31 @@ async def test_execute_legacy_store_with_metrics_raises_typeerror(
     )
     with pytest.raises(TypeError, match="unexpected keyword argument 'metrics'"):
         await execute_query(shape, field_node, minimal_registry, ctx)
+
+
+async def test_execute_query_touches_no_clock_without_metrics(
+    minimal_registry: ShapeRegistry,
+    minimal_data_graph: Graph,
+    monkeypatch,
+) -> None:
+    """The production path (metrics absent) makes no ``perf_counter`` calls —
+    ``timed``'s documented overhead guarantee, enforced."""
+    from types import SimpleNamespace
+
+    import fastshaql.core.execution.store as store_module
+    from fastshaql.core.execution import ResolverContext, execute_query
+    from support.graphql_utils import root_field_node, shape_for_root_field
+
+    def _no_clock(*_args: object) -> float:
+        raise AssertionError("perf_counter called with metrics absent")
+
+    monkeypatch.setattr(store_module, "time", SimpleNamespace(perf_counter=_no_clock))
+
+    field_node = root_field_node("{ thing { label } }")
+    shape = shape_for_root_field(minimal_registry, field_node.name.value)
+    ctx = ResolverContext(store=InMemoryStore(minimal_data_graph))
+    result = await execute_query(shape, field_node, minimal_registry, ctx)
+    assert [row["label"] for row in result] == ["Alpha", "Beta"]
 
 
 async def test_execute_query_context_lang_no_match_drops_field_keeps_entity(

@@ -76,7 +76,16 @@ DEFAULT_STORES = ("oxigraph", "fuseki", "qlever")
 def selected_stores() -> tuple[StoreSpec, ...]:
     """Parse ``EVAL_STORE`` into specs; the default is the license-free set."""
     raw = os.environ.get("EVAL_STORE", ",".join(DEFAULT_STORES))
-    names = [name.strip() for name in raw.split(",") if name.strip()]
+    # dict.fromkeys: order-preserving dedup — a repeated name would otherwise
+    # run (and containerize) the same leg twice.
+    names = list(dict.fromkeys(name.strip() for name in raw.split(",") if name.strip()))
+    if not names:
+        # An explicit-but-empty selection must not collect zero tests and
+        # look green — fail the run instead.
+        raise SystemExit(
+            f"EVAL_STORE={raw!r} selects no stores; unset it for the default "
+            f"set ({', '.join(DEFAULT_STORES)}) or name stores explicitly"
+        )
     unknown = [name for name in names if name not in STORES]
     if unknown:
         known = ", ".join(sorted(STORES))

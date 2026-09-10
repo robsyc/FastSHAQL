@@ -125,8 +125,8 @@ CARTESIAN = Scenario(
     anchor_scale=Scale({"entities": 1, "multi_value": 2}, "anchor"),
     notes=(
         "Exercises cross-product row explosion with dedup coercion (ADR-0014); "
-        "scale axis multi_value (per-entity row count K^4); expected degradation "
-        "superlinear in materialized row count."
+        "scale axis entities/multi_value (per-entity row count K^4); expected "
+        "degradation superlinear in materialized row count."
     ),
     sweep=(
         Scale({"entities": 10, "multi_value": 2}, "N10-K2"),
@@ -239,10 +239,10 @@ DERIVED_HEAVY = Scenario(
 
 # ---------------------------------------------------------------------------
 # Lang-multiplicity scenario. One langString title per document per language
-# (en, nl, fr, ... up to ``langs``); the smoke case resolves through the
-# [en, nl, ""] preference chain. ``langs`` is the axis: every step of the chain
-# is another OPTIONAL+FILTER per field, so chain-resolution cost grows with the
-# language multiplicity of the underlying literals.
+# (en, nl, fr, ... up to ``langs``). Every doc carries @en, so the lowered
+# [en, nl, ""] chain always resolves at step 1 — the axis is not which step
+# wins but how many literals each step's OPTIONAL+FILTER scans; fallback
+# correctness is the hand-authored language case set's job.
 # ---------------------------------------------------------------------------
 
 _LANG_MULTIPLICITY_NS = "http://example.org/lang-multiplicity/"
@@ -253,6 +253,13 @@ _LANG_MULTIPLICITY_LANGS = ("en", "nl", "fr", "de", "es", "it", "pt", "sv")
 
 
 def _emit_lang_multiplicity_data(*, entities: int, langs: int, seed: int = 0) -> str:
+    # Loud, not clamping: a sweep labelled L16 silently measuring L8 (the pool
+    # size) would defeat the scenario's axis. The CLI mirrors this bound.
+    if not 1 <= langs <= len(_LANG_MULTIPLICITY_LANGS):
+        raise ValueError(
+            f"langs must be within the 1..{len(_LANG_MULTIPLICITY_LANGS)} tag pool, "
+            f"got {langs}"
+        )
     lines = ["@prefix ex: <http://example.org/> .\n\n"]
     for i in range(entities):
         doc = f"<{_mint_iri(_LANG_MULTIPLICITY_NS, seed, 'doc', str(i))}>"
@@ -274,10 +281,11 @@ LANG_MULTIPLICITY = Scenario(
     generator=_generate_lang_multiplicity,
     anchor_scale=Scale({"entities": 2, "langs": 2}, "anchor"),
     notes=(
-        "Exercises language-preference-chain lowering — each chain step is "
-        "another OPTIONAL+FILTER over the literal multiplicity (the ROADMAP "
-        "chain-efficiency prerequisite); scale axis langs; expected "
-        "degradation chain-resolution cost growing with multiplicity."
+        "Exercises language-preference-chain lowering — every doc carries @en, "
+        "so resolution wins at chain step 1 while the later steps' "
+        "OPTIONAL+FILTER still scan the literal multiplicity (the ROADMAP "
+        "chain-efficiency prerequisite; fallback correctness is the language "
+        "case set's job); scale axis langs/entities."
     ),
     sweep=(
         Scale({"entities": 100, "langs": 2}, "N100-L2"),
@@ -290,9 +298,10 @@ LANG_MULTIPLICITY = Scenario(
 
 # ---------------------------------------------------------------------------
 # Wide-results scenario. Rows with ten selected fields (eight single-valued
-# scalars, a two-value tag list, a two-part relationship) so the decoded SPARQL
-# row is wide before it is tall. Entities is the axis with parts pinned at 2 —
-# decode/convert cost should track row count (entities x parts) at fixed width.
+# scalars, a two-value tag list, a parameterized part relationship) so the
+# decoded SPARQL row is wide before it is tall. Entities is the axis with parts
+# pinned at 2 — decode/convert cost should track row count (entities x 2 tags
+# x parts) at fixed width.
 # ---------------------------------------------------------------------------
 
 _WIDE_RESULTS_NS = "http://example.org/wide-results/"

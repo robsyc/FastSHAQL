@@ -21,9 +21,9 @@ from typing import TYPE_CHECKING
 
 import httpx
 import pytest
-from rdflib import ConjunctiveGraph, Graph
+from rdflib import ConjunctiveGraph, Dataset, Graph
 
-from support.eval.session import StoreSession, check
+from support.eval.session import StoreSession, check, triple_total, verify_loaded
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -38,6 +38,9 @@ REPO_CONFIG_TTL = f"""\
 @prefix sail: <http://www.openrdf.org/config/sail#>.
 @prefix graphdb: <http://www.ontotext.com/config/graphdb#>.
 
+# ruleset "empty" — no entailment: every leg runs plain SPARQL 1.1 semantics
+# (ADR-0022). An inferencing ruleset materializes extra triples the
+# rdflib-validated goldens never see, and inflates the load read-back count.
 [] a rep:Repository ;
     rep:repositoryID "{REPO_ID}" ;
     rdfs:label "fastshaql evaluation" ;
@@ -46,7 +49,7 @@ REPO_CONFIG_TTL = f"""\
         sr:sailImpl [
             sail:sailType "graphdb:Sail" ;
             graphdb:repository-type "file-repository" ;
-            graphdb:ruleset "rdfsplus-optimized" ;
+            graphdb:ruleset "empty" ;
             graphdb:storage-folder "storage" ;
             graphdb:base-URL "http://example.org/owlim#" ;
             graphdb:entity-id-size "32" ;
@@ -95,6 +98,19 @@ class GraphDbSession(StoreSession):
             headers={"Content-Type": content_type},
         )
         check(response)
+        # Read the repository back and count: the statements endpoint has no
+        # per-graph addressing, so the whole-repository TriG round trip is the
+        # countable unit. Exact equality — the rdfsplus-optimized ruleset only
+        # ever inflates it (entailed triples), and only if a case loads schema
+        # triples, which none do today; an inflation failure is the signal.
+        readback = self._client.get(
+            f"{self.base_url}/repositories/{REPO_ID}/statements",
+            headers={"Accept": "application/x-trig"},
+        )
+        check(readback)
+        loaded = Dataset()
+        loaded.parse(data=readback.text, format="trig")
+        verify_loaded("graphdb", triple_total(graph), triple_total(loaded))
 
     def close(self) -> None:
         """Close the long-lived HTTP client (call from the session fixture teardown)."""

@@ -160,6 +160,34 @@ async def test_http_ms_recorded_on_error_response(monkeypatch) -> None:
     assert metrics.decode_ms == 0.0
 
 
+async def test_no_clock_calls_without_metrics(monkeypatch) -> None:
+    """The production path (metrics absent) touches no clock at all — the
+    overhead guarantee, enforced: any unconditional ``perf_counter`` in the
+    store path fails this test loudly."""
+    from types import SimpleNamespace
+
+    import fastshaql.stores.http as http_module
+
+    def _no_clock(*_args: object) -> float:
+        raise AssertionError("perf_counter called with metrics absent")
+
+    monkeypatch.setattr(http_module, "time", SimpleNamespace(perf_counter=_no_clock))
+
+    def handler(_request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            content=b'{"results": {"bindings": []}}',
+            headers={"Content-Type": "application/sparql-results+json"},
+        )
+
+    transport = httpx.MockTransport(handler)
+    async with httpx.AsyncClient(transport=transport, base_url="http://stub") as client:
+        store = HttpxSparqlStore(client, "http://stub/sparql")
+        rows = await store.query("SELECT ?s WHERE { ?s ?p ?o }")  # no metrics
+
+    assert rows == []
+
+
 def test_timed_records_phase_when_body_raises(monkeypatch) -> None:
     # ``timed``'s try/finally still accounts the phase as the exception
     # unwinds — a failing store round trip keeps its ``store_ms``. Same

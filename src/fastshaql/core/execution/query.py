@@ -41,7 +41,7 @@ async def execute_query(
     """
     metrics = context.metrics
 
-    with timed(metrics, "total_ms"):
+    with timed(metrics, "execute_ms"):
         with timed(metrics, "translate_ms"):
             result = translate_query(
                 shape,

@@ -177,6 +177,30 @@ async def test_check_parity_set_level_divergence_fallback(monkeypatch) -> None:
     ]
 
 
+async def test_check_parity_case_level_entry_outranks_set_level(monkeypatch) -> None:
+    """Both a case-level and a set-level entry registered — case-level wins."""
+    monkeypatch.setattr(
+        "support.eval.parity.KNOWN_DIVERGENCES",
+        {
+            ("stub", "stub-cases", "a"): Divergence(reason="case-level reason"),
+            ("stub", "stub-cases", None): Divergence(reason="set-level reason"),
+        },
+    )
+    monkeypatch.setattr(
+        "support.eval.parity.run_case_on_store",
+        _fake_runner({"a": AssertionError("golden mismatch")}),
+    )
+
+    with pytest.raises(AssertionError):
+        await check_parity(
+            _SPEC, _StubSession(), _StubStore(), _StubSource(), ("a",), Graph()
+        )
+
+    assert get_report().parity == [
+        ParityRow("stub", "stub-cases", "a", "divergence", reason="case-level reason")
+    ]
+
+
 async def test_check_parity_infra_fault_propagates_unrecorded(monkeypatch) -> None:
     """Non-AssertionError faults are pytest errors — never divergence/fail rows."""
     monkeypatch.setattr("support.eval.parity.KNOWN_DIVERGENCES", {})

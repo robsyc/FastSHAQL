@@ -211,6 +211,21 @@ def _pair(timings: PercentileTimings) -> str:
     return f"{timings.p50:.1f}/{timings.p95:.1f}"
 
 
+def _scenario_notes(name: str) -> str:
+    """Prose notes for a scenario heading, when the registry is importable.
+
+    Lazy import: this module doubles as a standalone CLI (``just
+    eval-report``) where the ``support`` package may be off ``sys.path`` —
+    notes are prose, so the CLI renders fine without them.
+    """
+    try:
+        from support.scenarios import SCENARIOS
+    except ImportError:
+        return ""
+    scenario = SCENARIOS.get(name)
+    return scenario.notes if scenario is not None else ""
+
+
 def _render_stores(report: EvalReport) -> list[str]:
     lines = ["### Stores", ""]
     if not report.stores:
@@ -265,10 +280,12 @@ def _render_perf(report: EvalReport) -> list[str]:
     # ONE cross-store table. sorted() is stable — stores keep arrival order.
     ordered = sorted(report.perf, key=lambda row: row.scenario)
     for scenario, rows in itertools.groupby(ordered, key=lambda row: row.scenario):
+        lines.extend([f"### {scenario}", ""])
+        notes = _scenario_notes(scenario)
+        if notes:
+            lines.extend([f"*{notes}*", ""])
         lines.extend(
             [
-                f"### {scenario}",
-                "",
                 (
                     "| store | scale | rows | entities | total | core | translate "
                     "| store | http | decode | convert |"

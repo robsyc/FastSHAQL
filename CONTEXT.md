@@ -210,7 +210,7 @@ An IRI-identified graph, reachable only via `GRAPH` (fed by `FROM NAMED`).
 A `FROM <iri>` or `FROM NAMED <iri>` clause on a top-level SELECT; fastshaql emits `FROM` only, from `QueryContext.read_graphs`.
 
 **No-`FROM` default graph**:
-Store-defined, not spec-mandated, across three arrangements: truly-unnamed-only; union of the named graphs; or a union that also includes the unnamed graph (rdflib `default_union`, GraphDB, Oxigraph's opt-in knob) — while Jena's union excludes the stored unnamed graph (reachable there only as `urn:x-arq:DefaultGraph`). Explicit `FROM` is identical under all of them — why it remains the portable form (ADR-0011).
+Store-defined, not spec-mandated, across three arrangements: truly-unnamed-only; union of the named graphs; or a union that also includes the unnamed graph (rdflib `default_union`, GraphDB, QLever, Oxigraph's opt-in knob) — while Jena's union excludes the stored unnamed graph (reachable there only as `urn:x-arq:DefaultGraph`). Explicit `FROM` is identical under all of them — why it remains the portable form (ADR-0011).
 
 **Active graph**:
 The graph a basic pattern matches against (SPARQL §18.1) — initially the default graph; `GRAPH` switches it.

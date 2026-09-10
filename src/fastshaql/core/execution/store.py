@@ -122,7 +122,7 @@ class InMemoryStore(SparqlStore):
 class ExecutionMetrics:
     """Opt-in phase timings for profiling, one object per ResolverContext.
 
-    ``execute_query`` fills ``total_ms`` (its whole wall clock) plus the
+    ``execute_query`` fills ``execute_ms`` (its whole wall clock) plus the
     ``translate_ms`` / ``store_ms`` / ``convert_ms`` phases; a store that
     accepts *metrics* splits ``store_ms`` into ``http_ms`` (transport round
     trip) and ``decode_ms`` (results-JSON decode). Phases are recorded when
@@ -132,11 +132,11 @@ class ExecutionMetrics:
     One ``ResolverContext`` serves an entire operation: each root field's
     ``execute_query`` overwrites the previous values, so the numbers describe
     the last root field resolved. The graphql-core share of a single-field
-    operation is the residual: ``graphql()`` wall clock minus ``total_ms``.
+    operation is the residual: ``graphql()`` wall clock minus ``execute_ms``.
     Attach via ``ResolverContext.metrics``; ``None`` in production.
     """
 
-    total_ms: float = 0.0
+    execute_ms: float = 0.0
     translate_ms: float = 0.0
     store_ms: float = 0.0
     convert_ms: float = 0.0
