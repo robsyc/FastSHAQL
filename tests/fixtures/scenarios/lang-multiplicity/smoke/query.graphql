@@ -1,0 +1,6 @@
+query LangMultiplicity {
+  doc {
+    iri
+    title
+  }
+}

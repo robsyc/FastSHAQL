@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate ``data.ttl`` for the cartesian scenario.
 
-Default parameters match the committed correctness anchor
+Default parameters are derived from the committed correctness anchor
 (``smoke/expected.json``). Larger scales are for manual perf runs against a real
 triple store — the evaluation harness generates data in-memory via
 ``CARTESIAN.data_at`` instead.
@@ -29,10 +29,16 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description="Generate cartesian scenario data")
     parser.add_argument(
-        "--entities", type=int, default=1, help="Number of Thing entities"
+        "--entities",
+        type=int,
+        default=CARTESIAN.anchor_scale.params["entities"],
+        help="Number of Thing entities",
     )
     parser.add_argument(
-        "--multi-value", type=int, default=2, help="Values per multi-valued field"
+        "--multi-value",
+        type=int,
+        default=CARTESIAN.anchor_scale.params["multi_value"],
+        help="Values per multi-valued field",
     )
     parser.add_argument("--seed", type=int, default=0, help="IRI minting seed")
     parser.add_argument(
@@ -48,7 +54,12 @@ def main() -> None:
         parser.error("--multi-value must be >= 1")
 
     scale = Scale(
-        {"entities": args.entities, "multi_value": args.multi_value, "seed": args.seed},
+        {
+            **CARTESIAN.anchor_scale.params,
+            "entities": args.entities,
+            "multi_value": args.multi_value,
+            "seed": args.seed,
+        },
         f"cli-N{args.entities}-K{args.multi_value}",
     )
     args.output.write_text(CARTESIAN.generator(scale), encoding="utf-8")

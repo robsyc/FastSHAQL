@@ -1,0 +1,14 @@
+{
+  "data": {
+    "doc": [
+      {
+        "iri": "http://example.org/lang-multiplicity/b8879257fb2c",
+        "title": "Title-e0-en"
+      },
+      {
+        "iri": "http://example.org/lang-multiplicity/c34e161dd909",
+        "title": "Title-e1-en"
+      }
+    ]
+  }
+}

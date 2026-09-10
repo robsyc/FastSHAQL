@@ -19,7 +19,7 @@ from support.graphql_utils import root_field_node, shape_for_root_field
 if TYPE_CHECKING:
     from rdflib import Graph
 
-    from fastshaql.core.execution.store import SparqlRow, SparqlStore
+    from fastshaql.core.execution.store import ExecutionMetrics, SparqlRow, SparqlStore
     from fastshaql.core.ir import NodeShapeIR
     from fastshaql.core.registry import ShapeRegistry
     from fastshaql.core.translation.variables import TranslationResult
@@ -46,9 +46,11 @@ class RecordingStore:
         self.queries: list[str] = []
         self.total_rows: int = 0
 
-    async def query(self, sparql: str) -> list[SparqlRow]:
+    async def query(
+        self, sparql: str, metrics: ExecutionMetrics | None = None
+    ) -> list[SparqlRow]:
         self.queries.append(sparql)
-        rows = await self._inner.query(sparql)
+        rows = await self._inner.query(sparql, metrics=metrics)
         self.total_rows += len(rows)
         return rows
 

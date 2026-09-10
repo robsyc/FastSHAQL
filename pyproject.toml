@@ -52,7 +52,7 @@ dev = [
     "ruff>=0.15",
     "ty>=0.0.42",
     "cffconvert>=2.0.0",
-    "testcontainers>=4.9",
+    "testcontainers>=4.9,<5",
     "markdownify>=1.0",
     "beautifulsoup4>=4.12",
     "complexipy>=7.0.1",
@@ -144,7 +144,7 @@ ignore = [
 "tests/support/import_guard.py" = ["T20"]                   # check-script CLI output
 "tests/support/mutation/floor.py" = ["T20"]                 # CLI output
 "tests/support/architecture/module_graph.py" = ["T20"]      # CLI output
-"tests/fixtures/scenarios/cartesian/generate.py" = ["T20"]  # generator CLI output
+"tests/fixtures/scenarios/*/generate.py" = ["T20"]          # generator CLI output
 "src/fastshaql/adapters/**" = ["ARG002"]                    # framework-mandated view signatures
 
 [tool.ruff.lint.mccabe]
@@ -212,6 +212,6 @@ markers = [
     "unit: single-stage tests with programmatic/inline inputs (auto-marked by directory)",
     "integration: multi-stage tests composing real fixture inputs (auto-marked by directory)",
     "e2e: full-pipeline golden tests (query.graphql + expected.json + expected.sparql) (auto-marked by directory)",
-    "evaluation: full-pipeline tests against a real triple store (GraphDB CE via testcontainers)",
+    "evaluation: full-pipeline tests against the store matrix via testcontainers (auto-marked by directory)",
     "adapter: framework adapter HTTP-contract tests (auto-marked by directory)",
 ]

@@ -1,0 +1,94 @@
+# Wide-result fixture: every row projects ten fields (eight single-valued
+# scalars, a tag list, a two-scalar relationship) — a row wide before it is
+# tall, probing decode/convert cost at fixed width and growing row count.
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:PartShape a sh:NodeShape ;
+    sh:codeIdentifier "Part" ;
+    sh:targetClass ex:Part ;
+    sh:property [
+        sh:path ex:partCode ;
+        sh:codeIdentifier "partCode" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:partName ;
+        sh:codeIdentifier "partName" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] .
+
+ex:RowShape a sh:NodeShape ;
+    sh:codeIdentifier "Row" ;
+    sh:targetClass ex:Row ;
+    sh:property [
+        sh:path ex:code ;
+        sh:codeIdentifier "code" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:name ;
+        sh:codeIdentifier "name" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:description ;
+        sh:codeIdentifier "description" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:category ;
+        sh:codeIdentifier "category" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:quantity ;
+        sh:codeIdentifier "quantity" ;
+        sh:datatype xsd:integer ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:sequence ;
+        sh:codeIdentifier "sequence" ;
+        sh:datatype xsd:integer ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:weight ;
+        sh:codeIdentifier "weight" ;
+        sh:datatype xsd:integer ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:version ;
+        sh:codeIdentifier "version" ;
+        sh:datatype xsd:integer ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:tag ;
+        sh:codeIdentifier "tag" ;
+        sh:datatype xsd:string ;
+    ] ;
+    sh:property [
+        sh:path ex:hasPart ;
+        sh:codeIdentifier "hasPart" ;
+        sh:class ex:Part ;
+    ] .

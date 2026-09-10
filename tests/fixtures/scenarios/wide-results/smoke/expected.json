@@ -1,0 +1,72 @@
+{
+  "data": {
+    "row": [
+      {
+        "iri": "http://example.org/wide-results/8a21d1a92368",
+        "code": "code-e0",
+        "name": "name-e0",
+        "description": "description-e0",
+        "category": "category-e0",
+        "quantity": 0,
+        "sequence": 0,
+        "weight": 0,
+        "version": 0,
+        "tag": [
+          "tag-e0-a",
+          "tag-e0-b"
+        ],
+        "hasPart": [
+          {
+            "iri": "http://example.org/wide-results/98461e77ed09",
+            "partCode": "part-e0-0",
+            "partName": "Part-name-e0-0"
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/wide-results/71b60b363863",
+        "code": "code-e1",
+        "name": "name-e1",
+        "description": "description-e1",
+        "category": "category-e1",
+        "quantity": 1,
+        "sequence": 1,
+        "weight": 1,
+        "version": 1,
+        "tag": [
+          "tag-e1-a",
+          "tag-e1-b"
+        ],
+        "hasPart": [
+          {
+            "iri": "http://example.org/wide-results/720a807ce42b",
+            "partCode": "part-e1-0",
+            "partName": "Part-name-e1-0"
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/wide-results/3684c846d2b2",
+        "code": "code-e2",
+        "name": "name-e2",
+        "description": "description-e2",
+        "category": "category-e2",
+        "quantity": 2,
+        "sequence": 2,
+        "weight": 2,
+        "version": 2,
+        "tag": [
+          "tag-e2-a",
+          "tag-e2-b"
+        ],
+        "hasPart": [
+          {
+            "iri": "http://example.org/wide-results/d9fa3f9a0906",
+            "partCode": "part-e2-0",
+            "partName": "Part-name-e2-0"
+          }
+        ]
+      }
+    ]
+  }
+}

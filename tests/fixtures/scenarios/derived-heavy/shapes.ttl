@@ -1,0 +1,102 @@
+# Derived-field density (ADR-0015): five sh:values derivations over four
+# asserted scalars, all flat tier — pathValues lookup, CONCAT select, if/exists,
+# exists boolean, constant. Namespace conventions mirror the derived and
+# node_expr case sets (shnex: for node expressions, sh:prefixes for selects).
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
+@prefix ex: <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:prefixes a sh:ShapesGraph ;
+    sh:declare [
+        sh:prefix "ex" ;
+        sh:namespace "http://example.org/" ;
+    ] .
+
+ex:ThingShape a sh:NodeShape ;
+    sh:codeIdentifier "Thing" ;
+    sh:targetClass ex:Thing ;
+    sh:property [
+        sh:path ex:givenName ;
+        sh:codeIdentifier "givenName" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:familyName ;
+        sh:codeIdentifier "familyName" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:shortName ;
+        sh:codeIdentifier "shortName" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:review ;
+        sh:codeIdentifier "review" ;
+        sh:datatype xsd:string ;
+        sh:minCount 0 ;
+        sh:maxCount 1 ;
+    ] ;
+    sh:property [
+        sh:path ex:label ;
+        sh:codeIdentifier "label" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:values [ shnex:pathValues ex:shortName ] ;
+    ] ;
+    sh:property [
+        sh:path ex:fullName ;
+        sh:codeIdentifier "fullName" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:values [
+            sh:prefixes ex:prefixes ;
+            sh:select """
+                SELECT ?fullName
+                WHERE {
+                    $this ex:givenName ?given .
+                    $this ex:familyName ?family .
+                    BIND(CONCAT(?given, " ", ?family) AS ?fullName)
+                }
+            """ ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path ex:curationStatus ;
+        sh:codeIdentifier "curationStatus" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:values [
+            shnex:if [
+                shnex:exists [ shnex:pathValues ex:review ] ;
+            ] ;
+            shnex:then "curated" ;
+            shnex:else "unreviewed" ;
+        ] ;
+    ] ;
+    sh:property [
+        sh:path ex:isReviewed ;
+        sh:codeIdentifier "isReviewed" ;
+        sh:datatype xsd:boolean ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:values [ shnex:exists [ shnex:pathValues ex:review ] ] ;
+    ] ;
+    sh:property [
+        sh:path ex:source ;
+        sh:codeIdentifier "source" ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:values "Fastshaql" ;
+    ] .

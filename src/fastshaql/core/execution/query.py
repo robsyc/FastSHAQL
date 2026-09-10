@@ -41,14 +41,22 @@ async def execute_query(
     """
     metrics = context.metrics
 
-    with timed(metrics, "translate_ms"):
-        result = translate_query(
-            shape,
-            field_node,
-            registry,
-            query_context=context.query_context,
-        )
-    with timed(metrics, "store_ms"):
-        rows = await context.store.query(result.query.render())
-    with timed(metrics, "convert_ms"):
-        return convert_rows(rows, shape, result.var_map, registry)
+    with timed(metrics, "execute_ms"):
+        with timed(metrics, "translate_ms"):
+            result = translate_query(
+                shape,
+                field_node,
+                registry,
+                query_context=context.query_context,
+            )
+            # Render counts as translation: AST → SPARQL string.
+            sparql = result.query.render()
+        with timed(metrics, "store_ms"):
+            # Metrics arg passed only on profiling runs: stores with a one-arg
+            # ``query`` signature keep working in production.
+            if metrics is None:
+                rows = await context.store.query(sparql)
+            else:
+                rows = await context.store.query(sparql, metrics=metrics)
+        with timed(metrics, "convert_ms"):
+            return convert_rows(rows, shape, result.var_map, registry)

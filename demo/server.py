@@ -30,6 +30,7 @@ from rdflib import Dataset
 from fastshaql import build_executable_schema, load_shapes, parse_shapes
 from fastshaql.adapters.fastapi import build_graphql_router
 from fastshaql.core import (
+    ExecutionMetrics,
     InMemoryStore,
     QueryContext,
     ResolverContext,
@@ -76,10 +77,12 @@ class LatencyStore:
     inner: SparqlStore
     delay: float
 
-    async def query(self, sparql: str) -> list[SparqlRow]:
+    async def query(
+        self, sparql: str, metrics: ExecutionMetrics | None = None
+    ) -> list[SparqlRow]:
         if self.delay:
             await asyncio.sleep(self.delay)
-        return await self.inner.query(sparql)
+        return await self.inner.query(sparql, metrics=metrics)
 
 
 def load_data_graph(path: Path) -> Dataset:

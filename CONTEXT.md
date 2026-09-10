@@ -210,7 +210,7 @@ An IRI-identified graph, reachable only via `GRAPH` (fed by `FROM NAMED`).
 A `FROM <iri>` or `FROM NAMED <iri>` clause on a top-level SELECT; fastshaql emits `FROM` only, from `QueryContext.read_graphs`.
 
 **No-`FROM` default graph**:
-Store-defined, not spec-mandated: stores diverge between union-of-all-named-graphs and truly-unnamed-only; explicit `FROM` is identical under either contract (ADR-0011).
+Store-defined, not spec-mandated, across three arrangements: truly-unnamed-only; union of the named graphs; or a union that also includes the unnamed graph (rdflib `default_union`, GraphDB, QLever, Oxigraph's opt-in knob) — while Jena's union excludes the stored unnamed graph (reachable there only as `urn:x-arq:DefaultGraph`). Explicit `FROM` is identical under all of them — why it remains the portable form (ADR-0011).
 
 **Active graph**:
 The graph a basic pattern matches against (SPARQL §18.1) — initially the default graph; `GRAPH` switches it.
@@ -253,7 +253,7 @@ The level of the test pyramid a test belongs to — unit, integration, e2e, eval
 _Avoid_: bare "tier" for node-expression lowering (Flat tier and Sub-SELECT tier own that sense)
 
 **Store matrix**:
-The set of triple stores the evaluation tier runs — one `StoreSession` adapter per store, selected by name (ADR-0022; designed — GraphDB CE is the shipped leg, the widening is ROADMAP backlog).
+The set of triple stores the evaluation tier runs — one `StoreSession` adapter per store (Oxigraph, Fuseki, QLever, GraphDB Free), selected by name via `EVAL_STORE` (ADR-0022).
 _Avoid_: backend ("database, backend" is the retired Store synonym); store list
 
 **Envelope**:

@@ -1,0 +1,14 @@
+query DerivedHeavy {
+  thing {
+    iri
+    givenName
+    familyName
+    shortName
+    review
+    label
+    fullName
+    curationStatus
+    isReviewed
+    source
+  }
+}

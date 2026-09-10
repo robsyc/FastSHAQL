@@ -37,7 +37,7 @@ Every feature track is **research- and spec-led, then E2E-test-driven**. Before 
 
 - FastAPI and Django adapters; shared GraphQL-over-HTTP envelope (ADR-0019)
 - **Async HTTP SPARQL store as the** `httpx` **extra** — `fastshaql.stores.http.HttpxSparqlStore` over a caller-owned `httpx.AsyncClient`; one extra per optional dependency (`fastapi`/`django`/`httpx`) with `all` as the recursive union (ADR-0018)
-- Declarative fixture test harness — cases vs scenarios (ADR-0021); GraphDB-CE evaluation harness for parity/perf (ADR-0022)
+- Declarative fixture test harness — cases vs scenarios (ADR-0021); multi-store evaluation harness for parity/perf (ADR-0022)
 
 ## Future: writes
 
@@ -82,16 +82,14 @@ The shipped Flat tier (everything lowerable into the single merged query body) i
 
 ### Evaluation infrastructure & bottleneck location
 
-Research before any structural change. We are currently **in the dark** on where costs actually sit. ADR-0022 records the decisions.
+Research before any structural change. The report now locates the costs (ADR-0022); what remains is acting on the evidence — no verdict on a pipeline change has been made yet.
 
-- **Store matrix:** widen the evaluation tier beyond GraphDB Free (the proprietary free tier) with **Oxigraph, Fuseki (Jena), and QLever** behind `StoreSession`, selected by name (`EVAL_STORE`); nightly CI runs one job per store.
-- **Execution observability** — investigate integration points for telemetry and debugging of the executed SPARQL: surfacing the existing `ExecutionMetrics` phase timings and the generated query text (e.g. opt-in via GraphQL response `extensions`, or hooks for tracing/metrics collectors). No design work done yet; starts with a survey of what graphql-core result middleware can carry per operation.
-- **Scenario expansion:** alongside the shipped `cartesian` sweep, add deep-nested relationship trees (recursive converter grouping), derived-field-heavy shapes, language-multiplicity (feeds the item below), and wide large-result sets.
-- **Locate the bottleneck** across the whole query-time flow: total request wall time plus the translate / http / decode / convert split (graphql-core overhead = the residual); extend the harness to aggregate and report across scenarios and stores.
-- **Report v2:** per-store dimension and metadata, parity conformance matrix (case-set granularity in markdown, per-case detail in the JSON artifact), cross-store perf comparison, in-memory baseline rows.
+- **First full-matrix nightly (2026-09-10, run 34493251030):** all four stores green. Translate is flat (≈0.2 ms) and graphql-core stays ≤0.15 s; costs sit in the store round trip and client-side decode (≈16–18 µs/row) + convert (≈6 µs/row), which dominate as rows explode (cartesian N50-K8: ~70% of a 7 s total) — while Oxigraph alone executes the wide-results join superlinearly (0.2 s @ 200 rows → 16 s @ 2 000; GraphDB near-linear).
+- **Wire & decode efficiency:** with decode + convert the dominant client cost, try a decode fast path replacing rdflib's per-term `parseJsonTerm`, then gzip / SPARQL-TSV results behind the isolated `decode_sparql_results` seam — measured on the harness (cartesian is the probe).
+- **Execution observability** — investigate integration points for telemetry and debugging of the executed SPARQL: surfacing the existing `ExecutionMetrics` phase timings and the generated query text (e.g. opt-in via GraphQL response `extensions`, or hooks for tracing/metrics collectors). No design work done yet; starts with a survey of what graphql-core result middleware can carry per operation; widen the same seam for library users profiling their own queries.
 - **Language-chain lowering efficiency:** per-step `OPTIONAL`s re-scan the path once per chain entry; measure against single-pass alternatives (priority `BIND` over `LANG()`) on the evaluation harness, folding an `expected.sparql` pattern review into the same pass. The question is essentially whether we can serialize our SPARQL in a more triple-store efficient way.
-- **Later, not this epic:** trend charts over commits/releases — needs persisted per-commit reports once report v2 exists (the badges-branch commit pattern is the obvious mechanism).
-- **Gate:** no architectural change to the result pipeline (streaming store, `ResultUnpacker`, DataLoader/GROUP_CONCAT relationship strategy) lands until this evidence exists. The converter's O(rows × fields + rows × relationships × depth) and double-materialization are intrinsic to ADR-0014, not a converter bug.
+- **Later, not this epic:** trend charts over commits/releases — needs persisted per-commit reports (the badges-branch commit pattern is the obvious mechanism).
+- **Gate:** the evidence now exists (nightly note above); no architectural change to the result pipeline (streaming store, `ResultUnpacker`, DataLoader/GROUP_CONCAT relationship strategy) lands without a measured before/after on the harness. The converter's O(rows × fields + rows × relationships × depth) and double-materialization are intrinsic to ADR-0014, not a converter bug.
 - **Rust core rewrite** is on the table *contingent on* the profiling results — not before.
 
 ### Named graphs & nanopublications use-case

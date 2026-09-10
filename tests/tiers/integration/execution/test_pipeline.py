@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
 from graphql import graphql
 from rdflib import RDF, Dataset, Graph, Literal, Namespace, URIRef
 
@@ -127,6 +128,113 @@ async def test_execute_records_metrics_when_attached(
     assert metrics.translate_ms > 0.0
     assert metrics.store_ms > 0.0
     assert metrics.convert_ms > 0.0
+    # execute_ms wraps the whole call: the phases are contained in it.
+    assert metrics.execute_ms >= (
+        metrics.translate_ms + metrics.store_ms + metrics.convert_ms
+    )
+
+
+async def test_execute_passes_metrics_to_store_when_attached(
+    minimal_registry: ShapeRegistry,
+) -> None:
+    """Profiling runs forward the metrics object to the store's ``query`` —
+    the seam HTTP-backed stores use to record the http/decode split."""
+    from fastshaql.core.execution import (
+        ExecutionMetrics,
+        ResolverContext,
+        execute_query,
+    )
+    from support.graphql_utils import root_field_node, shape_for_root_field
+
+    seen: list[tuple[str, object]] = []
+
+    class MetricsSpyStore:
+        async def query(self, sparql: str, metrics: object = None) -> list[dict]:
+            seen.append((sparql, metrics))
+            return []
+
+    field_node = root_field_node("{ thing { label } }")
+    shape = shape_for_root_field(minimal_registry, field_node.name.value)
+    metrics = ExecutionMetrics()
+    ctx = ResolverContext(store=MetricsSpyStore(), metrics=metrics)
+    await execute_query(shape, field_node, minimal_registry, ctx)
+    assert len(seen) == 1
+    assert "SELECT" in seen[0][0]  # the rendered query travels with it
+    assert seen[0][1] is metrics
+
+
+async def test_execute_leaves_pre_widening_stores_working_without_metrics(
+    minimal_registry: ShapeRegistry,
+) -> None:
+    """No metrics attached → the store is called exactly as before the
+    ``metrics`` widening: one-argument ``query`` implementations keep working
+    in production (ADR-0022)."""
+    from fastshaql.core.execution import ResolverContext, execute_query
+    from support.graphql_utils import root_field_node, shape_for_root_field
+
+    class LegacyOneArgStore:
+        async def query(self, sparql: str) -> list[dict]:  # noqa: ARG002 — the shape is the point
+            return []
+
+    field_node = root_field_node("{ thing { label } }")
+    shape = shape_for_root_field(minimal_registry, field_node.name.value)
+    ctx = ResolverContext(
+        store=LegacyOneArgStore(),  # ty: ignore[invalid-argument-type]
+    )
+    result = await execute_query(shape, field_node, minimal_registry, ctx)
+    assert result == []
+
+
+async def test_execute_legacy_store_with_metrics_raises_typeerror(
+    minimal_registry: ShapeRegistry,
+) -> None:
+    """Metrics attached → the same one-arg ``query`` cannot serve the run:
+    the failure is a loud ``TypeError``, never a silently unprofiled one
+    (ADR-0022) — the complement of the no-metrics compat test above."""
+    from fastshaql.core.execution import (
+        ExecutionMetrics,
+        ResolverContext,
+        execute_query,
+    )
+    from support.graphql_utils import root_field_node, shape_for_root_field
+
+    class LegacyOneArgStore:
+        async def query(self, sparql: str) -> list[dict]:  # noqa: ARG002 — the shape is the point
+            return []
+
+    field_node = root_field_node("{ thing { label } }")
+    shape = shape_for_root_field(minimal_registry, field_node.name.value)
+    ctx = ResolverContext(
+        store=LegacyOneArgStore(),  # ty: ignore[invalid-argument-type]
+        metrics=ExecutionMetrics(),
+    )
+    with pytest.raises(TypeError, match="unexpected keyword argument 'metrics'"):
+        await execute_query(shape, field_node, minimal_registry, ctx)
+
+
+async def test_execute_query_touches_no_clock_without_metrics(
+    minimal_registry: ShapeRegistry,
+    minimal_data_graph: Graph,
+    monkeypatch,
+) -> None:
+    """The production path (metrics absent) makes no ``perf_counter`` calls —
+    ``timed``'s documented overhead guarantee, enforced."""
+    from types import SimpleNamespace
+
+    import fastshaql.core.execution.store as store_module
+    from fastshaql.core.execution import ResolverContext, execute_query
+    from support.graphql_utils import root_field_node, shape_for_root_field
+
+    def _no_clock(*_args: object) -> float:
+        raise AssertionError("perf_counter called with metrics absent")
+
+    monkeypatch.setattr(store_module, "time", SimpleNamespace(perf_counter=_no_clock))
+
+    field_node = root_field_node("{ thing { label } }")
+    shape = shape_for_root_field(minimal_registry, field_node.name.value)
+    ctx = ResolverContext(store=InMemoryStore(minimal_data_graph))
+    result = await execute_query(shape, field_node, minimal_registry, ctx)
+    assert [row["label"] for row in result] == ["Alpha", "Beta"]
 
 
 async def test_execute_query_context_lang_no_match_drops_field_keeps_entity(

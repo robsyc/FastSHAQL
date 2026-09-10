@@ -467,7 +467,7 @@ dev = [
     { name = "pytest-django", specifier = ">=4.11" },
     { name = "ruff", specifier = ">=0.15" },
     { name = "tach", specifier = "==0.35.0" },
-    { name = "testcontainers", specifier = ">=4.9" },
+    { name = "testcontainers", specifier = ">=4.9,<5" },
     { name = "ty", specifier = ">=0.0.42" },
 ]
 

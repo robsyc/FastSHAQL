@@ -4,7 +4,8 @@ The parity tier loads ``case_set.load_data()`` (a ``Dataset``) into GraphDB via
 ``GraphDbSession.load_graph``. A ``Dataset`` must be serialised as TriG (Turtle
 silently drops named graphs — see ADR-0011), and a plain ``Graph`` as
 Turtle. The content type is set to match so GraphDB's RDF4J statements endpoint
-routes the payload correctly.
+routes the payload correctly. The client double echoes the posted payload on
+the read-back GET, so ``load_graph``'s triple-count verification passes.
 """
 
 from __future__ import annotations
@@ -23,8 +24,25 @@ def _session() -> tuple[GraphDbSession, MagicMock]:
         base_url="http://gdb", query_endpoint="http://gdb/repositories/x"
     )
     client = MagicMock()
-    client.post.return_value.status_code = 200
     client.delete.return_value.status_code = 204
+    posted = {"body": b""}
+
+    def _post(_url: str, **kwargs: object) -> MagicMock:
+        body = kwargs.get("content", b"")
+        assert isinstance(body, bytes)
+        posted["body"] = body
+        response = MagicMock()
+        response.status_code = 200
+        return response
+
+    def _get(_url: str, **_kwargs: object) -> MagicMock:
+        response = MagicMock()
+        response.status_code = 200
+        response.text = posted["body"].decode()
+        return response
+
+    client.post.side_effect = _post
+    client.get.side_effect = _get
     sess._client = client  # type: ignore[assignment]
     return sess, client
 

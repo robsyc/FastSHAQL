@@ -61,11 +61,19 @@ def decode_sparql_results(raw: bytes) -> list[SparqlRow]:
 class SparqlStore(Protocol):
     """Store-protocol SPARQL SELECT execution."""
 
-    async def query(self, sparql: str) -> list[SparqlRow]:
+    async def query(
+        self, sparql: str, metrics: ExecutionMetrics | None = None
+    ) -> list[SparqlRow]:
         """Execute a SPARQL SELECT and return variable bindings.
 
         Args:
             sparql: A complete SPARQL SELECT query string.
+            metrics: When given (profiling runs only), an HTTP-backed store
+                records its transport round trip (``http_ms``) and wire decode
+                (``decode_ms``) on it. Implementations may ignore it. A store
+                with a one-arg ``query`` keeps working while metrics is absent
+                but cannot serve profiling runs — calling it with metrics
+                attached fails loudly with ``TypeError``.
 
         Returns:
             One dict per result row, keyed by variable name (no ``?`` prefix)
@@ -91,8 +99,16 @@ class InMemoryStore(SparqlStore):
         self._graph = graph
         self._lock = threading.Lock()
 
-    async def query(self, sparql: str) -> list[SparqlRow]:
-        """Execute via ``rdflib.Graph.query()`` and return row dicts."""
+    async def query(
+        self,
+        sparql: str,
+        metrics: ExecutionMetrics | None = None,  # noqa: ARG002 — protocol slot
+    ) -> list[SparqlRow]:
+        """Execute via ``rdflib.Graph.query()`` and return row dicts.
+
+        *metrics* is accepted for protocol compatibility and ignored — there
+        is no meaningful http/decode split for an in-process store.
+        """
         result = await asyncio.to_thread(self._locked_query, sparql)
         rows = cast(Iterable[ResultRow], result)
         return [cast(SparqlRow, row.asdict()) for row in rows]
@@ -102,18 +118,30 @@ class InMemoryStore(SparqlStore):
             return self._graph.query(sparql)
 
 
-@dataclass
+@dataclass(slots=True)
 class ExecutionMetrics:
-    """Optional per-request phase timings for profiling.
+    """Opt-in phase timings for profiling, one object per ResolverContext.
 
-    Filled by :func:`execute_query`: ``translate_ms``, ``store_ms``,
-    ``convert_ms`` — the SELECT translate/store/convert pipeline. Attach via
-    :class:`ResolverContext`; ``None`` in production.
+    ``execute_query`` fills ``execute_ms`` (its whole wall clock) plus the
+    ``translate_ms`` / ``store_ms`` / ``convert_ms`` phases; a store that
+    accepts *metrics* splits ``store_ms`` into ``http_ms`` (transport round
+    trip) and ``decode_ms`` (results-JSON decode). Phases are recorded when
+    they complete — or as an exception unwinds through them — see
+    :func:`timed`.
+
+    One ``ResolverContext`` serves an entire operation: each root field's
+    ``execute_query`` overwrites the previous values, so the numbers describe
+    the last root field resolved. The graphql-core share of a single-field
+    operation is the residual: ``graphql()`` wall clock minus ``execute_ms``.
+    Attach via ``ResolverContext.metrics``; ``None`` in production.
     """
 
+    execute_ms: float = 0.0
     translate_ms: float = 0.0
     store_ms: float = 0.0
     convert_ms: float = 0.0
+    http_ms: float = 0.0
+    decode_ms: float = 0.0
 
 
 @contextmanager
@@ -122,13 +150,16 @@ def timed(metrics: ExecutionMetrics | None, attr: str) -> Iterator[None]:
 
     No ``perf_counter`` calls and no attribute writes happen when metrics is
     absent, so the production path pays only the context-manager entry cost.
+    The phase is recorded even when the wrapped body raises.
     """
     if metrics is None:
         yield
         return
     start = time.perf_counter()
-    yield
-    setattr(metrics, attr, (time.perf_counter() - start) * 1e3)
+    try:
+        yield
+    finally:
+        setattr(metrics, attr, (time.perf_counter() - start) * 1e3)
 
 
 @dataclass(frozen=True)
