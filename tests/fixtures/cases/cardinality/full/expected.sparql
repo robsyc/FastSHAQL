@@ -1,6 +1,6 @@
 SELECT ?iri ?label ?subtitle ?tag ?altLabel
 WHERE {
-  ?iri a <http://example.org/Thing> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Thing> .
   ?iri <http://example.org/label> ?label .
   OPTIONAL {
     ?iri <http://example.org/subtitle> ?subtitle .

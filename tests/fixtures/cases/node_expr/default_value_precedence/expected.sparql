@@ -1,6 +1,6 @@
 SELECT ?iri ?symbol ?assayVersion ?supportScore
 WHERE {
-  ?iri a <http://example.org/genomics/Gene> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/genomics/Gene> .
   ?iri <http://example.org/genomics/symbol> ?symbol .
   OPTIONAL {
     ?iri <http://example.org/genomics/assayVersion> ?_dv_assayVersion .

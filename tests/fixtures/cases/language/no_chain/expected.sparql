@@ -1,6 +1,6 @@
 SELECT ?iri ?altLabel ?plain
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   OPTIONAL {
     ?iri <http://example.org/altLabel> ?altLabel .
   }

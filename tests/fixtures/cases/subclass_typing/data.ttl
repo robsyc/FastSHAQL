@@ -1,0 +1,19 @@
+@prefix ex:  <http://example.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Subclass axioms live in the data graph — closure reads the queried
+# graphs only (Core §6.3; the ADR-0016 deviation).
+
+ex:Painting rdfs:subClassOf ex:Asset .
+ex:Sculpture rdfs:subClassOf ex:Asset .
+ex:Gallery rdfs:subClassOf ex:Custodian .
+
+ex:bank a ex:Custodian ; ex:name "Bank" .
+ex:museum a ex:Gallery ; ex:name "Museum" .
+
+# mona/david are Assets only through their subclass typing; ledger directly.
+ex:mona a ex:Painting ; ex:label "Mona Lisa" ; ex:heldBy ex:bank .
+ex:david a ex:Sculpture ; ex:label "David" ; ex:heldBy ex:museum .
+ex:ledger a ex:Asset ; ex:label "Ledger" ; ex:heldBy ex:bank .
+# A non-Asset under the same link — every typing emission must drop it.
+ex:gadget a ex:Gadget ; ex:label "Gadget" ; ex:heldBy ex:museum .

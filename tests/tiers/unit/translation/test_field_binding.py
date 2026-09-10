@@ -11,13 +11,15 @@ from __future__ import annotations
 
 from typing import cast
 
-from rdflib import RDF, URIRef, Variable
+from rdflib import RDF, RDFS, URIRef, Variable
 
 from fastshaql.core.ir.node_expr import SelectNodeExpr
 from fastshaql.core.sparql import (
     PredicatePath,
     RawGraphPattern,
+    SequencePath,
     TriplePattern,
+    ZeroOrMorePath,
 )
 from fastshaql.core.translation.field_binding import FieldBindings
 from fastshaql.core.translation.joins import relationship_join_patterns
@@ -92,6 +94,8 @@ def test_relationship_join_patterns_omit_type_triple_by_default() -> None:
 
 
 def test_relationship_join_patterns_with_type_triple_when_requested() -> None:
+    """The opt-in typing emission is the SHACL-instance path
+    ``rdf:type/rdfs:subClassOf*`` (ADR-0025), not a plain type triple."""
     prop = relationship_property(
         "employer",
         EX + "CompanyShape",
@@ -104,7 +108,9 @@ def test_relationship_join_patterns_with_type_triple_when_requested() -> None:
     )
     assert patterns[1] == TriplePattern(
         subject=Variable("o"),
-        predicate=PredicatePath(RDF.type),
+        predicate=SequencePath(
+            (PredicatePath(RDF.type), ZeroOrMorePath(PredicatePath(RDFS.subClassOf)))
+        ),
         object=EX + "Company",
     )
 

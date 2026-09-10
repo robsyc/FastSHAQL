@@ -1,0 +1,8 @@
+query SubclassTypingFilterShapeClosure {
+  custodian {
+    name
+    heldAssets {
+      label
+    }
+  }
+}

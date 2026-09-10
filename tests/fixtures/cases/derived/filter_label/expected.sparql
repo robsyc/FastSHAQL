@@ -1,6 +1,6 @@
 SELECT ?iri ?label ?iriLength
 WHERE {
-  ?iri a <http://example.org/Item> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Item> .
   ?iri <http://example.org/givenName> ?given .
   ?iri <http://example.org/familyName> ?family .
   BIND(CONCAT(?given, " ", ?family) AS ?label)
