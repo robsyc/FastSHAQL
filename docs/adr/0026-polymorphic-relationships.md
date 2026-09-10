@@ -1,10 +1,12 @@
 # ADR-0026 — Polymorphic relationships (`sh:or` over `sh:class`/`sh:node` → union types)
 
-**Status:** Proposed (design confirmed 2026-09-04; implementation pending — slices in [ROADMAP](../ROADMAP.md), preceded by ADR-0025)
+**Status:** Proposed (update this ADR and related docs when the implementation lands)
+
+> NOTE: This ADR is a bit too wordy and could be simplified and trimmed down.
 
 ## Context
 
-Only the datatype-only `sh:or` is consumed today (normalised into `datatypes`, ADR-0012); every other `sh:or` — including the spec's own property-shape example `sh:or ( [sh:class ex:Address] … )` (Core §7.7.3) — is parse-recognized-and-inert, so a field linking heterogeneous object types (an `Article.block` pointing at a paragraph, an image, or a table) never reaches the schema. GraphQL fragments are rejected outright in translation. Prior art converges: TopBraid and GraphDB generate **unions** from `sh:or`; **interfaces** come from inheritance, never from `sh:or` (PostGraphile's shared-fields rule requires explicit user declaration); graphql-to-sparql.js lowers inline fragments as type-guarded OPTIONAL lanes; shape-to-query lowers `sh:or` as UNION branches. Prototypes validated the mechanics with graphql-core 3.2 and rdflib (throwaway, 2026-09-04).
+Only the datatype-only `sh:or` is consumed today (normalised into `datatypes`, ADR-0012); every other `sh:or` — including the spec's own property-shape example `sh:or ( [sh:class ex:Address] … )` (Core §7.7.3) — is parse-recognized-and-inert, so a field linking heterogeneous object types (an `Article.block` pointing at a paragraph, an image, or a table) never reaches the schema. GraphQL fragments are rejected outright in translation. Prior art converges: TopBraid and GraphDB generate **unions** from `sh:or`; **interfaces** come from inheritance, never from `sh:or` (PostGraphile's shared-fields rule requires explicit user declaration); graphql-to-sparql.js lowers inline fragments as type-guarded OPTIONAL lanes; shape-to-query lowers `sh:or` as UNION branches. Prototypes validated the mechanics with graphql-core 3.2 and rdflib.
 
 ## Decision
 

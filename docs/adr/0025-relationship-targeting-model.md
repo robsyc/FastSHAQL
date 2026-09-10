@@ -1,6 +1,6 @@
 # ADR-0025 — Relationship targeting: `sh:node` names the target, `sh:class` types the binding
 
-**Status:** Proposed (design confirmed 2026-09-04; implementation pending — slices in [ROADMAP](../ROADMAP.md))
+**Status:** Proposed (update this ADR and related docs when the implementation lands)
 
 ## Context
 
