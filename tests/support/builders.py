@@ -111,7 +111,7 @@ def relationship_property(
         datatypes=(),
         min_count=min_count,
         max_count=max_count,
-        value_class=value_class,
+        value_classes=(value_class,) if value_class is not None else (),
         value_shape_iri=value_shape_iri,
     )
 

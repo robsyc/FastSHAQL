@@ -1,0 +1,17 @@
+query RelationshipTargetingExplicitBindingTyping {
+  customer {
+    name
+    billing {
+      street
+    }
+    shipping {
+      street
+    }
+    contacts {
+      street
+    }
+    registered {
+      street
+    }
+  }
+}

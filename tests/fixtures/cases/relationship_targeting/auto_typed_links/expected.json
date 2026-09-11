@@ -1,0 +1,22 @@
+{
+  "data": {
+    "customer": [
+      {
+        "name": "A",
+        "address": {
+          "street": "Dam 1"
+        },
+        "note": {
+          "text": "first"
+        }
+      },
+      {
+        "name": "B",
+        "address": null,
+        "note": {
+          "text": "second"
+        }
+      }
+    ]
+  }
+}

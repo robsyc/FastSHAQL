@@ -62,10 +62,13 @@ WHERE {
     assert "subtitle" not in result.query.render().split("SELECT")[1].split("WHERE")[0]
 
 
-def test_translate_sh_node_relationship_filter_omits_type_in_exists(
+def test_translate_sh_node_relationship_filter_auto_types_in_exists(
     person_shape,
     relationship_registry: ShapeRegistry,
 ) -> None:
+    """The filter's EXISTS scope auto-types a ``sh:node`` traversal exactly
+    like the selection walk (ADR-0025) — candidates narrow to SHACL
+    instances of the target's class before the inner predicates apply."""
     query = '{ persons(where: { address: { street: { eq: "Main St" } } }) { name } }'
     result = translate_query(
         person_shape, root_field_node(query), relationship_registry
@@ -76,15 +79,12 @@ WHERE {
   ?iri <http://example.org/name> ?name .
   ?iri <http://example.org/address> ?address_iri .
   FILTER(EXISTS {
+    ?address_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Address> .
     ?address_iri <http://example.org/street> ?_rf_address_street .
     FILTER(?_rf_address_street = "Main St")
   })
 }"""
     assert result.query.render() == golden
-    assert (
-        "a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Address>"
-        not in result.query.render()
-    )
 
 
 def test_translate_employer_name_filter_with_selection(

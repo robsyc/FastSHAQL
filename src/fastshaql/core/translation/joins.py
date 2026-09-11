@@ -35,8 +35,9 @@ def relationship_join_patterns(
     *child_subject* as the value variable (replace-not-union — asserted path
     triples are dropped, ADR-0015).
 
-    When *emit_type_triple* is true and the property carries a ``value_class``,
-    also emits the child ``rdf:type`` triple via :func:`relationship_type_patterns`.
+    When *emit_type_triple* is true and the property carries binding
+    classes, also emits their SHACL-instance typing paths via
+    :func:`relationship_type_patterns`.
     """
     if prop.source is ValueSource.DERIVED:
         if prop.values_expr is None:
@@ -65,8 +66,10 @@ def relationship_type_patterns(
     subject: Variable,
     prop: PropertyShapeIR,
 ) -> list[Pattern]:
-    """Emit the child's SHACL-instance typing path for a relationship
-    subject (ADR-0025) — ``None`` when the binding carries no class."""
-    if prop.value_class is None:
-        return []
-    return [TriplePattern(subject, SHACL_INSTANCE_PATH, prop.value_class)]
+    """Emit the child's SHACL-instance typing paths for a relationship
+    subject (ADR-0025): one conjunctive path per declared class — empty
+    when the binding carries none."""
+    return [
+        TriplePattern(subject, SHACL_INSTANCE_PATH, class_iri)
+        for class_iri in prop.value_classes
+    ]
