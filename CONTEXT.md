@@ -95,7 +95,7 @@ A member of an enum property's `sh:in` list — homogeneous in term kind. GraphQ
 _Avoid_: enum member, code
 
 **Relationship**:
-A Property whose value is another RDF resource — `sh:node` names the linked shape (the target), `sh:class` types the binding (its `rdf:type` constraints) (ADR-0025).
+A Property whose value is another RDF resource — `sh:node` names the linked shape (the target), `sh:class` types the binding (ADR-0025).
 _Avoid_: link, reference, association
 
 **Polymorphic relationship**:

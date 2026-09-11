@@ -4,6 +4,7 @@ WHERE {
   ?iri <http://example.org/name> ?name .
   OPTIONAL {
     ?iri <http://example.org/audit> ?audit_iri .
+    ?audit_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/AuditLog> .
     ?audit_iri <http://example.org/action> ?audit_action .
   }
 }

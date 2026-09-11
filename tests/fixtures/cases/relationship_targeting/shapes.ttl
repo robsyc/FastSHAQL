@@ -1,0 +1,74 @@
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix ex:  <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# ADR-0025 targeting: sh:node names the target, sh:class types the
+# binding; explicit classes replace the auto-typed implicit.
+
+ex:PostalAddressShape a sh:NodeShape ;
+    sh:codeIdentifier "PostalAddress" ;
+    sh:targetClass ex:PostalAddress ;
+    sh:property [
+        sh:path ex:street ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:NoteShape a sh:NodeShape ;
+    sh:codeIdentifier "Note" ;
+    sh:property [
+        sh:path ex:text ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:CustomerShape a sh:NodeShape ;
+    sh:codeIdentifier "Customer" ;
+    sh:targetClass ex:Customer ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:address ;
+        sh:node ex:PostalAddressShape ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:note ;
+        sh:node ex:NoteShape ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:billing ;
+        sh:node ex:PostalAddressShape ;
+        sh:class ex:VerifiedAddress ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:shipping ;
+        sh:node ex:PostalAddressShape ;
+        sh:class ex:PostalAddress ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:contacts ;
+        sh:node ex:PostalAddressShape ;
+        sh:class ex:VerifiedAddress ;
+        sh:values ( ex:bill-1 ex:bill-2 )
+    ] ;
+    sh:property [
+        sh:path ex:registered ;
+        sh:node ex:PostalAddressShape ;
+        sh:class ex:VerifiedAddress , ex:PrimeAddress ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] .

@@ -125,7 +125,8 @@ class PropertyShapeIR(ShapeIR):
     (**asserted** | **derived**). ``sh:in`` on a relationship is stored but
     read-ignored (overlay). Datatype-only ``sh:or`` normalizes into
     :attr:`datatypes`; any other ``sh:or`` is parse-recognized-and-inert.
-    Deferred: ``sh:and``/``sh:not``.
+    ``sh:and`` contributes class-only members into :attr:`value_classes`;
+    anything more is deferred.
     """
 
     graphql_field_name: str
@@ -150,16 +151,17 @@ class PropertyShapeIR(ShapeIR):
     max_count: int | None = None
     """Maximum value count. Parser: ``sh:maxCount`` (SHACL §7.2.2)."""
 
-    value_class: URIRef | None = None
-    """Target class IRI. Parser: ``sh:class`` (SHACL §7.1.1).
-    Emitted as type triple in SPARQL translation. Distinct from ``target_class`` on :class:`NodeShapeIR`
-    ``sh:class`` is a value constraint, ``sh:targetClass`` is a targeting mechanism."""
+    value_classes: tuple[URIRef, ...] = ()
+    """Binding class constraints (SHACL §7.1.1) — the declared ``sh:class``
+    values and class-only ``sh:and`` members, or, when none are declared,
+    the ``sh:node`` target's indexed class (auto-typing, ADR-0025). One
+    SHACL-instance typing path each in translation; IRI-sorted. A value
+    constraint — distinct from ``target_class`` targeting."""
 
     value_shape_iri: URIRef | None = None
-    """IRI of the resolved target shape for relationship properties.
-    Populated in :func:`~fastshaql.core.parser.parse_shapes`
-    from ``sh:class`` (via ``by_target_class``; SHACL §7.1.1)
-    or ``sh:node`` (via ``by_iri``; SHACL §7.8.1)."""
+    """IRI of the relationship's target shape — the GraphQL type, from
+    ``sh:node`` (§7.8.1) or a sole ``sh:class`` resolved via the class
+    index, with a synthetic shape for untargeted classes (ADR-0025)."""
 
     in_values: tuple[Node, ...] | None = None
     """Closed value set from ``sh:in`` (SHACL §7.9.3), preserving rdflib terms."""
@@ -234,7 +236,7 @@ class PropertyShapeIR(ShapeIR):
         both land on their arm here and carry
         ``ValueSource.DERIVED``.
         """
-        if self.value_class is not None or self.value_shape_iri is not None:
+        if self.value_classes or self.value_shape_iri is not None:
             return ValueType.RELATIONSHIP
         if self.in_values is not None:
             return ValueType.ENUM

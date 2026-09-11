@@ -1,11 +1,12 @@
 """SHACL shapes graph → Shape IR — ``core/parser/`` and ``core/ir/``.
 
 Tests parse SHACL Turtle into ``NodeShapeIR`` and ``PropertyShapeIR``,
-verify cardinality resolution (``FieldKind``), registry indexes, and
-relationship property resolution (``sh:class``, ``sh:node``), unsupported
-forms, and zero-capacity field exclusion.
+verify cardinality resolution (``FieldKind``), registry indexes, skip
+behavior (duplicate field names, blank-node shapes, deactivated shapes),
+unsupported counts and identifiers, zero-capacity field exclusion, and
+read scoping within one shapes graph.
 
-Order: minimal fixture baseline → cardinality → registry indexes → relationships → unsupported forms → read scoping.
+Order: minimal baseline → cardinality → registry indexes → field-name/blank-node/deactivated skips → unsupported counts → zero capacity → identifiers → read scoping.
 """
 
 from __future__ import annotations
@@ -18,13 +19,10 @@ from fastshaql.core.ir import (
     FieldKind,
     NodeShapeIR,
     PropertyShapeIR,
-    ValueType,
 )
 from fastshaql.core.ir.shacl_path import PredicatePath
 from fastshaql.core.parser import parse_shapes
 from fastshaql.core.parser.errors import UnsupportedShapeError
-from fastshaql.core.parser.node_shape import parse_node_shape
-from fastshaql.core.parser.property_shape import parse_property_shape
 from fastshaql.core.parser.util import InvalidCodeIdentifierError
 from support.builders import EX, scalar_property
 
@@ -101,75 +99,6 @@ def test_registry_indexes(minimal_shapes_graph: Graph) -> None:
     assert registry.by_iri[EX + "ThingShape"] is thing
 
 
-# --- Relationships ---
-
-
-def test_parse_sh_class_resolves_value_shape(relationship_shapes_graph: Graph) -> None:
-    registry = parse_shapes(relationship_shapes_graph)
-    person = registry.by_type_name["Person"]
-    employer = person.property_shapes["employer"]
-
-    assert employer.value_class == EX + "Company"
-    assert employer.value_shape_iri == EX + "CompanyShape"
-    assert registry.by_iri[EX + "CompanyShape"].graphql_type_name == "Company"
-    assert employer.value_type is ValueType.RELATIONSHIP
-    assert employer.datatype is None
-
-
-def test_parse_sh_node_resolves_value_shape_by_iri(
-    relationship_shapes_graph: Graph,
-) -> None:
-    registry = parse_shapes(relationship_shapes_graph)
-    person = registry.by_type_name["Person"]
-    address = person.property_shapes["address"]
-
-    assert address.value_class is None
-    assert address.value_shape_iri == EX + "AddressShape"
-    assert registry.by_iri[EX + "AddressShape"].graphql_type_name == "Address"
-
-
-def test_parse_sh_class_creates_synthetic_shape_when_no_target(
-    relationship_shapes_graph: Graph,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    registry = parse_shapes(relationship_shapes_graph)
-    person = registry.by_type_name["Person"]
-    department = person.property_shapes["department"]
-
-    assert department.value_class == EX + "Department"
-    synthetic_iri = URIRef("urn:fastshaql:synthetic:Department")
-    assert department.value_shape_iri == synthetic_iri
-    synthetic = registry.by_iri[synthetic_iri]
-    assert synthetic.target_class is None
-    assert synthetic.property_shapes == {}
-    assert registry.by_type_name["Department"] is synthetic
-    warnings = [r for r in caplog.records if "No shape targets class" in r.message]
-    assert len(warnings) == 1
-    # The warning names both the untargeted class and the synthetic shape it
-    # produced — the author's pointer from problem to remedy.
-    message = warnings[0].getMessage()
-    assert f"{EX}Department" in message
-    assert "urn:fastshaql:synthetic:Department" in message
-
-
-def test_parse_nested_value_shape_iri_resolves_through_registry(
-    relationship_shapes_graph: Graph,
-) -> None:
-    """IRI indirection eliminates stale references — registry always holds resolved shapes."""
-    registry = parse_shapes(relationship_shapes_graph)
-    person = registry.by_type_name["Person"]
-    employer = person.property_shapes["employer"]
-    assert employer.value_shape_iri is not None
-
-    company = registry.by_iri[employer.value_shape_iri]
-    located_in = company.property_shapes["locatedIn"]
-    assert located_in.value_shape_iri is not None
-
-    city = registry.by_iri[located_in.value_shape_iri]
-    assert city.graphql_type_name == "City"
-    assert city.iri == registry.by_type_name["City"].iri
-
-
 # --- Duplicate field-name skip ---
 
 
@@ -234,221 +163,6 @@ def test_blank_node_shape_is_skipped(
     bnode = next(graph.subjects(RDF.type, SH.NodeShape))
     message = skipping[0].getMessage()
     assert str(bnode) in message
-
-
-# --- Synthetic-shape cache ---
-
-
-def test_repeated_sh_class_creates_single_synthetic_shape(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Two properties referencing the same untargeted class share one synthetic."""
-    graph = Graph()
-    graph.parse(
-        data="""
-        @prefix ex: <http://example.org/> .
-        @prefix sh: <http://www.w3.org/ns/shacl#> .
-
-        ex:PersonShape a sh:NodeShape ;
-            sh:codeIdentifier "Person" ;
-            sh:targetClass ex:Person ;
-            sh:property [ sh:path ex:dept1 ; sh:class ex:Department ] ;
-            sh:property [ sh:path ex:dept2 ; sh:class ex:Department ] .
-
-        ex:OrgShape a sh:NodeShape ;
-            sh:codeIdentifier "Org" ;
-            sh:targetClass ex:Org ;
-            sh:property [ sh:path ex:unit ; sh:class ex:Department ] .
-        """,
-        format="turtle",
-    )
-    with caplog.at_level("WARNING"):
-        registry = parse_shapes(graph)
-    synthetic_iri = URIRef("urn:fastshaql:synthetic:Department")
-    assert synthetic_iri in registry.by_iri
-    warnings = [r for r in caplog.records if "No shape targets class" in r.message]
-    assert len(warnings) == 1
-
-
-# --- rdfs:comment / rdfs:label description ---
-
-
-def test_node_shape_description_from_rdfs_comment() -> None:
-    """``rdfs:comment`` on a node shape populates ``description``."""
-    graph = Graph()
-    graph.parse(
-        data="""
-        @prefix ex:   <http://example.org/> .
-        @prefix sh:   <http://www.w3.org/ns/shacl#> .
-        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-
-        ex:ThingShape a sh:NodeShape ;
-            sh:codeIdentifier "Thing" ;
-            sh:targetClass ex:Thing ;
-            rdfs:comment "A thing." .
-        """,
-        format="turtle",
-    )
-    registry = parse_shapes(graph)
-    thing = registry.by_type_name["Thing"]
-    assert thing.description == "A thing."
-
-
-def test_node_shape_description_falls_back_to_rdfs_label() -> None:
-    """``rdfs:label`` is used when ``rdfs:comment`` is absent."""
-    graph = Graph()
-    graph.parse(
-        data="""
-        @prefix ex:   <http://example.org/> .
-        @prefix sh:   <http://www.w3.org/ns/shacl#> .
-        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-
-        ex:ThingShape a sh:NodeShape ;
-            sh:codeIdentifier "Thing" ;
-            sh:targetClass ex:Thing ;
-            rdfs:label "ThingLabel" .
-        """,
-        format="turtle",
-    )
-    registry = parse_shapes(graph)
-    thing = registry.by_type_name["Thing"]
-    assert thing.description == "ThingLabel"
-
-
-@pytest.mark.parametrize(
-    ("turtle_extra", "expected"),
-    [
-        ('rdfs:comment "Une chose."@fr , "A thing."@en', "A thing."),
-        ('rdfs:comment "Plain text." , "Autre"@fr', "Plain text."),
-        ('rdfs:comment "Bonjour"@fr', "Bonjour"),
-        ('rdfs:comment "US English"@en-US', "US English"),
-        ('rdfs:label "Thing label"@en', "Thing label"),
-    ],
-    ids=[
-        "preferred_lang",
-        "untagged_over_foreign",
-        "any_lang_fallback",
-        "rfc4647_basic",
-        "predicate_fallback",
-    ],
-)
-def test_node_shape_description_language_selection_wired(
-    turtle_extra: str,
-    expected: str,
-) -> None:
-    """Language selection flows through ``parse_shapes`` (matrix in ``test_graph_reads``)."""
-    graph = Graph()
-    graph.parse(
-        data=f"""
-        @prefix ex:   <http://example.org/> .
-        @prefix sh:   <http://www.w3.org/ns/shacl#> .
-        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-
-        ex:ThingShape a sh:NodeShape ;
-            sh:codeIdentifier "Thing" ;
-            sh:targetClass ex:Thing ;
-            {turtle_extra} .
-        """,
-        format="turtle",
-    )
-    registry = parse_shapes(graph)
-    thing = registry.by_type_name["Thing"]
-    assert thing.description == expected
-
-
-def test_parse_shapes_description_language_parameter() -> None:
-    """``description_language`` selects a non-default preferred language."""
-    graph = Graph()
-    graph.parse(
-        data="""
-        @prefix ex:   <http://example.org/> .
-        @prefix sh:   <http://www.w3.org/ns/shacl#> .
-        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-
-        ex:ThingShape a sh:NodeShape ;
-            sh:codeIdentifier "Thing" ;
-            sh:targetClass ex:Thing ;
-            rdfs:comment "A thing."@en , "Ein Ding."@de .
-        """,
-        format="turtle",
-    )
-    registry = parse_shapes(graph, description_language="de")
-    thing = registry.by_type_name["Thing"]
-    assert thing.description == "Ein Ding."
-
-
-def test_property_shape_description_language_selection() -> None:
-    """Property shapes apply the same language preference to ``sh:description``."""
-    graph = Graph()
-    graph.parse(
-        data="""
-        @prefix ex:   <http://example.org/> .
-        @prefix sh:   <http://www.w3.org/ns/shacl#> .
-        @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
-
-        ex:ThingShape a sh:NodeShape ;
-            sh:codeIdentifier "Thing" ;
-            sh:targetClass ex:Thing ;
-            sh:property [
-                sh:path ex:label ;
-                sh:datatype xsd:string ;
-                sh:minCount 1 ;
-                sh:description "Étiquette"@fr , "Label"@en
-            ] .
-        """,
-        format="turtle",
-    )
-    registry = parse_shapes(graph)
-    thing = registry.by_type_name["Thing"]
-    assert thing.property_shapes["label"].description == "Label"
-
-
-def test_property_shape_description_falls_back_to_sh_name() -> None:
-    """``sh:name`` supplies the property description when ``sh:description`` is absent."""
-    graph = Graph()
-    graph.parse(
-        data="""
-        @prefix ex:   <http://example.org/> .
-        @prefix sh:   <http://www.w3.org/ns/shacl#> .
-        @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
-
-        ex:ThingShape a sh:NodeShape ;
-            sh:codeIdentifier "Thing" ;
-            sh:targetClass ex:Thing ;
-            sh:property [
-                sh:path ex:label ;
-                sh:datatype xsd:string ;
-                sh:minCount 1 ;
-                sh:name "Display name"@en
-            ] .
-        """,
-        format="turtle",
-    )
-    registry = parse_shapes(graph)
-    thing = registry.by_type_name["Thing"]
-    assert thing.property_shapes["label"].description == "Display name"
-
-
-def test_node_shape_description_predicate_priority_over_language() -> None:
-    """A foreign-language ``rdfs:comment`` beats a preferred-language ``rdfs:label``."""
-    graph = Graph()
-    graph.parse(
-        data="""
-        @prefix ex:   <http://example.org/> .
-        @prefix sh:   <http://www.w3.org/ns/shacl#> .
-        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-
-        ex:ThingShape a sh:NodeShape ;
-            sh:codeIdentifier "Thing" ;
-            sh:targetClass ex:Thing ;
-            rdfs:comment "Commentaire"@fr ;
-            rdfs:label "English label"@en .
-        """,
-        format="turtle",
-    )
-    registry = parse_shapes(graph)
-    thing = registry.by_type_name["Thing"]
-    assert thing.description == "Commentaire"
 
 
 # --- Deactivated shapes (SHACL Core §3.1.6: not evaluated → no schema surface) ---
@@ -553,7 +267,7 @@ def test_multiple_deactivated_values_reject() -> None:
         parse_shapes(graph)
 
 
-# --- Unsupported sh:node/sh:class forms, counts, and identifiers ---
+# --- Unsupported counts, zero capacity, and identifiers ---
 
 
 def _person_graph(prop_body: str) -> Graph:
@@ -572,62 +286,6 @@ def _person_graph(prop_body: str) -> Graph:
             ] .
         """
     )
-
-
-def test_blank_node_sh_node_on_property_shape_raises() -> None:
-    """An inline (blank-node) ``sh:node`` shape rejects — degrading the field
-    to a scalar would misdescribe it."""
-    graph = _person_graph("sh:node [] ;")
-    with pytest.raises(UnsupportedShapeError, match="Blank-node sh:node"):
-        parse_shapes(graph)
-
-
-@pytest.mark.parametrize(
-    ("body", "match"),
-    [
-        ("sh:node ex:AddressShape , ex:LocationShape ;", "Multiple sh:node values"),
-        ("sh:class ex:Company , ex:Org ;", "Multiple sh:class values"),
-    ],
-    ids=["multiple_sh_node", "multiple_sh_class"],
-)
-def test_multiple_relationship_anchor_values_raise(body: str, match: str) -> None:
-    """The spec conjoins repeated ``sh:node``/``sh:class`` values (§3.1.1) —
-    no lowering yet, and no silent arbitrary pick either."""
-    graph = _person_graph(body)
-    with pytest.raises(UnsupportedShapeError, match=match):
-        parse_shapes(graph)
-
-
-def test_literal_sh_node_value_raises() -> None:
-    """``sh:node`` values are node shapes — a literal is ill-formed (§7.8.1)."""
-    graph = _person_graph('sh:node "Address" ;')
-    with pytest.raises(UnsupportedShapeError, match="not a node shape"):
-        parse_shapes(graph)
-
-
-@pytest.mark.parametrize(
-    "class_value",
-    ["( ex:Company ex:Org )", "()"],
-    ids=["union", "empty_union"],
-)
-def test_sh_class_list_form_raises(class_value: str) -> None:
-    """The 1.2 union syntax (§7.1.1) has no lowering yet — including the
-    empty (vacuous) union, which reaches this branch rather than parsing
-    as an IRI."""
-    graph = _person_graph(f"sh:class {class_value} ;")
-    with pytest.raises(UnsupportedShapeError, match="list form"):
-        parse_shapes(graph)
-
-
-def test_literal_sh_class_value_raises() -> None:
-    """``sh:class`` values are IRIs or IRI lists — a literal is ill-formed
-    (§7.1.1), and the error cites the spec rule."""
-    graph = _person_graph('sh:class "Company" ;')
-    with pytest.raises(
-        UnsupportedShapeError,
-        match=r"is not an IRI \(SHACL §7\.1\.1: values are IRIs or lists of IRIs\)$",
-    ):
-        parse_shapes(graph)
 
 
 @pytest.mark.parametrize(
@@ -805,118 +463,6 @@ def test_property_walk_continues_past_skipped_properties(
         person = parse_shapes(graph).by_type_name["Person"]
     assert set(person.property_shapes) == {"name", "tag"}
     assert person.property_shapes["name"].min_count == 1
-
-
-def test_derived_relationship_without_datatype_parses() -> None:
-    """A derived relationship anchors on ``sh:class`` alone — the
-    ``sh:datatype`` requirement binds only non-relationship derived fields
-    (ADR-0015: (RELATIONSHIP, DERIVED) needs no literal space)."""
-    graph = _shapes_graph(
-        """
-        @prefix ex:    <http://example.org/> .
-        @prefix sh:    <http://www.w3.org/ns/shacl#> .
-        @prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
-
-        ex:PersonShape a sh:NodeShape ;
-            sh:codeIdentifier "Person" ;
-            sh:targetClass ex:Person ;
-            sh:property [
-                sh:path ex:friend ;
-                sh:class ex:Person ;
-                sh:values [ shnex:pathValues ex:knows ] ;
-            ] .
-        """
-    )
-    friend = parse_shapes(graph).by_type_name["Person"].property_shapes["friend"]
-    assert friend.datatypes == ()
-    assert friend.value_class == EX + "Person"
-    assert friend.value_type is ValueType.RELATIONSHIP
-
-
-def test_description_language_reaches_property_shapes() -> None:
-    """``description_language`` flows through the node shape into every
-    property shape's own description read (ADR-0007)."""
-    graph = _shapes_graph(
-        """
-        @prefix ex:   <http://example.org/> .
-        @prefix sh:   <http://www.w3.org/ns/shacl#> .
-        @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
-
-        ex:ThingShape a sh:NodeShape ;
-            sh:codeIdentifier "Thing" ;
-            sh:targetClass ex:Thing ;
-            sh:property [
-                sh:path ex:note ;
-                sh:datatype xsd:string ;
-                sh:description "A label."@en , "Ein Etikett."@de ;
-            ] .
-        """
-    )
-    note = parse_shapes(graph, description_language="de").by_type_name["Thing"]
-    assert note.property_shapes["note"].description == "Ein Etikett."
-
-
-def test_node_description_defaults_to_english() -> None:
-    """The ``description_language`` default (``"en"``) is contract: without an
-    override, a shape with ``de``/``en`` descriptions reads the English one
-    (ADR-0007) — the lexical fallback would pick ``de``."""
-    graph = _shapes_graph(
-        """
-        @prefix ex:   <http://example.org/> .
-        @prefix sh:   <http://www.w3.org/ns/shacl#> .
-        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-
-        ex:ThingShape a sh:NodeShape ;
-            sh:codeIdentifier "Thing" ;
-            sh:targetClass ex:Thing ;
-            rdfs:comment "Hello"@en , "Hallo"@de .
-        """
-    )
-    shape = parse_node_shape(graph, EX + "ThingShape")
-    assert shape.description == "Hello"
-
-
-def test_property_description_defaults_to_english() -> None:
-    """Same default at the property level: a directly parsed property shape
-    without a language override reads the English description."""
-    graph = _shapes_graph(
-        """
-        @prefix ex:   <http://example.org/> .
-        @prefix sh:   <http://www.w3.org/ns/shacl#> .
-        @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
-
-        ex:noteShape a sh:PropertyShape ;
-            sh:path ex:note ;
-            sh:datatype xsd:string ;
-            sh:description "A label."@en , "Ein Etikett."@de .
-        """
-    )
-    parsed = parse_property_shape(
-        graph, EX + "noteShape", parent_graphql_type_name="Thing"
-    )
-    assert parsed is not None
-    assert parsed.description == "A label."
-
-
-def test_parse_shapes_description_language_default_is_english() -> None:
-    """The facade-level default (``"en"``) is contract, matching the
-    node/property-level defaults: ``parse_shapes`` without an override reads
-    the English description (ADR-0007) — the lexical fallback would pick
-    ``de``."""
-    graph = _shapes_graph(
-        """
-        @prefix ex:   <http://example.org/> .
-        @prefix sh:   <http://www.w3.org/ns/shacl#> .
-        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-
-        ex:ThingShape a sh:NodeShape ;
-            sh:codeIdentifier "Thing" ;
-            sh:targetClass ex:Thing ;
-            rdfs:comment "Hello"@en , "Hallo"@de .
-        """
-    )
-    registry = parse_shapes(graph)
-    assert registry.by_type_name["Thing"].description == "Hello"
 
 
 def test_blank_node_shape_skip_keeps_later_shapes(caplog) -> None:

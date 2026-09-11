@@ -1,0 +1,11 @@
+query RelationshipTargetingAutoTypedLinks {
+  customer {
+    name
+    address {
+      street
+    }
+    note {
+      text
+    }
+  }
+}

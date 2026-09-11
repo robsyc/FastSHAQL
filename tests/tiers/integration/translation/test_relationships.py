@@ -98,28 +98,6 @@ def test_translate_optional_relationship_wraps_child_subtree(
     assert employer_map.fields == {"name": Variable("employer_name")}
 
 
-def test_translate_sh_node_relationship_omits_type_triple(
-    person_shape,
-    relationship_registry: ShapeRegistry,
-) -> None:
-    field_node = _root_field("{ persons { address { street } } }")
-    result = translate_query(person_shape, field_node, relationship_registry)
-    assert result.query.render() == (
-        """SELECT ?iri ?address_iri ?address_street
-WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
-  OPTIONAL {
-    ?iri <http://example.org/address> ?address_iri .
-    ?address_iri <http://example.org/street> ?address_street .
-  }
-}"""
-    )
-    assert (
-        "a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Address>"
-        not in result.query.render()
-    )
-
-
 # --- Nesting and recursion ---
 
 
