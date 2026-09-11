@@ -1,6 +1,6 @@
 SELECT ?iri ?registryCode ?assayPanels
 WHERE {
-  ?iri a <http://example.org/genomics/Gene> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/genomics/Gene> .
   BIND("FSQ-REG" AS ?registryCode)
   OPTIONAL {
     VALUES ?assayPanels {

@@ -32,7 +32,7 @@ def test_translate_implicit_and_multiple_scalars(
     result = translate_query(person, root_field_node(query), relationship_registry)
     golden = """SELECT ?iri ?name ?age
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   ?iri <http://example.org/age> ?age .
   FILTER(?name = "Alice" && ?age > "25"^^<http://www.w3.org/2001/XMLSchema#integer>)
@@ -53,7 +53,7 @@ def test_translate_explicit_and_combinator(
     )
     golden = """SELECT ?iri ?name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   FILTER(?name = "Alice" && CONTAINS(?name, "lic"))
 }"""
@@ -70,7 +70,7 @@ def test_translate_explicit_not_combinator(
     )
     golden = """SELECT ?iri ?name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   FILTER(!(?name = "Alice"))
 }"""

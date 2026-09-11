@@ -1,6 +1,6 @@
 SELECT ?iri ?source ?iriLength
 WHERE {
-  ?iri a <http://example.org/Item> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Item> .
   BIND("Fastshaql" AS ?source)
   BIND(STRLEN(STR(?iri)) AS ?iriLength)
 }

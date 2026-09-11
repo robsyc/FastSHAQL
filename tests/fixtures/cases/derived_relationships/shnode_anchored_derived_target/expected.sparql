@@ -1,10 +1,11 @@
 SELECT ?iri ?name ?featuredEdition_iri ?featuredEdition_title
 WHERE {
-  ?iri a <http://example.org/library/Member> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/library/Member> .
   ?iri <http://example.org/library/name> ?name .
   OPTIONAL {
     ?iri <http://example.org/library/sponsors> ?edition .
     BIND(?edition AS ?featuredEdition_iri)
+    ?featuredEdition_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/library/RareBook> .
     ?featuredEdition_iri <http://example.org/library/title> ?featuredEdition_title .
   }
 }

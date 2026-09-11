@@ -8,12 +8,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from rdflib import RDF, URIRef, Variable
+from rdflib import URIRef, Variable
 
 from fastshaql.core.kernel.constants import IRI_FIELD
 from fastshaql.core.sparql import (
     Pattern,
-    PredicatePath,
     SelectQuery,
     TriplePattern,
 )
@@ -27,6 +26,7 @@ from .filters import (
     translate_where_filter,
 )
 from .node_expr import translate_node_expr
+from .paths import SHACL_INSTANCE_PATH
 from .scope import TranslationScope
 from .selection import iter_field_selections, translate_selection
 from .variables import TranslationResult, VariableAllocator
@@ -127,15 +127,15 @@ def translate_query(
 
 
 def _target_entity_patterns(shape: NodeShapeIR, subject: Variable) -> list[Pattern]:
-    """Root-entity emission for the shape's target (ADR-0016): the
-    target-class ``rdf:type`` triple, or the target expression's lowering
-    with the shape IRI as focus term — pagination and filters join on
-    ``?iri`` either way."""
+    """Root-entity emission for the shape's target (ADR-0016): the target
+    class's SHACL-instance path (ADR-0025), or the target expression's
+    lowering with the shape IRI as focus term — pagination and filters join
+    on ``?iri`` either way."""
     if shape.target_class is not None:
         return [
             TriplePattern(
                 subject=subject,
-                predicate=PredicatePath(RDF.type),
+                predicate=SHACL_INSTANCE_PATH,
                 object=shape.target_class,
             )
         ]

@@ -3,7 +3,7 @@ WHERE {
   {
     SELECT DISTINCT ?iri
     WHERE {
-      ?iri a <http://example.org/Person> .
+      ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
     }
     ORDER BY ?iri
     OFFSET 10

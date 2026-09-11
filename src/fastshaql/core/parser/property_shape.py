@@ -25,12 +25,13 @@ from .node_expr import (
 from .shacl_in import parse_shacl_in
 from .shacl_path import parse_shacl_path
 from .util import (
+    SH_AND,
     SH_CLASS,
     first_localized_str,
     object_int,
     property_graphql_field_name,
     read_code_identifier,
-    sole_object,
+    strict_rdf_list,
     synthesize_inline_shape_iri,
 )
 
@@ -132,47 +133,101 @@ def _check_default_value_boundaries(
         )
 
 
-def _sole_class_value(graph: Graph, prop_shape: Node) -> URIRef | None:
-    """The ``sh:class`` relationship anchor (SHACL Core §7.1.1).
+def _and_class_values(graph: Graph, prop_shape: Node) -> tuple[URIRef, ...]:
+    """Classes contributed by ``sh:and`` members whose sole constraint is
+    ``sh:class`` (SHACL Core §7.7.2 — the same conjunction as repeated
+    ``sh:class`` values, §3.1.1). A member carrying any other constraint
+    warns and voids the whole ``sh:and``: consuming its class slice alone
+    would loosen it.
+    """
+    classes: list[URIRef] = []
+    for head in graph.objects(prop_shape, SH_AND):
+        for member in strict_rdf_list(graph, head, what=f"sh:and on {prop_shape}"):
+            values = list(graph.objects(member, SH_CLASS))
+            if set(graph.predicates(member, None)) != {SH_CLASS} or not all(
+                isinstance(v, URIRef) for v in values
+            ):
+                logger.warning(
+                    "sh:and on %s carries members beyond sh:class — "
+                    "validator-only, ignored for reads",
+                    prop_shape,
+                )
+                return ()
+            classes.extend(v for v in values if isinstance(v, URIRef))
+    return tuple(classes)
 
-    A single IRI is the classic form. The 1.2 list form (union semantics)
-    and multiple values (the spec ANDs them) have no lowering — both
-    reject loudly rather than silently degrading the field to a scalar.
+
+def _class_values(
+    graph: Graph, prop_shape: Node, *, node_ref: URIRef | None
+) -> tuple[URIRef, ...]:
+    """The binding class constraints (SHACL Core §7.1.1): the ``sh:class``
+    values conjoined with classes from class-only ``sh:and`` members
+    (§7.7.2), IRI-sorted for deterministic emission.
+
+    The 1.2 list form (union semantics) rejects loudly until polymorphic
+    relationships land (ADR-0026); conjoined classes without ``sh:node``
+    reject with guidance — their intersection names no target shape.
 
     Raises:
         UnsupportedShapeError: On a literal value (§7.1.1: IRIs or lists
-            of IRIs only), the list form, or multiple values.
+            of IRIs only), the list form, or conjoined classes without
+            ``sh:node``.
     """
-    value = sole_object(graph, prop_shape, SH_CLASS, what="sh:class")
-    if value is None:
-        return None
-    if isinstance(value, Literal):
+    at = f"sh:class on {prop_shape}"
+    flat = {v for v in graph.objects(prop_shape, SH_CLASS) if isinstance(v, URIRef)}
+    for value in graph.objects(prop_shape, SH_CLASS):
+        if value == RDF.nil:
+            raise UnsupportedShapeError(
+                f"{at}: the sh:class list form is empty — declare at least one class IRI"
+            )
+        if isinstance(value, Literal):
+            raise UnsupportedShapeError(
+                f"sh:class value {value!r} on {prop_shape} is not an IRI "
+                "(SHACL §7.1.1: values are IRIs or lists of IRIs)"
+            )
+        if not isinstance(value, URIRef):
+            raise UnsupportedShapeError(
+                f"{at}: the sh:class list form (union of target classes, SHACL 1.2 "
+                "§7.1.1) is not lowered yet — declare one class per property until "
+                "polymorphic relationships land"
+                + (
+                    " (a list cannot express the binding union beside sh:node either)"
+                    if node_ref is not None
+                    else ""
+                )
+            )
+    flat.update(_and_class_values(graph, prop_shape))
+    values = tuple(sorted(flat, key=str))
+    if len(values) > 1 and node_ref is None:
         raise UnsupportedShapeError(
-            f"sh:class value {value!r} on {prop_shape} is not an IRI "
-            "(SHACL §7.1.1: values are IRIs or lists of IRIs)"
+            f"{at}: multiple conjoined classes (sh:class, sh:and) intersect "
+            "(SHACL §7.1.1) but name no shape — add sh:node to select the target"
         )
-    if not isinstance(value, URIRef) or value == RDF.nil:
-        raise UnsupportedShapeError(
-            f"sh:class list form (union semantics, SHACL §7.1.1) on "
-            f"{prop_shape} is not supported"
-        )
-    return value
+    return values
 
 
 def _sole_node_ref(graph: Graph, prop_shape: Node) -> URIRef | None:
-    """The ``sh:node`` value-shape anchor (SHACL Core §7.8.1).
+    """The ``sh:node`` value-shape anchor (SHACL Core §7.8.1) — the target.
 
     Values must be well-formed node shapes. A blank node (an inline shape)
-    and multiple values (the spec conjoins them, §3.1.1) reject loudly —
-    silently dropping either would degrade the field to a scalar.
+    rejects loudly — silently dropping it would degrade the field to a
+    scalar. Multiple values reject with the targeting model's remedy:
+    conformance to several node shapes selects no single GraphQL type.
 
     Raises:
         UnsupportedShapeError: On a literal value, a blank-node value, or
             multiple values.
     """
-    value = sole_object(graph, prop_shape, SH.node, what="sh:node")
-    if value is None:
+    values = list(graph.objects(prop_shape, SH.node))
+    if len(values) > 1:
+        raise UnsupportedShapeError(
+            f"Multiple sh:node values on {prop_shape} — the spec conjoins them "
+            "(SHACL §7.8.1) but conformance to several shapes selects no single "
+            "GraphQL type; declare one target"
+        )
+    if not values:
         return None
+    value = values[0]
     if isinstance(value, Literal):
         raise UnsupportedShapeError(
             f"sh:node value {value!r} on {prop_shape} is not a node shape (SHACL §7.8.1)"
@@ -219,9 +274,9 @@ def parse_property_shape(
             (§7.2); derived-field and default-value boundary violations
             (ADR-0015); datatype/``sh:or`` forms fastshaql cannot lower
             (:func:`~fastshaql.core.parser.datatypes.datatypes_from_shape`);
-            and the ``sh:class``/``sh:node``
-            forms with no lowering — the ``sh:class`` list form (§7.1.1),
-            multiple values (the spec conjoins them, §3.1.1), or a
+            and the targeting forms with no lowering (ADR-0025): the
+            ``sh:class`` list form (§7.1.1 union — ADR-0026), conjoined
+            classes without ``sh:node``, multiple ``sh:node`` values, or a
             blank-node ``sh:node`` (inline node shape).
     """
     path = parse_shacl_path(graph, prop_shape)
@@ -240,8 +295,8 @@ def parse_property_shape(
         )
     )
 
-    value_class = _sole_class_value(graph, prop_shape)
     node_ref = _sole_node_ref(graph, prop_shape)
+    value_classes = _class_values(graph, prop_shape, node_ref=node_ref)
 
     in_values = parse_shacl_in(graph, prop_shape)
     if in_values == ():
@@ -253,7 +308,7 @@ def parse_property_shape(
     values_expr = parse_node_expr(graph, prop_shape)
     default_expr = parse_default_value(graph, prop_shape)
 
-    is_relationship = value_class is not None or node_ref is not None
+    is_relationship = bool(value_classes) or node_ref is not None
     if is_relationship and in_values is not None:
         logger.warning(
             "Relationship-overlay sh:in on %s field %r — read-ignored; fastshaql performs no write-validation",
@@ -310,7 +365,7 @@ def parse_property_shape(
         datatypes=datatypes,
         min_count=min_count,
         max_count=max_count,
-        value_class=value_class,
+        value_classes=value_classes,
         value_shape_iri=node_ref,
         in_values=in_values,
         values_expr=values_expr,

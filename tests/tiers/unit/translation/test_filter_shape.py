@@ -9,7 +9,7 @@ Order: flat conjuncts → nested property conjuncts → class unions.
 
 from __future__ import annotations
 
-from rdflib import RDF, Literal, URIRef, Variable
+from rdflib import RDF, RDFS, Literal, URIRef, Variable
 from rdflib.namespace import XSD
 
 from fastshaql.core.ir.filter_shape import (
@@ -30,6 +30,12 @@ from fastshaql.core.sparql import (
 )
 from fastshaql.core.sparql import (
     PredicatePath as SparqlPredicatePath,
+)
+from fastshaql.core.sparql import (
+    SequencePath as SparqlSequencePath,
+)
+from fastshaql.core.sparql import (
+    ZeroOrMorePath as SparqlZeroOrMorePath,
 )
 from fastshaql.core.translation.filter_shape import translate_filter_shape
 
@@ -93,7 +99,12 @@ def test_min_count_one_inside_property_is_absorbed_by_the_join() -> None:
         ),
         TriplePattern(
             subject=Variable("v_p0"),
-            predicate=SparqlPredicatePath(RDF.type),
+            predicate=SparqlSequencePath(
+                (
+                    SparqlPredicatePath(RDF.type),
+                    SparqlZeroOrMorePath(SparqlPredicatePath(RDFS.subClassOf)),
+                )
+            ),
             object=EX + "Disease",
         ),
     ]
@@ -129,7 +140,12 @@ def test_single_class_conjunct_sits_directly_as_path_object() -> None:
     assert patterns == [
         TriplePattern(
             subject=Variable("v"),
-            predicate=SparqlPredicatePath(RDF.type),
+            predicate=SparqlSequencePath(
+                (
+                    SparqlPredicatePath(RDF.type),
+                    SparqlZeroOrMorePath(SparqlPredicatePath(RDFS.subClassOf)),
+                )
+            ),
             object=EX + "Disease",
         )
     ]

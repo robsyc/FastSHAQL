@@ -33,7 +33,7 @@ def test_translate_promotion_optional_field_in_filter_bound(
     assert result.query.render() == (
         """SELECT ?iri ?label ?subtitle
 WHERE {
-  ?iri a <http://example.org/Thing> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Thing> .
   ?iri <http://example.org/label> ?label .
   ?iri <http://example.org/subtitle> ?subtitle .
   FILTER(?subtitle = "The First")
@@ -53,7 +53,7 @@ def test_translate_promotion_filtered_field_not_selected(
     assert result.query.render() == (
         """SELECT ?iri ?label
 WHERE {
-  ?iri a <http://example.org/Thing> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Thing> .
   ?iri <http://example.org/label> ?label .
   ?iri <http://example.org/subtitle> ?subtitle .
   FILTER(?subtitle = "The First")
@@ -62,26 +62,29 @@ WHERE {
     assert "subtitle" not in result.query.render().split("SELECT")[1].split("WHERE")[0]
 
 
-def test_translate_sh_node_relationship_filter_omits_type_in_exists(
+def test_translate_sh_node_relationship_filter_auto_types_in_exists(
     person_shape,
     relationship_registry: ShapeRegistry,
 ) -> None:
+    """The filter's EXISTS scope auto-types a ``sh:node`` traversal exactly
+    like the selection walk (ADR-0025) — candidates narrow to SHACL
+    instances of the target's class before the inner predicates apply."""
     query = '{ persons(where: { address: { street: { eq: "Main St" } } }) { name } }'
     result = translate_query(
         person_shape, root_field_node(query), relationship_registry
     )
     golden = """SELECT ?iri ?name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   ?iri <http://example.org/address> ?address_iri .
   FILTER(EXISTS {
+    ?address_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Address> .
     ?address_iri <http://example.org/street> ?_rf_address_street .
     FILTER(?_rf_address_street = "Main St")
   })
 }"""
     assert result.query.render() == golden
-    assert "a <http://example.org/Address>" not in result.query.render()
 
 
 def test_translate_employer_name_filter_with_selection(
@@ -98,13 +101,13 @@ def test_translate_employer_name_filter_with_selection(
     assert result.query.render() == (
         """SELECT ?iri ?name ?employer_iri ?employer_name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   ?iri <http://example.org/employer> ?employer_iri .
-  ?employer_iri a <http://example.org/Company> .
+  ?employer_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Company> .
   ?employer_iri <http://example.org/name> ?employer_name .
   FILTER(EXISTS {
-    ?employer_iri a <http://example.org/Company> .
+    ?employer_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Company> .
     ?employer_iri <http://example.org/name> ?_rf_employer_name .
     FILTER(?_rf_employer_name = "Acme")
   })
@@ -127,11 +130,11 @@ def test_translate_root_filter_does_not_promote_optional_child_field(
     result = translate_query(person, root_field_node(query), registry)
     golden = """SELECT ?iri ?name ?employer_iri ?employer_name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   OPTIONAL {
     ?iri <http://example.org/employer> ?employer_iri .
-    ?employer_iri a <http://example.org/Company> .
+    ?employer_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Company> .
     OPTIONAL {
       ?employer_iri <http://example.org/name> ?employer_name .
     }
@@ -160,7 +163,7 @@ def test_translate_empty_relationship_filter_promotes_join(
     )
     golden = """SELECT ?iri ?name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   ?iri <http://example.org/employer> ?employer_iri .
 }"""
@@ -179,10 +182,10 @@ def test_translate_nested_filter_does_not_promote_homonymous_root_scalar(
     )
     golden = """SELECT ?iri
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/employer> ?employer_iri .
   FILTER(EXISTS {
-    ?employer_iri a <http://example.org/Company> .
+    ?employer_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Company> .
     ?employer_iri <http://example.org/name> ?_rf_employer_name .
     FILTER(?_rf_employer_name = "Acme")
   })

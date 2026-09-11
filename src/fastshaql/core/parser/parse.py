@@ -2,9 +2,7 @@
 
 Three-pass parse:
 (1) walk the graph into ``NodeShapeIR`` / ``PropertyShapeIR`` dataclasses,
-(2) resolve ``sh:class`` cross-references via target-class lookup,
-set ``value_shape_iri`` on relationship properties,
-and create synthetic shapes for untargeted classes,
+(2) resolve relationships per the targeting model (ADR-0025),
 (3) flatten ``sh:node`` inheritance (ADR-0005) — merge parent property shapes
 into each child and reject cycles, then resolve visibility.
 
@@ -129,42 +127,49 @@ def _make_synthetic_shape(class_iri: URIRef) -> NodeShapeIR:
     )
 
 
-def _resolve_shape_iri(
+def _resolve_relationship(
     prop: PropertyShapeIR,
+    by_iri: dict[URIRef, NodeShapeIR],
     by_target_class: dict[URIRef, NodeShapeIR],
     synthetics: dict[URIRef, NodeShapeIR],
-) -> URIRef | None:
-    """Resolve the target shape IRI for a relationship property.
-
-    For ``sh:class``: look up the target shape via ``by_target_class``,
-    creating a synthetic shape if no match is found. Properties without
-    ``sh:class`` (including ``sh:node``) return ``None``, leaving their
-    pass-1 ``value_shape_iri`` untouched.
+) -> PropertyShapeIR:
+    """Resolve one relationship property per the targeting model
+    (ADR-0025): a ``sh:node`` property keeps its target and is
+    auto-typed from the target shape's ``indexed_class`` when it
+    declares no classes; a class-only property resolves its target via
+    ``by_target_class``, creating a synthetic shape when no shape
+    targets the class.
     """
-    if prop.value_class is not None:
-        target = by_target_class.get(prop.value_class)
+    if prop.value_shape_iri is not None:
+        target = by_iri.get(prop.value_shape_iri)
+        if prop.value_classes or target is None or target.indexed_class is None:
+            return prop
+        return dataclasses.replace(prop, value_classes=(target.indexed_class,))
+    if prop.value_classes:
+        class_iri = prop.value_classes[0]
+        target = by_target_class.get(class_iri)
         if target is not None:
-            return target.iri
-        if prop.value_class not in synthetics:
-            synthetics[prop.value_class] = _make_synthetic_shape(prop.value_class)
+            return dataclasses.replace(prop, value_shape_iri=target.iri)
+        if class_iri not in synthetics:
+            synthetics[class_iri] = _make_synthetic_shape(class_iri)
             log.warning(
                 "No shape targets class %s — created synthetic %s",
-                prop.value_class,
-                synthetics[prop.value_class].iri,
+                class_iri,
+                synthetics[class_iri].iri,
             )
-        return synthetics[prop.value_class].iri
-    return None
+        return dataclasses.replace(prop, value_shape_iri=synthetics[class_iri].iri)
+    return prop
 
 
 def parse_shapes(graph: Graph, *, description_language: str = "en") -> ShapeRegistry:
     """Parse every named ``sh:NodeShape`` in *graph* and return a :class:`ShapeRegistry`.
 
-    Pass 1 builds ``NodeShapeIR`` with raw ``value_class`` set and
+    Pass 1 builds ``NodeShapeIR`` with raw ``value_classes`` set and
     ``value_shape_iri`` populated for ``sh:node`` properties (the ``sh:node``
-    value IS the shape IRI). Pass 2 resolves ``sh:class`` properties by mapping
-    ``value_class`` to the target shape IRI via ``by_target_class``, creating
-    synthetic shapes for untargeted classes. Pass 3 flattens node-shape
-    inheritance (``sh:node`` on node shapes, ADR-0005) before visibility.
+    value IS the shape IRI). Pass 2 resolves relationships per the targeting
+    model (ADR-0025, :func:`_resolve_relationship`). Pass 3 flattens
+    node-shape inheritance (``sh:node`` on node shapes, ADR-0005) before
+    visibility.
 
     Shapes typed ``sh:ShapeClass`` (Core §3.1.3.3) are enumerated alongside
     ``sh:NodeShape`` — a shape may carry either or both types.
@@ -202,17 +207,16 @@ def parse_shapes(graph: Graph, *, description_language: str = "en") -> ShapeRegi
         )
 
     by_target_class = index_by_target_class(shapes)
+    by_iri = {shape.iri: shape for shape in shapes}
     synthetics: dict[URIRef, NodeShapeIR] = {}
 
     resolved: list[NodeShapeIR] = []
     for shape in shapes:
         props: dict[str, PropertyShapeIR] = {}
         for name, prop in shape.property_shapes.items():
-            target_iri = _resolve_shape_iri(prop, by_target_class, synthetics)
-            if target_iri is not None:
-                props[name] = dataclasses.replace(prop, value_shape_iri=target_iri)
-            else:
-                props[name] = prop
+            props[name] = _resolve_relationship(
+                prop, by_iri, by_target_class, synthetics
+            )
         resolved.append(dataclasses.replace(shape, property_shapes=props))
 
     resolved = _resolve_inheritance(resolved)

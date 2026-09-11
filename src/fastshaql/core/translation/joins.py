@@ -8,13 +8,18 @@ subject (ADR-0015). Callers never re-spread the source decision.
 
 from __future__ import annotations
 
-from rdflib import RDF, Variable
+from typing import TYPE_CHECKING
 
-from fastshaql.core.ir import PropertyShapeIR, ValueSource
-from fastshaql.core.sparql import Pattern, PredicatePath, TriplePattern
+from fastshaql.core.ir import ValueSource
+from fastshaql.core.sparql import Pattern, TriplePattern
 
 from .node_expr import translate_node_expr
-from .paths import map_shacl_path_to_sparql_path
+from .paths import SHACL_INSTANCE_PATH, map_shacl_path_to_sparql_path
+
+if TYPE_CHECKING:
+    from rdflib import Variable
+
+    from fastshaql.core.ir import PropertyShapeIR
 
 
 def relationship_join_patterns(
@@ -30,8 +35,9 @@ def relationship_join_patterns(
     *child_subject* as the value variable (replace-not-union — asserted path
     triples are dropped, ADR-0015).
 
-    When *emit_type_triple* is true and the property carries a ``value_class``,
-    also emits the child ``rdf:type`` triple via :func:`relationship_type_patterns`.
+    When *emit_type_triple* is true and the property carries binding
+    classes, also emits their SHACL-instance typing paths via
+    :func:`relationship_type_patterns`.
     """
     if prop.source is ValueSource.DERIVED:
         if prop.values_expr is None:
@@ -60,7 +66,10 @@ def relationship_type_patterns(
     subject: Variable,
     prop: PropertyShapeIR,
 ) -> list[Pattern]:
-    """Emit the child ``rdf:type`` constraint triple for a relationship subject."""
-    if prop.value_class is None:
-        return []
-    return [TriplePattern(subject, PredicatePath(RDF.type), prop.value_class)]
+    """Emit the child's SHACL-instance typing paths for a relationship
+    subject (ADR-0025): one conjunctive path per declared class — empty
+    when the binding carries none."""
+    return [
+        TriplePattern(subject, SHACL_INSTANCE_PATH, class_iri)
+        for class_iri in prop.value_classes
+    ]

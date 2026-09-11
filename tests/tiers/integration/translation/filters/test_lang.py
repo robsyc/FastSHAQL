@@ -37,7 +37,7 @@ def test_translate_lang_string_filter_wraps_str(
     result = translate_query(person, root_field_node(query), relationship_registry)
     golden = """SELECT ?iri ?name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   FILTER(STR(?name) = "Alice")
 }"""
@@ -60,7 +60,7 @@ def test_translate_dir_lang_string_filter_compares_as_plain_string(
     result = translate_query(person, root_field_node(query), relationship_registry)
     golden = """SELECT ?iri ?name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   FILTER(STR(?name) = "Alice")
 }"""
@@ -122,7 +122,7 @@ def test_translate_lang_and_where_filter_on_lang_string_separate_clauses(
     )
     golden = """SELECT ?iri ?name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   OPTIONAL {
     ?iri <http://example.org/name> ?_l0_name .
     FILTER(langMatches(LANG(?_l0_name), "en"))
@@ -160,7 +160,7 @@ def test_translate_union_field_filter_compares_resolved_value(
     )
     golden = """SELECT ?iri ?note
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   OPTIONAL {
     ?iri <http://example.org/note> ?_l0_note .
     FILTER(langMatches(LANG(?_l0_note), "en"))
@@ -196,10 +196,10 @@ def test_translate_nested_relationship_lang_string_filter(
     )
     golden = """SELECT ?iri ?employer_iri ?employer_bio
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   OPTIONAL {
     ?iri <http://example.org/employer> ?employer_iri .
-    ?employer_iri a <http://example.org/Company> .
+    ?employer_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Company> .
     OPTIONAL {
       ?employer_iri <http://example.org/bio> ?_l0_employer_bio .
       FILTER(langMatches(LANG(?_l0_employer_bio), "en"))
@@ -231,7 +231,7 @@ def test_translate_promoted_lang_string_list_emits_union_filter(
     )
     golden = """SELECT ?iri ?name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   ?iri <http://example.org/bio> ?bio .
   FILTER(langMatches(LANG(?bio), "en"))
@@ -268,7 +268,7 @@ WHERE {{
   {{
     SELECT DISTINCT ?iri
     WHERE {{
-      ?iri a <http://example.org/Person> .
+      ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
 {textwrap.indent(chain, "    ")}
       FILTER(STR(?name) = "Alice")
     }}
@@ -304,13 +304,13 @@ def test_translate_filter_exists_emits_chain_on_rf_variable(
     )
     golden = """SELECT ?iri ?name ?employer_iri ?employer_name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   ?iri <http://example.org/employer> ?employer_iri .
-  ?employer_iri a <http://example.org/Company> .
+  ?employer_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Company> .
   ?employer_iri <http://example.org/name> ?employer_name .
   FILTER(EXISTS {
-    ?employer_iri a <http://example.org/Company> .
+    ?employer_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Company> .
     OPTIONAL {
       ?employer_iri <http://example.org/bio> ?_l0__rf_employer_bio .
       FILTER(langMatches(LANG(?_l0__rf_employer_bio), "en"))

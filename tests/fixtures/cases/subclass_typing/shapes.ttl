@@ -1,0 +1,45 @@
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
+@prefix ex:    <http://example.org/> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+
+# Typing emissions close over rdfs:subClassOf (SHACL-instance semantics,
+# ADR-0025): sh:targetClass roots, sh:class bindings, and sh:class inside
+# shnex:filterShape all match values typed through a subclass chain.
+
+ex:AssetShape a sh:NodeShape ;
+    sh:codeIdentifier "Asset" ;
+    sh:targetClass ex:Asset ;
+    sh:property [
+        sh:path ex:label ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:heldBy ;
+        sh:class ex:Custodian ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] .
+
+ex:CustodianShape a sh:NodeShape ;
+    sh:codeIdentifier "Custodian" ;
+    sh:targetClass ex:Custodian ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:heldAssets ;
+        sh:class ex:Asset ;
+        sh:values [
+            shnex:nodes [
+                shnex:pathValues [ sh:inversePath ex:heldBy ]
+            ] ;
+            shnex:filterShape [ sh:class ex:Asset ]
+        ] ;
+        sh:minCount 0
+    ] .

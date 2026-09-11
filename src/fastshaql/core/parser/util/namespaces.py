@@ -10,6 +10,7 @@ from rdflib import Namespace, URIRef
 
 SH_NS = "http://www.w3.org/ns/shacl#"
 
+SH_AND = URIRef(f"{SH_NS}and")
 SH_CLASS = URIRef(f"{SH_NS}class")
 SH_CODE_IDENTIFIER = URIRef(f"{SH_NS}codeIdentifier")
 SH_IN = URIRef(f"{SH_NS}in")

@@ -1,0 +1,29 @@
+SELECT ?iri ?name ?billing_iri ?billing_street ?shipping_iri ?shipping_street ?contacts_iri ?contacts_street ?registered_iri ?registered_street
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Customer> .
+  ?iri <http://example.org/name> ?name .
+  OPTIONAL {
+    ?iri <http://example.org/billing> ?billing_iri .
+    ?billing_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/VerifiedAddress> .
+    ?billing_iri <http://example.org/street> ?billing_street .
+  }
+  OPTIONAL {
+    ?iri <http://example.org/shipping> ?shipping_iri .
+    ?shipping_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/PostalAddress> .
+    ?shipping_iri <http://example.org/street> ?shipping_street .
+  }
+  OPTIONAL {
+    VALUES ?contacts_iri {
+      <http://example.org/bill-1>
+      <http://example.org/bill-2>
+    }
+    ?contacts_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/VerifiedAddress> .
+    ?contacts_iri <http://example.org/street> ?contacts_street .
+  }
+  OPTIONAL {
+    ?iri <http://example.org/registered> ?registered_iri .
+    ?registered_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/PrimeAddress> .
+    ?registered_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/VerifiedAddress> .
+    ?registered_iri <http://example.org/street> ?registered_street .
+  }
+}

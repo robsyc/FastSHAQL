@@ -1,0 +1,36 @@
+{
+  "data": {
+    "customer": [
+      {
+        "name": "A",
+        "billing": {
+          "street": "Invoice Way 1"
+        },
+        "shipping": {
+          "street": "Depot 1"
+        },
+        "contacts": [
+          {
+            "street": "Invoice Way 1"
+          }
+        ],
+        "registered": {
+          "street": "Registry Way 1"
+        }
+      },
+      {
+        "name": "B",
+        "billing": null,
+        "shipping": {
+          "street": "Depot 2"
+        },
+        "contacts": [
+          {
+            "street": "Invoice Way 1"
+          }
+        ],
+        "registered": null
+      }
+    ]
+  }
+}
