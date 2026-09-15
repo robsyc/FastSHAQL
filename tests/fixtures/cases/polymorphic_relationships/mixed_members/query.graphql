@@ -1,0 +1,14 @@
+query PolymorphicMixedMembers {
+  article {
+    title
+    block {
+      __typename
+      ... on Paragraph {
+        text
+      }
+      ... on Image {
+        url
+      }
+    }
+  }
+}

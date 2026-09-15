@@ -93,7 +93,8 @@ def test_translate_optional_relationship_wraps_child_subtree(
         in optional_block
     )
     assert "?employer_iri <http://example.org/name> ?employer_name ." in optional_block
-    employer_iri, employer_map = result.var_map.relationships["employer"]
+    binding = result.var_map.relationships["employer"]
+    employer_iri, employer_map = binding.subject_var, binding.single_map
     assert employer_iri == Variable("employer_iri")
     assert employer_map.fields == {"name": Variable("employer_name")}
 
@@ -123,8 +124,9 @@ WHERE {
   }
 }"""
     )
-    knows_iri, knows_map = result.var_map.relationships["knows"]
-    nested_iri, _ = knows_map.relationships["knows"]
+    binding = result.var_map.relationships["knows"]
+    knows_iri, knows_map = binding.subject_var, binding.single_map
+    nested_iri = knows_map.relationships["knows"].subject_var
     assert knows_iri == Variable("knows_iri")
     assert nested_iri == Variable("knows_knows_iri")
 
@@ -213,10 +215,40 @@ def test_translate_raises_when_relationship_has_no_value_shape(
         translate_query(broken, field_node, relationship_registry)
 
 
-def test_translate_rejects_graphql_fragments(
+def test_translate_flattens_matching_inline_fragment(
     minimal_registry: ShapeRegistry,
 ) -> None:
+    """An inline fragment naming the enclosing object type flattens into the
+    selection (ADR-0026) — the fields translate as if written bare."""
     thing = minimal_registry.by_type_name["Thing"]
     field_node = _root_field("{ things { ... on Thing { label } } }")
-    with pytest.raises(TypeError, match="fragments are not supported"):
+    result = translate_query(thing, field_node, minimal_registry)
+    assert "?iri <http://example.org/label> ?label ." in result.query.render()
+
+
+def test_translate_rejects_named_fragment_spread(
+    minimal_registry: ShapeRegistry,
+) -> None:
+    """Named fragment spreads stay unsupported (ADR-0026 boundaries) — they
+    need operation-level definitions plumbed through ``translate_query``;
+    the rejection names the node kind."""
+    thing = minimal_registry.by_type_name["Thing"]
+    field_node = _root_field("{ things { ...thingFields } }")
+    with pytest.raises(
+        TypeError,
+        match=r"named fragments are not supported \(got 'FragmentSpreadNode'\)",
+    ):
+        translate_query(thing, field_node, minimal_registry)
+
+
+def test_translate_rejects_mismatched_inline_fragment(
+    minimal_registry: ShapeRegistry,
+) -> None:
+    """An inline fragment naming a type the field never returns rejects
+    loudly — the fields would silently select nothing (ADR-0026)."""
+    thing = minimal_registry.by_type_name["Thing"]
+    field_node = _root_field("{ things { ... on Elsewhere { label } } }")
+    with pytest.raises(
+        ValueError, match="Inline fragment on 'Elsewhere' inside a 'Thing' selection"
+    ):
         translate_query(thing, field_node, minimal_registry)

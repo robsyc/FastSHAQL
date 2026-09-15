@@ -41,7 +41,10 @@ from fastshaql.core.translation.filters.where import (
     translate_fields,
     translate_where_filter,
 )
-from fastshaql.core.translation.variables import VariableMap
+from fastshaql.core.translation.variables import (
+    RelationshipBinding,
+    VariableMap,
+)
 from support.graphql_utils import root_field_node
 from support.translation import translation_scope
 
@@ -130,9 +133,8 @@ def test_deeply_nested_relationship_filters_resolve_targets(
     person = relationship_registry.by_type_name["Person"]
     scope = translation_scope(relationship_registry)
     join_var = Variable("knows_iri")
-    scope.relationships["knows"] = (
-        join_var,
-        VariableMap(subject_var=join_var, fields={}, relationships={}),
+    scope.relationships["knows"] = RelationshipBinding.single(
+        join_var, VariableMap(subject_var=join_var, fields={}, relationships={})
     )
     ctx = RootFilterContext.from_scope(scope, bindings=FieldBindings())
     node = ObjectValueNode(

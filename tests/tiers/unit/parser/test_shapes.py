@@ -363,6 +363,7 @@ def test_zero_capacity_property_excludes_field(
     message = excluded[0].getMessage()
     assert declaration_label in message
     assert "on None" not in message  # the property shape is named, never dropped
+    assert "%s" not in message  # nor left unformatted by a dropped argument
 
 
 @pytest.mark.parametrize(

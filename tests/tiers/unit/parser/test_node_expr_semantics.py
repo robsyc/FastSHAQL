@@ -23,7 +23,10 @@ from fastshaql.core.ir.node_expr import (
 from fastshaql.core.ir.shacl_path import PredicatePath
 from fastshaql.core.kernel.io import load_shapes
 from fastshaql.core.parser.node_expr import UnsupportedShapeError
-from fastshaql.core.parser.node_expr.semantics import reject_derived_path_targets
+from fastshaql.core.parser.node_expr.semantics import (
+    reads_focus,
+    reject_derived_path_targets,
+)
 from fastshaql.core.parser.parse import parse_shapes
 from fastshaql.core.parser.util.namespaces import SH_VALUES
 from support.builders import EX, thing_shape
@@ -366,3 +369,22 @@ def test_derived_target_scan_requires_a_path_predicate() -> None:
     reject_derived_path_targets(
         graph, PathValuesNodeExpr(path=PredicatePath(EX + "name")), EX + "S", "f"
     )
+
+
+@pytest.mark.parametrize(
+    ("expr", "reads"),
+    [
+        ("STR($this)", True),
+        ("STR(?this)", True),
+        ('CONCAT("$this is a literal", "x")', False),
+        ('CONCAT("$this", STR($this))', True),
+        ("1 + 1", False),
+    ],
+    ids=["dollar", "qmark", "literal-only", "literal-and-code", "no-reference"],
+)
+def test_reads_focus_matches_only_code_positions(expr: str, reads: bool) -> None:
+    """``reads_focus`` runs the substitution's protected-region transform —
+    a ``$this`` inside a string literal is a literal value, so only code
+    positions count; the rejection and the substitution agree on what reads
+    the focus."""
+    assert reads_focus(expr) is reads

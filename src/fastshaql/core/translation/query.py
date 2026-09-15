@@ -28,7 +28,7 @@ from .filters import (
 from .node_expr import translate_node_expr
 from .paths import SHACL_INSTANCE_PATH
 from .scope import TranslationScope
-from .selection import iter_field_selections, translate_selection
+from .selection import iter_field_selections, reject_directives, translate_selection
 from .variables import TranslationResult, VariableAllocator
 from .where_assembly import WhereParts, assemble_where
 
@@ -75,6 +75,9 @@ def translate_query(
             "(SPARQL Update WITH / Graph Store Protocol target); the "
             "read-only query pipeline never consumes it — leave it unset"
         )
+    reject_directives(
+        field_node, where=f"the root query field {field_node.name.value!r}"
+    )
     where_arg = extract_where_argument(field_node)
     limit, offset = extract_pagination_arguments(field_node)
     paginate = limit is not None or offset is not None
@@ -94,7 +97,7 @@ def translate_query(
     scope.projection.append(subject)
 
     selection_patterns: list[Pattern] = []
-    for selection in iter_field_selections(field_node):
+    for selection in iter_field_selections(field_node, shape.graphql_type_name):
         selection_patterns.extend(
             translate_selection(selection, shape, scope, bindings)
         )

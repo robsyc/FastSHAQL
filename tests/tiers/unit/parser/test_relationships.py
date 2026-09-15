@@ -15,6 +15,8 @@ import pytest
 from rdflib import Graph, URIRef
 
 from fastshaql.core.ir import ValueType
+from fastshaql.core.ir.node_expr import SparqlExprNodeExpr
+from fastshaql.core.ir.property_shape import UnionMember
 from fastshaql.core.parser import parse_shapes
 from fastshaql.core.parser.errors import UnsupportedShapeError
 from support.builders import EX
@@ -310,13 +312,16 @@ def test_repeated_sh_class_creates_single_synthetic_shape(
 # --- Unsupported sh:node/sh:class forms ---
 
 
-def _person_graph(prop_body: str) -> Graph:
-    """A Person shape whose single ``note`` property carries *prop_body*."""
+def _person_graph(prop_body: str, shapes: str = "") -> Graph:
+    """A Person shape whose single ``note`` property carries *prop_body*,
+    beside any extra node *shapes*."""
     return _shapes_graph(
         f"""
         @prefix ex: <http://example.org/> .
         @prefix sh: <http://www.w3.org/ns/shacl#> .
+        @prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
         @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+        {shapes}
         ex:PersonShape a sh:NodeShape ;
             sh:codeIdentifier "Person" ;
             sh:targetClass ex:Person ;
@@ -388,48 +393,91 @@ def test_malformed_sh_and_list_raises() -> None:
         parse_shapes(graph)
 
 
-@pytest.mark.parametrize(
-    ("prop_def", "match"),
-    [
-        (
-            "ex:BadProp a sh:PropertyShape ; sh:path ex:dept ; sh:class ( ex:Company ex:Org ) .",
-            (
-                r"sh:class on http://example\.org/BadProp: the sh:class list form "
-                r"\(union of target classes, SHACL 1\.2 §7\.1\.1\) is not lowered "
-                r"yet — declare one class per property until polymorphic "
-                r"relationships land$"
-            ),
+def test_empty_sh_class_list_form_raises() -> None:
+    """The empty 1.2 list form stays a loud rejection — the union names no
+    members. Named property shapes: the rejection names the offender."""
+    graph = _named_props_graph(
+        "ex:BadProp",
+        "ex:BadProp a sh:PropertyShape ; sh:path ex:dept ; sh:class () .",
+    )
+    with pytest.raises(
+        UnsupportedShapeError,
+        match=(
+            r"sh:class on http://example\.org/BadProp: the sh:class list form is "
+            r"empty — declare at least one class IRI$"
         ),
-        (
-            "ex:BadProp a sh:PropertyShape ; sh:path ex:dept ; sh:class () .",
-            (
-                r"sh:class on http://example\.org/BadProp: the sh:class list form is "
-                r"empty — declare at least one class IRI$"
-            ),
-        ),
-        (
-            (
-                "ex:BadProp a sh:PropertyShape ; sh:path ex:dept ; sh:node ex:Elsewhere ; "
-                "sh:class ( ex:Company ex:Org ) ."
-            ),
-            (
-                r"sh:class on http://example\.org/BadProp: the sh:class list form .* "
-                r"until polymorphic relationships land \(a list cannot express the "
-                r"binding union beside sh:node either\)$"
-            ),
-        ),
-    ],
-    ids=["union", "empty_union", "union_with_node"],
-)
-def test_sh_class_list_form_raises(prop_def: str, match: str) -> None:
-    """The 1.2 union syntax (§7.1.1) stays a loud placeholder until polymorphic
-    relationships land (ADR-0026) — beside ``sh:node`` too, where the list
-    would express a binding union; including the empty (vacuous) union, which
-    reaches this branch rather than parsing as an IRI. Named property shapes —
-    the rejection names the offender."""
-    graph = _named_props_graph("ex:BadProp", prop_def)
-    with pytest.raises(UnsupportedShapeError, match=match):
+    ):
         parse_shapes(graph)
+
+
+def test_malformed_sh_class_list_form_raises() -> None:
+    """A structurally malformed list (a cons cell missing ``rdf:rest``)
+    rejects with the declaration named — the same reading as ``sh:and``."""
+    graph = _named_props_graph(
+        "ex:BadProp",
+        "ex:BadProp a sh:PropertyShape ; sh:path ex:dept ; "
+        "sh:class [ <http://www.w3.org/1999/02/22-rdf-syntax-ns#first> ex:Org ] .",
+    )
+    with pytest.raises(
+        UnsupportedShapeError,
+        match=(
+            r"sh:class on http://example\.org/BadProp list form is not a "
+            r"well-formed SHACL list"
+        ),
+    ):
+        parse_shapes(graph)
+
+
+def test_sh_class_list_form_alone_is_polymorphic() -> None:
+    """The 1.2 list form alone (§7.1.1 union semantics) normalises into
+    polymorphic members (ADR-0026): one member per declared class, resolved
+    through the class index — synthetics here, as no shapes target the
+    classes."""
+    graph = _named_props_graph(
+        "ex:DeptProp",
+        "ex:DeptProp a sh:PropertyShape ; sh:path ex:dept ; sh:class ( ex:Company ex:Org ) .",
+    )
+    registry = parse_shapes(graph)
+    prop = registry.by_type_name["Person"].property_shapes["dept"]
+    assert prop.value_type is ValueType.RELATIONSHIP
+    assert prop.is_polymorphic
+    assert prop.value_shape_iri is None
+    assert prop.value_classes == ()
+    assert prop.union_members == (
+        UnionMember(
+            shape_iri=URIRef("urn:fastshaql:synthetic:Company"),
+            class_iri=EX + "Company",
+        ),
+        UnionMember(
+            shape_iri=URIRef("urn:fastshaql:synthetic:Org"), class_iri=EX + "Org"
+        ),
+    )
+
+
+def test_sh_class_list_form_beside_node_is_binding_union() -> None:
+    """Beside ``sh:node`` the list form is the single-target binding union
+    (ADR-0025 row 5): every member pairs a declared class with the target,
+    auto-typing stays off, and the listed classes mint no synthetics."""
+    graph = _named_props_graph(
+        "ex:DeptProp",
+        """
+        ex:DeptProp a sh:PropertyShape ; sh:path ex:dept ;
+            sh:node ex:OrgShape ; sh:class ( ex:Company ex:Org ) .
+        ex:OrgShape a sh:NodeShape ; sh:codeIdentifier "Org" ;
+            sh:targetClass ex:Org .
+        """,
+    )
+    registry = parse_shapes(graph)
+    prop = registry.by_type_name["Person"].property_shapes["dept"]
+    assert prop.value_type is ValueType.RELATIONSHIP
+    assert not prop.is_polymorphic
+    assert prop.value_shape_iri == EX + "OrgShape"
+    assert prop.value_classes == ()
+    assert prop.union_members == (
+        UnionMember(shape_iri=EX + "OrgShape", class_iri=EX + "Company"),
+        UnionMember(shape_iri=EX + "OrgShape", class_iri=EX + "Org"),
+    )
+    assert URIRef("urn:fastshaql:synthetic:Company") not in registry.by_iri
 
 
 def test_sh_class_scan_ignores_deactivated_siblings() -> None:
@@ -466,23 +514,77 @@ def test_derived_relationship_without_datatype_parses() -> None:
     """A derived relationship anchors on ``sh:class`` alone — the
     ``sh:datatype`` requirement binds only non-relationship derived fields
     (ADR-0015: (RELATIONSHIP, DERIVED) needs no literal space)."""
-    graph = _shapes_graph(
-        """
-        @prefix ex:    <http://example.org/> .
-        @prefix sh:    <http://www.w3.org/ns/shacl#> .
-        @prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
-
-        ex:PersonShape a sh:NodeShape ;
-            sh:codeIdentifier "Person" ;
-            sh:targetClass ex:Person ;
-            sh:property [
-                sh:path ex:friend ;
-                sh:class ex:Person ;
-                sh:values [ shnex:pathValues ex:knows ] ;
-            ] .
-        """
+    graph = _person_graph(
+        "sh:class ex:Person ; sh:values [ shnex:pathValues ex:knows ] ;"
     )
-    friend = parse_shapes(graph).by_type_name["Person"].property_shapes["friend"]
+    friend = parse_shapes(graph).by_type_name["Person"].property_shapes["note"]
     assert friend.datatypes == ()
     assert friend.value_classes == (EX + "Person",)
     assert friend.value_type is ValueType.RELATIONSHIP
+
+
+@pytest.mark.parametrize("expr", ["STR($this)", "STR(?this)"], ids=["dollar", "qmark"])
+def test_derived_relationship_focus_bound_sparql_expr_rejects(expr: str) -> None:
+    """A derived relationship whose ``sh:sparqlExpr`` reads the focus node
+    rejects (ADR-0026 hazard containment): the ``BIND`` cannot live in the
+    guard's containing sub-SELECT — its values would drop — and uncontained
+    an erroring row fabricates values. Both focus spellings count."""
+    with pytest.raises(
+        UnsupportedShapeError,
+        match=r"computes its values with sh:sparqlExpr reading \$this",
+    ):
+        parse_shapes(
+            _person_graph(
+                f'sh:class ex:Page ; sh:values [ sh:sparqlExpr "{expr}" ] ; sh:maxCount 1'
+            )
+        )
+
+
+def test_derived_relationship_focus_bound_sparql_expr_rejects_without_typing() -> None:
+    """The rejection needs no typing anchor: the filter paths contain every
+    derived link emission, so a class-less ``sh:node`` target would swallow
+    the values the moment the field is filtered."""
+    with pytest.raises(UnsupportedShapeError, match="sh:sparqlExpr reading"):
+        parse_shapes(
+            _person_graph(
+                'sh:node ex:TagShape ; sh:values [ sh:sparqlExpr "STR($this)" ] ; '
+                "sh:maxCount 1",
+                shapes='ex:TagShape a sh:NodeShape ; sh:codeIdentifier "Tag" .',
+            )
+        )
+
+
+def test_derived_relationship_focus_independent_sparql_expr_parses() -> None:
+    """A focus-independent ``sh:sparqlExpr`` derives relationships fine —
+    its ``BIND`` binds regardless of the focus, so containment is safe
+    (every parent gets the value; the constant-IRI E2E case exercises it)."""
+    prop = (
+        parse_shapes(
+            _person_graph(
+                "sh:class ex:Page ; "
+                'sh:values [ sh:sparqlExpr "IRI(\\"http://example.org/central\\")" ] ; '
+                "sh:maxCount 1"
+            )
+        )
+        .by_type_name["Person"]
+        .property_shapes["note"]
+    )
+    assert prop.value_type is ValueType.RELATIONSHIP
+    assert isinstance(prop.values_expr, SparqlExprNodeExpr)
+
+
+def test_derived_scalar_focus_bound_sparql_expr_parses() -> None:
+    """Scalars never join a guard — a focus-reading ``sh:sparqlExpr`` stays
+    supported there (the ``BIND`` sits at group level, focus bound)."""
+    prop = (
+        parse_shapes(
+            _person_graph(
+                'sh:datatype xsd:integer ; sh:values [ sh:sparqlExpr "STRLEN(STR($this))" ] ; '
+                "sh:maxCount 1"
+            )
+        )
+        .by_type_name["Person"]
+        .property_shapes["note"]
+    )
+    assert prop.value_type is ValueType.SCALAR
+    assert isinstance(prop.values_expr, SparqlExprNodeExpr)

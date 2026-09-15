@@ -1,0 +1,23 @@
+query PolymorphicListFormEquivalence {
+  article {
+    title
+    block {
+      __typename
+      ... on Paragraph {
+        text
+      }
+      ... on Image {
+        url
+      }
+    }
+    chunk {
+      __typename
+      ... on Paragraph {
+        text
+      }
+      ... on Image {
+        url
+      }
+    }
+  }
+}

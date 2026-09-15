@@ -13,9 +13,15 @@ WHERE {
     ?shipping_iri <http://example.org/street> ?shipping_street .
   }
   OPTIONAL {
-    VALUES ?contacts_iri {
-      <http://example.org/bill-1>
-      <http://example.org/bill-2>
+    {
+      SELECT ?iri ?contacts_iri
+      WHERE {
+        VALUES ?contacts_iri {
+          <http://example.org/bill-1>
+          <http://example.org/bill-2>
+        }
+        FILTER(BOUND(?contacts_iri))
+      }
     }
     ?contacts_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/VerifiedAddress> .
     ?contacts_iri <http://example.org/street> ?contacts_street .

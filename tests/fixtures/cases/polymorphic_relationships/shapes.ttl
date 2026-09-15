@@ -1,0 +1,90 @@
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix ex:  <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# ADR-0026 polymorphic relationships: sh:or members (and the sh:class
+# list form) derive one union-typed field; the sh:class list beside
+# sh:node (ADR-0025 row 5) stays single-target behind a VALUES guard.
+
+ex:ParagraphShape a sh:NodeShape ;
+    sh:codeIdentifier "Paragraph" ;
+    sh:targetClass ex:Paragraph ;
+    sh:property [
+        sh:path ex:text ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:author ;
+        sh:node ex:PersonShape ;
+        sh:maxCount 1
+    ] .
+
+ex:PersonShape a sh:NodeShape ;
+    sh:codeIdentifier "Person" ;
+    sh:targetClass ex:Person ;
+    sh:property [
+        sh:path ex:name ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:ImageShape a sh:NodeShape ;
+    sh:codeIdentifier "Image" ;
+    sh:targetClass ex:Image ;
+    sh:property [
+        sh:path ex:url ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:AssetShape a sh:NodeShape ;
+    sh:codeIdentifier "Asset" ;
+    sh:targetClass ex:Asset ;
+    sh:property [
+        sh:path ex:caption ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:ArticleShape a sh:NodeShape ;
+    sh:codeIdentifier "Article" ;
+    sh:targetClass ex:Article ;
+    sh:property [
+        sh:path ex:title ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:lead ;
+        sh:or ( [ sh:class ex:Paragraph ] [ sh:class ex:Image ] ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:block ;
+        sh:or ( [ sh:class ex:Paragraph ] [ sh:node ex:ImageShape ] ) ;
+        sh:minCount 0
+    ] ;
+    sh:property [
+        sh:path ex:block ;
+        sh:codeIdentifier "chunk" ;
+        sh:class ( ex:Paragraph ex:Image ) ;
+        sh:minCount 0
+    ] ;
+    sh:property [
+        sh:path ex:related ;
+        sh:or ( [ sh:class ex:Paragraph ] [ sh:class ex:Image ] ) ;
+        sh:values ( ex:para-2 ex:img-2 ex:none-1 )
+    ] ;
+    sh:property [
+        sh:path ex:asset ;
+        sh:node ex:AssetShape ;
+        sh:class ( ex:Photo ex:Video ) ;
+        sh:minCount 0
+    ] .

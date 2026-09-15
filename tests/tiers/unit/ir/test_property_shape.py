@@ -19,6 +19,7 @@ from rdflib.namespace import RDF, XSD
 from fastshaql.core.ir import (
     FieldKind,
     LiteralSpace,
+    UnionMember,
     ValueSource,
     ValueType,
 )
@@ -234,3 +235,11 @@ def test_builders_reject_datatype_and_datatypes_together() -> None:
             datatype=XSD.string,
             datatypes=(XSD.string, RDF.langString),
         )
+
+
+def test_union_member_rejects_both_sides_unset() -> None:
+    """The machine-checkable half of the pass invariant — a member with
+    neither shape nor class IRI would fail far from its origin (an opaque
+    registry KeyError), so construction rejects it instead."""
+    with pytest.raises(ValueError, match="needs a shape IRI, a class IRI, or both"):
+        UnionMember(shape_iri=None, class_iri=None)

@@ -1,0 +1,54 @@
+{
+  "data": {
+    "article": [
+      {
+        "title": "Syntax highlights",
+        "related": [
+          {
+            "__typename": "Paragraph",
+            "text": "Related paragraph",
+            "author": {
+              "name": "Ada Lovelace"
+            }
+          },
+          {
+            "__typename": "Image",
+            "url": "https://example.org/img-2.png"
+          }
+        ]
+      },
+      {
+        "title": "Dual types",
+        "related": [
+          {
+            "__typename": "Paragraph",
+            "text": "Related paragraph",
+            "author": {
+              "name": "Ada Lovelace"
+            }
+          },
+          {
+            "__typename": "Image",
+            "url": "https://example.org/img-2.png"
+          }
+        ]
+      },
+      {
+        "title": "Childless",
+        "related": [
+          {
+            "__typename": "Paragraph",
+            "text": "Related paragraph",
+            "author": {
+              "name": "Ada Lovelace"
+            }
+          },
+          {
+            "__typename": "Image",
+            "url": "https://example.org/img-2.png"
+          }
+        ]
+      }
+    ]
+  }
+}

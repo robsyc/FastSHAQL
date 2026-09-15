@@ -1,0 +1,8 @@
+query PolymorphicBindingUnion {
+  article {
+    title
+    asset {
+      caption
+    }
+  }
+}

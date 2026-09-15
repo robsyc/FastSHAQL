@@ -1,0 +1,13 @@
+query PolymorphicDerivedUnion {
+  article {
+    title
+    related {
+      ... on Paragraph {
+        text
+      }
+      ... on Image {
+        url
+      }
+    }
+  }
+}

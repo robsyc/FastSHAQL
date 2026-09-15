@@ -1,0 +1,70 @@
+@prefix ex:  <http://example.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Asserted values all conform (integrity tier validates); the
+# non-member ex:none-1 reaches the data only through sh:values
+# constants (the kiosk precedent — pySHACL never evaluates them).
+
+ex:para-1 a ex:Paragraph ;
+    ex:text "Intro paragraph" .
+
+ex:img-1 a ex:Image ;
+    ex:url "https://example.org/img-1.png" .
+
+# Overlap: typed as both members — member-order priority stamps
+# Paragraph; the Image lane's fields stay hidden.
+ex:both-1 a ex:Paragraph, ex:Image ;
+    ex:text "Dual-typed block" ;
+    ex:url "https://example.org/both.png" .
+
+# Reaches the derived union's Paragraph lane only through the subclass
+# closure (rdf:type/rdfs:subClassOf*) — the lane stamps it Paragraph, and
+# the nested author relationship resolves inside the member fragment.
+ex:para-2 a ex:SubParagraph ;
+    ex:text "Related paragraph" ;
+    ex:author ex:person-1 .
+
+ex:person-1 a ex:Person ;
+    ex:name "Ada Lovelace" .
+
+ex:para-3 a ex:Paragraph ;
+    ex:text "Lead summary" .
+
+ex:img-2 a ex:Image ;
+    ex:url "https://example.org/img-2.png" .
+
+ex:none-1 a ex:Sidebar .
+
+ex:photo-1 a ex:Photo ;
+    ex:caption "Site photo" .
+
+# Reaches the binding union only through the subclass closure
+# (rdf:type/rdfs:subClassOf* — ADR-0025).
+ex:vector-1 a ex:VectorPhoto ;
+    ex:caption "Vector art" .
+
+ex:video-1 a ex:Video ;
+    ex:caption "Demo clip" .
+
+# The required lead (minCount 1/maxCount 1): exactly one child per
+# article — the lead may also appear among the ex:block values.
+ex:article-1 a ex:Article ;
+    ex:title "Syntax highlights" ;
+    ex:lead ex:para-1 ;
+    ex:block ex:para-1, ex:img-1 ;
+    ex:asset ex:photo-1, ex:video-1 .
+
+ex:article-2 a ex:Article ;
+    ex:title "Dual types" ;
+    ex:lead ex:img-1 ;
+    ex:block ex:both-1 ;
+    ex:asset ex:vector-1 .
+
+# Childless only for the optional union fields (block/asset resolve to
+# [], never null); the required lead still binds exactly one child.
+ex:article-3 a ex:Article ;
+    ex:title "Childless" ;
+    ex:lead ex:para-3 .
+
+ex:VectorPhoto rdfs:subClassOf ex:Photo .
+ex:SubParagraph rdfs:subClassOf ex:Paragraph .

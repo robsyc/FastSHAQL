@@ -21,7 +21,7 @@ def test_translate_selection_returns_patterns(relationship_registry) -> None:
     person = relationship_registry.by_type_name["Person"]
     scope = translation_scope(relationship_registry)
     field = root_field_node("{ persons { name } }")
-    selection = next(iter_field_selections(field))
+    selection = next(iter_field_selections(field, "Person"))
     patterns = translate_selection(selection, person, scope)
     assert len(patterns) == 1
     assert isinstance(patterns[0], TriplePattern)

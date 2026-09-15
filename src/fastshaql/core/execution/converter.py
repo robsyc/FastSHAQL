@@ -12,12 +12,13 @@ from typing import TYPE_CHECKING, cast
 
 from rdflib import IdentifiedNode, Literal
 
-from fastshaql.core.ir import NodeShapeIR, ValueType
-from fastshaql.core.kernel.constants import IRI_FIELD
+from fastshaql.core.ir import NodeShapeIR, PropertyShapeIR, ValueType
+from fastshaql.core.kernel.constants import IRI_FIELD, TYPENAME_FIELD
 
 if TYPE_CHECKING:
     from fastshaql.core.registry import ShapeRegistry
     from fastshaql.core.translation import VariableMap
+    from fastshaql.core.translation.variables import RelationshipBinding
 
     from .store import SparqlRow, SparqlTerm
 
@@ -41,10 +42,6 @@ def coerce_value(term: SparqlTerm | None) -> object:
             return str(term)
         case _:
             raise TypeError(f"Unsupported SPARQL term type: {type(term)!r}")
-
-
-def _subject_key(var_map: VariableMap) -> str:
-    return str(var_map.subject_var)
 
 
 def _group_rows_by_var(
@@ -109,6 +106,42 @@ def _apply_scalar_fields(
                 entity[field_name] = value
 
 
+def _polymorphic_children(
+    child_groups: dict[str, list[SparqlRow]],
+    child_order: list[str],
+    prop: PropertyShapeIR,
+    binding: RelationshipBinding,
+    registry: ShapeRegistry,
+) -> list[dict[str, object]] | dict[str, object] | None:
+    """Build a polymorphic field's value(s): one entity per child, stamped
+    with its member's type name (graphql-core's default type resolver reads
+    the ``__typename`` key — no custom resolvers, ADR-0026)."""
+    disc_key = str(binding.discriminator)
+    # Lanes in declared member order (binding.members runs parallel to
+    # prop.union_members by construction), precomputing each lane's shape
+    # and map: the first lane whose class a group's discriminator bound
+    # stamps the child (ADR-0026 member-order priority); a group binding
+    # no member class is a non-member and drops.
+    lanes = tuple(
+        (str(member.class_iri), registry.member_shape(member), lane.map)
+        for member, lane in zip(prop.union_members, binding.members, strict=True)
+    )
+    children: list[dict[str, object]] = []
+    for key in child_order:
+        rows = child_groups[key]
+        bound = {str(row[disc_key]) for row in rows if row.get(disc_key) is not None}
+        for class_str, child_shape, member_map in lanes:
+            if class_str not in bound:
+                continue
+            child = _build_entity(rows, child_shape, member_map, registry)
+            child[TYPENAME_FIELD] = child_shape.graphql_type_name
+            children.append(child)
+            break
+    if prop.kind.is_list:
+        return children
+    return children[0] if children else None
+
+
 def _apply_relationship_fields(
     entity: dict[str, object],
     entity_rows: list[SparqlRow],
@@ -116,18 +149,26 @@ def _apply_relationship_fields(
     var_map: VariableMap,
     registry: ShapeRegistry,
 ) -> None:
-    for rel_name, (child_subject_var, child_map) in var_map.relationships.items():
+    for rel_name, binding in var_map.relationships.items():
         prop = shape.property_shapes[rel_name]
+        child_order, child_groups = _group_rows_by_var(
+            entity_rows, str(binding.subject_var)
+        )
+
+        if binding.discriminator is not None:
+            entity[rel_name] = _polymorphic_children(
+                child_groups, child_order, prop, binding, registry
+            )
+            continue
+
         child_shape = registry.resolve_relationship_target(prop)
-        child_key = str(child_subject_var)
-        child_order, child_groups = _group_rows_by_var(entity_rows, child_key)
+        child_map = binding.single_map
 
         if prop.kind.is_list:
-            nested = [
+            entity[rel_name] = [
                 _build_entity(child_groups[key], child_shape, child_map, registry)
                 for key in child_order
             ]
-            entity[rel_name] = nested
             continue
 
         if child_order:
@@ -183,6 +224,6 @@ def convert_rows(
     Returns:
         One dict per entity with coerced scalar, list, and nested values.
     """
-    subject_key = _subject_key(var_map)
+    subject_key = str(var_map.subject_var)
     order, groups = _group_rows_by_var(rows, subject_key)
     return [_build_entity(groups[key], shape, var_map, registry) for key in order]

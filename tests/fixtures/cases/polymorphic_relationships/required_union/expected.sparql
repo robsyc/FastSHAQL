@@ -1,0 +1,19 @@
+SELECT ?iri ?title ?lead_iri ?lead_member ?lead_1_text ?lead_2_url
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Article> .
+  ?iri <http://example.org/title> ?title .
+  ?iri <http://example.org/lead> ?lead_iri .
+  VALUES ?lead_member {
+    <http://example.org/Paragraph>
+    <http://example.org/Image>
+  }
+  ?lead_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* ?lead_member .
+  OPTIONAL {
+    ?lead_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Paragraph> .
+    ?lead_iri <http://example.org/text> ?lead_1_text .
+  }
+  OPTIONAL {
+    ?lead_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Image> .
+    ?lead_iri <http://example.org/url> ?lead_2_url .
+  }
+}

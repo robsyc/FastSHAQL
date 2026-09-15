@@ -1,0 +1,14 @@
+query PolymorphicPaginationUnion {
+  article(limit: 2) {
+    title
+    block {
+      __typename
+      ... on Paragraph {
+        text
+      }
+      ... on Image {
+        url
+      }
+    }
+  }
+}

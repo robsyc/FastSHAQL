@@ -116,6 +116,25 @@ class LiteralSpace(enum.Enum):
     untagged terminal appended last."""
 
 
+@dataclasses.dataclass(frozen=True)
+class UnionMember:
+    """One member of a polymorphic relationship (ADR-0026): a target shape
+    and its class discriminator.
+
+    Pass 1 fills one side for ``sh:or`` members — an ``sh:class`` member
+    carries its class, an ``sh:node`` member its shape — and both for
+    list-form entries beside ``sh:node`` (the binding-union row pairs the
+    declared classes with the target directly); pass 2 resolves both
+    everywhere. Consumers after parsing always see both set."""
+
+    shape_iri: URIRef | None
+    class_iri: URIRef | None
+
+    def __post_init__(self) -> None:
+        if self.shape_iri is None and self.class_iri is None:
+            raise ValueError("UnionMember needs a shape IRI, a class IRI, or both")
+
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class PropertyShapeIR(ShapeIR):
     """Parsed ``sh:PropertyShape``. Exactly one ``path`` (SHACL §3.3).
@@ -124,7 +143,9 @@ class PropertyShapeIR(ShapeIR):
     (**relationship** > **enum** > **scalar**) x :attr:`source`
     (**asserted** | **derived**). ``sh:in`` on a relationship is stored but
     read-ignored (overlay). Datatype-only ``sh:or`` normalizes into
-    :attr:`datatypes`; any other ``sh:or`` is parse-recognized-and-inert.
+    :attr:`datatypes`; an ``sh:or`` over ``sh:class``/``sh:node`` members and
+    the ``sh:class`` list form normalize into :attr:`union_members`
+    (ADR-0026); members with other constraints stay parse-recognized-and-inert.
     ``sh:and`` contributes class-only members into :attr:`value_classes`;
     anything more is deferred.
     """
@@ -162,6 +183,14 @@ class PropertyShapeIR(ShapeIR):
     """IRI of the relationship's target shape — the GraphQL type, from
     ``sh:node`` (§7.8.1) or a sole ``sh:class`` resolved via the class
     index, with a synthetic shape for untargeted classes (ADR-0025)."""
+
+    union_members: tuple[UnionMember, ...] = ()
+    """Polymorphic members (ADR-0026) — ``sh:or`` over ``sh:class``/``sh:node``
+    members or the ``sh:class`` list form, resolved at pass 2 to
+    (shape, class) pairs. Beside ``sh:node`` the list form is the
+    single-target binding union (ADR-0025 row 5): members share the target
+    and only the binding guard unions. Otherwise the member shapes form the
+    union type. Empty for single-target relationships."""
 
     in_values: tuple[Node, ...] | None = None
     """Closed value set from ``sh:in`` (SHACL §7.9.3), preserving rdflib terms."""
@@ -213,9 +242,9 @@ class PropertyShapeIR(ShapeIR):
         """GraphQL cardinality pattern derived from ``min_count`` /
         ``max_count`` — the single home of the field's nullability.
 
-        ``minCount >= 1`` is required; ``maxCount == 1`` is scalar; otherwise
-        list. A defaulted field (``default_expr``) is non-null at any
-        ``minCount``: the ``COALESCE`` always binds the value
+        ``minCount >= 1`` is required; ``maxCount == 1`` is scalar;
+        otherwise list. A defaulted field (``default_expr``) is non-null
+        at any ``minCount``: the ``COALESCE`` always binds the value
         variable, and the path must stay optional so the default can serve
         the entities it fills — exact for the scalar-only default boundary
         the parser enforces.
@@ -236,11 +265,16 @@ class PropertyShapeIR(ShapeIR):
         both land on their arm here and carry
         ``ValueSource.DERIVED``.
         """
-        if self.value_classes or self.value_shape_iri is not None:
+        if self.value_classes or self.value_shape_iri is not None or self.union_members:
             return ValueType.RELATIONSHIP
         if self.in_values is not None:
             return ValueType.ENUM
         return ValueType.SCALAR
+
+    @property
+    def is_polymorphic(self) -> bool:
+        """Whether this relationship lowers as a GraphQL union type."""
+        return bool(self.union_members) and self.value_shape_iri is None
 
     @property
     def source(self) -> ValueSource:

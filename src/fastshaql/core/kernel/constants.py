@@ -5,6 +5,10 @@ from rdflib import RDF, XSD, URIRef
 IRI_FIELD: str = "iri"
 """GraphQL field name for the RDF resource IRI on every object type."""
 
+TYPENAME_FIELD: str = "__typename"
+"""GraphQL meta-field naming a value's concrete runtime type — the key the converter
+stamps on polymorphic entity dicts for graphql-core's default type resolver (ADR-0026)."""
+
 INLINE_SHAPE_PREFIX: str = "urn:fastshaql:inline:"
 """URN prefix for synthesized blank-node Property IRIs."""
 

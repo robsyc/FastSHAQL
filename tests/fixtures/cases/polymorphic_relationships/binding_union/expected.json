@@ -1,0 +1,29 @@
+{
+  "data": {
+    "article": [
+      {
+        "title": "Syntax highlights",
+        "asset": [
+          {
+            "caption": "Site photo"
+          },
+          {
+            "caption": "Demo clip"
+          }
+        ]
+      },
+      {
+        "title": "Dual types",
+        "asset": [
+          {
+            "caption": "Vector art"
+          }
+        ]
+      },
+      {
+        "title": "Childless",
+        "asset": []
+      }
+    ]
+  }
+}
