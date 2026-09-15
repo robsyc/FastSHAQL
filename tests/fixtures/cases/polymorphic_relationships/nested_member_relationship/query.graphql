@@ -1,0 +1,17 @@
+query PolymorphicNestedMemberRelationship {
+  article {
+    title
+    related {
+      __typename
+      ... on Paragraph {
+        text
+        author {
+          name
+        }
+      }
+      ... on Image {
+        url
+      }
+    }
+  }
+}

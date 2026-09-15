@@ -192,6 +192,40 @@ def test_filter_shape_without_nodes_raises() -> None:
         parse_node_expr(graph, prop)
 
 
+@pytest.mark.parametrize(
+    "nodes_arm",
+    [
+        '[ sh:sparqlExpr "STRLEN(STR($this))" ]',
+        (
+            "[\n"
+            "                    shnex:if [ shnex:exists [ shnex:pathValues ex:review ] ] ;\n"
+            '                    shnex:then [ sh:sparqlExpr "STRLEN(STR($this))" ]\n'
+            "                ]"
+        ),
+    ],
+    ids=["direct", "distributed_through_if"],
+)
+def test_filter_shape_over_sparql_expr_candidates_raises(nodes_arm: str) -> None:
+    """A ``sh:sparqlExpr`` candidate rejects — directly or reached through
+    ``shnex:if`` distribution (the rejection survives into the branch): its
+    ``BIND`` needs the focus binding, so it cannot live in the containing
+    sub-SELECT, and uncontained its erroring rows fabricate candidates
+    under the conjuncts."""
+    graph, prop = graph_with_values(
+        f"""
+        ex:prop a sh:PropertyShape ;
+            sh:values [
+                shnex:nodes {nodes_arm} ;
+                shnex:filterShape [ sh:class ex:Tag ] ;
+            ] .
+        """
+    )
+    with pytest.raises(
+        UnsupportedShapeError, match="cannot filter sh:sparqlExpr candidates"
+    ):
+        parse_node_expr(graph, prop)
+
+
 def test_filter_shape_unknown_constraint_raises() -> None:
     graph, prop = graph_with_values(
         """

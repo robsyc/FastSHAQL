@@ -18,15 +18,18 @@ from graphql.type import (
     GraphQLList,
     GraphQLNonNull,
     GraphQLObjectType,
+    GraphQLUnionType,
 )
 
 from fastshaql.core.ir.node_shape import NodeShapeIR
+from fastshaql.core.kernel.identifiers import filter_input_name
 from fastshaql.core.registry import ShapeRegistry
 
 from ._gql import INT, object_type
 from .enums import collect_enum_filter_types, collect_enum_types
 from .filters import build_filter_type, build_operator_inputs
 from .types import build_object_type
+from .unions import build_union_types
 
 RootResolverFactory = Callable[[NodeShapeIR, ShapeRegistry], Callable[..., Any]]
 
@@ -76,14 +79,32 @@ def build_schema(
     visible_shapes = registry.visible_shapes()
     public_root_shapes = registry.public_root_shapes()
 
+    operator_inputs = build_operator_inputs()
+    # One allocation set for every synthesized type name (ADR-0006 suffix
+    # rule): shape names and their filter inputs are deterministic, so they
+    # seed; enums, unions, and enum filters then allocate in that order.
+    taken: set[str] = {"Query"} | set(operator_inputs)
+    for shape in visible_shapes:
+        taken.add(shape.graphql_type_name)
+        taken.add(filter_input_name(shape.graphql_type_name))
+
     object_types: dict[str, GraphQLObjectType] = {}
-    enum_types = collect_enum_types(visible_shapes)
+    enum_types = collect_enum_types(visible_shapes, taken)
+    union_types: dict[tuple[str, str], GraphQLUnionType] = {}
     for shape in visible_shapes:
         object_types[shape.graphql_type_name] = build_object_type(
-            shape, object_types, registry, enum_types=enum_types
+            shape,
+            object_types,
+            registry,
+            enum_types=enum_types,
+            union_types=union_types,
         )
-    operator_inputs = build_operator_inputs()
-    enum_filter_types = collect_enum_filter_types(enum_types)
+    # Filled after the object-type loop, into the dict the field thunks
+    # closed over — member object types must exist first (ADR-0026).
+    union_types.update(
+        build_union_types(visible_shapes, object_types, registry, taken=taken)
+    )
+    enum_filter_types = collect_enum_filter_types(enum_types, taken)
     filter_types: dict[str, GraphQLInputObjectType] = {}
     for shape in visible_shapes:
         filter_types[shape.graphql_type_name] = build_filter_type(
@@ -122,6 +143,7 @@ def build_schema(
     query_type = object_type("Query", query_fields)
     all_types = [
         *object_types.values(),
+        *union_types.values(),
         *operator_inputs.values(),
         *filter_types.values(),
     ]

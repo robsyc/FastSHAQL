@@ -17,10 +17,10 @@ from typing import TYPE_CHECKING
 
 from fastshaql.core.ir import NodeShapeIR, PropertyShapeIR, ValueType
 
-from .joins import relationship_join_patterns
+from .joins import relationship_join_patterns, relationship_link_patterns
 from .patterns import scalar_bind_patterns, wrap_if_unbound
 from .scope import TranslationScope
-from .variables import VariableMap
+from .variables import RelationshipBinding, VariableMap
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -28,6 +28,8 @@ if TYPE_CHECKING:
     from rdflib import Variable
 
     from fastshaql.core.sparql import Pattern
+
+    from .variables import MemberBinding
 
 
 @dataclasses.dataclass
@@ -133,21 +135,59 @@ def bind_scalar_field(
     return var, patterns
 
 
+def reject_polymorphic_filter(field_name: str) -> None:
+    """Raise the slice-3 filter boundary (ADR-0026): polymorphic fields
+    carry no filter input until member-keyed inputs and the
+    type-discrimination operator exist. Shared by promotion and both filter
+    strategies — the where walker's null early-return would otherwise let a
+    null-valued entry slip past the filter-side boundary. NOTE: REMOVE ONCE
+    THE FILTER SLICE IS IMPLEMENTED"""
+    raise ValueError(
+        f"Filters on polymorphic field {field_name!r} are not supported "
+        "yet — member-keyed filter inputs arrive with the filter slice "
+        "(ADR-0026)"
+    )
+
+
 def _promote_relationship_field(
     field_name: str,
     prop: PropertyShapeIR,
     scope: TranslationScope,
 ) -> list[Pattern]:
-    """Bind a promoted relationship field omitted from the selection."""
+    """Bind a promoted relationship field omitted from the selection.
+
+    The link emission is guarded: the filter's EXISTS typing guard follows
+    and must never see an unbound child (ADR-0026).
+
+    Raises:
+        ValueError: On a polymorphic field — :func:`reject_polymorphic_filter`.
+    """
+    if prop.is_polymorphic:
+        reject_polymorphic_filter(field_name)
     scope.allocator.push_scope(field_name)
     child_subject = scope.allocator.allocate("iri")
-    join_patterns = relationship_join_patterns(scope.subject, child_subject, prop)
+    join_patterns = relationship_link_patterns(
+        scope.subject, child_subject, prop, guarded=True
+    )
     scope.allocator.pop_scope()
-    scope.relationships[field_name] = (
+    scope.relationships[field_name] = RelationshipBinding.single(
         child_subject,
         VariableMap(subject_var=child_subject, fields={}, relationships={}),
     )
     return join_patterns
+
+
+def _open_child_scope(
+    field_name: str, scope: TranslationScope
+) -> tuple[Variable, TranslationScope]:
+    """Open a nested selection scope: the child subject allocated under the
+    field's allocator scope, and the child level sharing the walk's
+    allocator, registry, and language chain."""
+    scope.allocator.push_scope(field_name)
+    child_subject = scope.allocator.allocate("iri")
+    child_scope = TranslationScope.child(child_subject, scope)
+    child_scope.append_projection(child_subject)
+    return child_subject, child_scope
 
 
 def begin_relationship_selection(
@@ -156,27 +196,19 @@ def begin_relationship_selection(
     scope: TranslationScope,
 ) -> tuple[Variable, list[Pattern], TranslationScope]:
     """Open a relationship scope for selection translation."""
-    scope.allocator.push_scope(field_name)
-    child_subject = scope.allocator.allocate("iri")
+    child_subject, child_scope = _open_child_scope(field_name, scope)
     join_patterns = relationship_join_patterns(
         scope.subject,
         child_subject,
         prop,
+        allocator=scope.allocator,
         emit_type_triple=True,
     )
-    child_scope = TranslationScope(
-        subject=child_subject,
-        allocator=scope.allocator,
-        registry=scope.registry,
-        lang_tags=scope.lang_tags,
-    )
-    child_scope.append_projection(child_subject)
     return child_subject, join_patterns, child_scope
 
 
 def complete_relationship_selection(
     field_name: str,
-    child_subject: Variable,
     child_scope: TranslationScope,
     scope: TranslationScope,
     patterns: Sequence[Pattern],
@@ -184,10 +216,69 @@ def complete_relationship_selection(
     bound: bool,
 ) -> list[Pattern]:
     """Register a relationship binding and return wrapped selection patterns."""
-    scope.relationships[field_name] = (
-        child_subject,
-        child_scope.var_map(),
+    return _complete_selection(
+        field_name,
+        RelationshipBinding.single(child_scope.subject, child_scope.var_map()),
+        child_scope,
+        scope,
+        patterns,
+        bound=bound,
     )
+
+
+def begin_union_selection(
+    field_name: str,
+    prop: PropertyShapeIR,
+    scope: TranslationScope,
+) -> tuple[Variable, Variable, list[Pattern], TranslationScope]:
+    """Open a polymorphic relationship scope (ADR-0026): the child subject
+    and discriminator variables plus the contained link emission — the
+    union guard and member lanes replace the typing patterns."""
+    child_subject, child_scope = _open_child_scope(field_name, scope)
+    discriminator = scope.allocator.allocate("member")
+    join_patterns = relationship_link_patterns(
+        scope.subject, child_subject, prop, guarded=True
+    )
+    child_scope.append_projection(discriminator)
+    return child_subject, discriminator, join_patterns, child_scope
+
+
+def complete_union_selection(
+    field_name: str,
+    child_scope: TranslationScope,
+    scope: TranslationScope,
+    patterns: Sequence[Pattern],
+    members: tuple[MemberBinding, ...],
+    discriminator: Variable,
+    *,
+    bound: bool,
+) -> list[Pattern]:
+    """Register a polymorphic binding and return wrapped selection patterns."""
+    return _complete_selection(
+        field_name,
+        RelationshipBinding(
+            subject_var=child_scope.subject,
+            members=members,
+            discriminator=discriminator,
+        ),
+        child_scope,
+        scope,
+        patterns,
+        bound=bound,
+    )
+
+
+def _complete_selection(
+    field_name: str,
+    binding: RelationshipBinding,
+    child_scope: TranslationScope,
+    scope: TranslationScope,
+    patterns: Sequence[Pattern],
+    *,
+    bound: bool,
+) -> list[Pattern]:
+    """Register a relationship binding and return wrapped selection patterns."""
+    scope.relationships[field_name] = binding
     wrapped = wrap_if_unbound(patterns, bound=bound)
     for var in child_scope.projection:
         scope.append_projection(var)

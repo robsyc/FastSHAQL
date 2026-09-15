@@ -23,7 +23,8 @@ from fastshaql.core.sparql import (
     Pattern,
 )
 
-from ..joins import relationship_join_patterns, relationship_type_patterns
+from ..field_binding import reject_polymorphic_filter
+from ..joins import relationship_link_patterns, relationship_type_patterns
 from ..patterns import scalar_bind_patterns
 from .where import translate_fields
 
@@ -35,7 +36,7 @@ if TYPE_CHECKING:
 
     from ..field_binding import FieldBindings
     from ..scope import TranslationScope
-    from ..variables import VariableMap
+    from ..variables import RelationshipBinding
 
 
 class FilterContext(Protocol):
@@ -106,7 +107,12 @@ def exists_inner_patterns(
     registry: ShapeRegistry,
     scope: ExistsContext,
 ) -> list[Pattern]:
-    """Build pattern list inside an ``EXISTS { ... }`` block."""
+    """Build pattern list inside an ``EXISTS { ... }`` block.
+
+    The typing guard lives here and nowhere else on the filter path — every
+    link emission upstream is guarded against its re-binding an unbound
+    child (ADR-0026).
+    """
     child_patterns, child_expr = translate_fields(node, shape, scope, registry)
 
     patterns: list[Pattern] = []
@@ -115,22 +121,6 @@ def exists_inner_patterns(
     if child_expr is not None:
         patterns.append(FilterPattern(child_expr))
     return patterns
-
-
-def translate_exists_relationship(
-    ctx: ExistsContext,
-    field_name: str,
-    node: ObjectValueNode,
-    prop: PropertyShapeIR,
-    child_shape: NodeShapeIR,
-    registry: ShapeRegistry,
-) -> tuple[list[Pattern], Expression | None]:
-    """Translate a nested relationship filter inside an EXISTS block."""
-    child_subject = Variable(exists_join_var_name(ctx.rf_prefix, field_name))
-    join_patterns = relationship_join_patterns(ctx.subject, child_subject, prop)
-    child_scope = ctx.child_scope(child_subject, field_name)
-    exists_expr = build_exists_expr(node, child_shape, prop, registry, child_scope)
-    return join_patterns, exists_expr
 
 
 # --- The two concrete strategies ---
@@ -150,8 +140,8 @@ class RootFilterContext:
     """Subject variable for the root scope."""
     fields: dict[str, Variable]
     """GraphQL field name → bound SPARQL variable for scalars."""
-    relationships: dict[str, tuple[Variable, VariableMap]]
-    """GraphQL field name → (join variable, child variable map)."""
+    relationships: dict[str, RelationshipBinding]
+    """GraphQL field name → conversion binding (join variable + member maps)."""
     bindings: FieldBindings
     """Promotion state for the root translation level (ADR-0009/0010)."""
     lang_tags: tuple[str, ...] = ()
@@ -202,11 +192,13 @@ class RootFilterContext:
         registry: ShapeRegistry,
     ) -> tuple[list[Pattern], Expression | None]:
         """Build a ``FILTER EXISTS`` expression, emitting join triples when isolated."""
+        if prop.is_polymorphic:
+            reject_polymorphic_filter(field_name)
         if not node.fields:
             return [], None
         child_shape = registry.resolve_relationship_target(prop)
         try:
-            join_var = self.relationships[field_name][0]
+            join_var = self.relationships[field_name].subject_var
         except KeyError as exc:  # pragma: no cover — promotion invariant guarantees relationship is pre-bound
             raise ValueError(
                 f"Relationship filter {field_name!r} requires a bound join variable"
@@ -217,8 +209,8 @@ class RootFilterContext:
         exists_expr = build_exists_expr(node, child_shape, prop, registry, scope)
         if not self.bindings.reemit_bind(field_name):
             return [], exists_expr
-        join_patterns = relationship_join_patterns(
-            self.subject, join_var, prop, emit_type_triple=True
+        join_patterns = relationship_link_patterns(
+            self.subject, join_var, prop, guarded=True
         )
         return join_patterns, exists_expr
 
@@ -267,9 +259,15 @@ class ExistsContext:
         registry: ShapeRegistry,
     ) -> tuple[list[Pattern], Expression | None]:
         """Recursively translate a nested relationship within the EXISTS block."""
+        if prop.is_polymorphic:
+            reject_polymorphic_filter(field_name)
         if not node.fields:
             return [], None
         child_shape = registry.resolve_relationship_target(prop)
-        return translate_exists_relationship(
-            self, field_name, node, prop, child_shape, registry
+        child_subject = Variable(exists_join_var_name(self.rf_prefix, field_name))
+        join_patterns = relationship_link_patterns(
+            self.subject, child_subject, prop, guarded=True
         )
+        child_scope = self.child_scope(child_subject, field_name)
+        exists_expr = build_exists_expr(node, child_shape, prop, registry, child_scope)
+        return join_patterns, exists_expr

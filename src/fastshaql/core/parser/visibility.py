@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
     from rdflib import Graph
 
-    from fastshaql.core.ir import NodeShapeIR
+    from fastshaql.core.ir import NodeShapeIR, PropertyShapeIR
 
 GRAPHQL = Namespace("http://datashapes.org/graphql#")
 GRAPHQL_SCHEMA = GRAPHQL.Schema
@@ -164,15 +164,25 @@ def _enforce_closed_world(
         if result[shape.iri] is Visibility.EXCLUDED:
             continue
         for prop in shape.property_shapes.values():
-            target = prop.value_shape_iri
-            if target is None or _is_synthetic(target):
-                continue
-            if result.get(target) is Visibility.EXCLUDED:
-                raise VisibilityError(
-                    f"relationship {shape.graphql_type_name}.{prop.graphql_field_name} "
-                    f"targets shape {target}, which the schema does not publish; "
-                    f"add graphql:publicShape or graphql:protectedShape for it"
-                )
+            _reject_excluded_targets(shape, prop, result)
+
+
+def _reject_excluded_targets(
+    shape: NodeShapeIR,
+    prop: PropertyShapeIR,
+    result: dict[URIRef, Visibility],
+) -> None:
+    """Raise when any of a property's relationship targets (the single
+    target or a union member's — strictest-wins, ADR-0026) is excluded."""
+    for target in (prop.value_shape_iri, *(m.shape_iri for m in prop.union_members)):
+        if target is None or _is_synthetic(target):
+            continue
+        if result.get(target) is Visibility.EXCLUDED:
+            raise VisibilityError(
+                f"relationship {shape.graphql_type_name}.{prop.graphql_field_name} "
+                f"targets shape {target}, which the schema does not publish; "
+                f"add graphql:publicShape or graphql:protectedShape for it"
+            )
 
 
 def resolve_visibility(graph: Graph, shapes: Sequence[NodeShapeIR]) -> VisibilityMap:

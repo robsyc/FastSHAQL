@@ -38,6 +38,15 @@ CASES: dict[str, tuple[str, ...]] = {
     "cardinality": ("full",),
     "relationships": ("nested", "recursive", "full"),
     "relationship_targeting": ("auto_typed_links", "explicit_binding_typing"),
+    "polymorphic_relationships": (
+        "mixed_members",
+        "nested_member_relationship",
+        "derived_union",
+        "binding_union",
+        "list_form_equivalence",
+        "required_union",
+        "pagination_union",
+    ),
     "subclass_typing": ("root_closure", "binding_closure", "filter_shape_closure"),
     "filters": (
         "scalar_eq",

@@ -1,0 +1,14 @@
+query PolymorphicRequiredUnion {
+  article {
+    title
+    lead {
+      __typename
+      ... on Paragraph {
+        text
+      }
+      ... on Image {
+        url
+      }
+    }
+  }
+}

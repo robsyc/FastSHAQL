@@ -3,8 +3,14 @@ WHERE {
   ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Custodian> .
   ?iri <http://example.org/name> ?name .
   OPTIONAL {
-    ?iri ^<http://example.org/heldBy> ?heldAssets_iri .
-    ?heldAssets_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Asset> .
+    {
+      SELECT ?iri ?heldAssets_iri
+      WHERE {
+        ?iri ^<http://example.org/heldBy> ?heldAssets_iri .
+        ?heldAssets_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Asset> .
+        FILTER(BOUND(?heldAssets_iri))
+      }
+    }
     ?heldAssets_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Asset> .
     ?heldAssets_iri <http://example.org/label> ?heldAssets_label .
   }

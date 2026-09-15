@@ -1,8 +1,9 @@
 """Identifier-derivation helpers shared by parser, schema, and translation.
 
-Hosts the generic :func:`local_name` (IRI fragment / last path segment) plus
-the enum-naming helpers (ADR-0006). Pure functions; no fastshaql-internal
-dependencies, so safe to import from any layer.
+Hosts the generic :func:`local_name` (IRI fragment / last path segment), the
+enum-naming helpers, and the shared name-allocation rule (ADR-0006). Pure
+functions; no fastshaql-internal dependencies, so safe to import from any
+layer.
 """
 
 from __future__ import annotations
@@ -65,22 +66,35 @@ def enum_member_names(terms: Sequence[Node]) -> list[str]:
     names: list[str] = []
     for term in terms:
         base = mangle_enum_member_name(raw_enum_member_name(term))
-        joiner = "" if base.endswith("_") else "_"
-        name, counter = base, 1
-        while name in taken:
-            counter += 1
-            name = f"{base}{joiner}{counter}"
-        taken.add(name)
-        names.append(name)
+        names.append(
+            first_free_name(base, taken, joiner="" if base.endswith("_") else "_")
+        )
     return names
 
 
-def enum_type_name(*, parent_graphql_type_name: str, graphql_field_name: str) -> str:
-    """GraphQL enum type name for a property: ``{TypeName}{FieldName}``."""
+def first_free_name(base: str, taken: set[str], *, joiner: str = "") -> str:
+    """*base* if untaken, else its first numeric suffix from 2 — the
+    allocation rule shared by enum member names and synthesized type names
+    (ADR-0006); marks the result taken."""
+    name, counter = base, 1
+    while name in taken:
+        counter += 1
+        name = f"{base}{joiner}{counter}"
+    taken.add(name)
+    return name
+
+
+def property_type_name(
+    *, parent_graphql_type_name: str, graphql_field_name: str
+) -> str:
+    """Synthesized per-property type name: ``{TypeName}{FieldName}`` — the
+    base for enum and union type names before collision allocation."""
     field_part = graphql_field_name[:1].upper() + graphql_field_name[1:]
     return f"{parent_graphql_type_name}{field_part}"
 
 
-def enum_filter_type_name(name: str) -> str:
-    """Filter input type name for an enum property."""
-    return f"{name}Filter"
+def filter_input_name(graphql_type_name: str) -> str:
+    """Filter input type name — ``{name}Filter``. Node shapes and enum
+    properties draw filter names from one collision space, so both schema
+    lanes share this rule."""
+    return f"{graphql_type_name}Filter"

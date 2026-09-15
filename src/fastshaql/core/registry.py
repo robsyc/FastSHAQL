@@ -14,14 +14,14 @@ from __future__ import annotations
 import dataclasses
 import enum
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
-from fastshaql.core.ir import NodeShapeIR, PropertyShapeIR
+from rdflib import URIRef
+
+from fastshaql.core.ir import NodeShapeIR, PropertyShapeIR, UnionMember
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
-
-    from rdflib import URIRef
 
 
 # ---------------------------------------------------------------------------
@@ -176,9 +176,16 @@ class ShapeRegistry:
             prop: Relationship property shape with ``value_shape_iri`` set.
 
         Raises:
-            ValueError: When ``value_shape_iri`` is missing or unknown.
+            ValueError: When ``value_shape_iri`` is missing or unknown, or
+                the property is polymorphic (union members name several
+                targets — resolve those instead, ADR-0026).
         """
         label = prop.graphql_field_name
+        if prop.is_polymorphic:
+            raise ValueError(
+                f"Relationship {label!r} is polymorphic — resolve its "
+                "union_members instead"
+            )
         if prop.value_shape_iri is None:
             raise ValueError(f"Relationship {label!r} has no resolved value_shape_iri")
         try:
@@ -188,3 +195,8 @@ class ShapeRegistry:
                 f"Relationship {label!r} references unknown shape"
                 f" {prop.value_shape_iri}"
             ) from exc
+
+    def member_shape(self, member: UnionMember) -> NodeShapeIR:
+        """A union member's target shape — both UnionMember sides are
+        resolved at parse pass 2 (ADR-0026), so the lookup cannot miss."""
+        return self.by_iri[cast(URIRef, member.shape_iri)]

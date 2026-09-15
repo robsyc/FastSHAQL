@@ -12,6 +12,7 @@ from rdflib import RDF, SH, Literal, URIRef
 
 from fastshaql.core.ir import PropertyShapeIR
 from fastshaql.core.ir.node_expr import is_multivalued_capable
+from fastshaql.core.ir.property_shape import UnionMember
 from fastshaql.core.ir.shacl_path import PredicatePath
 
 from .datatypes import datatypes_from_shape
@@ -24,6 +25,7 @@ from .node_expr import (
 )
 from .shacl_in import parse_shacl_in
 from .shacl_path import parse_shacl_path
+from .unions import sh_or_members
 from .util import (
     SH_AND,
     SH_CLASS,
@@ -157,24 +159,40 @@ def _and_class_values(graph: Graph, prop_shape: Node) -> tuple[URIRef, ...]:
     return tuple(classes)
 
 
+def _list_form_classes(graph: Graph, head: Node, *, at: str) -> tuple[URIRef, ...]:
+    """The 1.2 list-form classes in declared order — all-IRI members
+    (§7.1.1). Duplicates ride through: the member-lane duplicate check
+    rejects them uniformly with the ``sh:or`` form."""
+    classes: list[URIRef] = []
+    for member in strict_rdf_list(graph, head, what=f"{at} list form"):
+        if not isinstance(member, URIRef):
+            raise UnsupportedShapeError(
+                f"{at} list form members must be IRIs (got {member!r})"
+            )
+        classes.append(member)
+    return tuple(classes)
+
+
 def _class_values(
     graph: Graph, prop_shape: Node, *, node_ref: URIRef | None
-) -> tuple[URIRef, ...]:
-    """The binding class constraints (SHACL Core §7.1.1): the ``sh:class``
+) -> tuple[tuple[URIRef, ...], tuple[URIRef, ...]]:
+    """The binding class constraints (SHACL Core §7.1.1): flat ``sh:class``
     values conjoined with classes from class-only ``sh:and`` members
-    (§7.7.2), IRI-sorted for deterministic emission.
-
-    The 1.2 list form (union semantics) rejects loudly until polymorphic
-    relationships land (ADR-0026); conjoined classes without ``sh:node``
-    reject with guidance — their intersection names no target shape.
+    (§7.7.2), IRI-sorted for deterministic emission; and the 1.2 list-form
+    classes in declared order — union semantics, the polymorphic lane
+    (ADR-0026): beside ``sh:node`` the single-target binding union, alone
+    the union of target classes.
 
     Raises:
         UnsupportedShapeError: On a literal value (§7.1.1: IRIs or lists
-            of IRIs only), the list form, or conjoined classes without
-            ``sh:node``.
+            of IRIs only), an empty or non-IRI-member list, multiple list
+            forms, flat values or class-only ``sh:and`` beside the list form
+            (the spec conjoins an intersection with a union), or conjoined
+            flat classes without ``sh:node``.
     """
     at = f"sh:class on {prop_shape}"
-    flat = {v for v in graph.objects(prop_shape, SH_CLASS) if isinstance(v, URIRef)}
+    flat: set[URIRef] = set()
+    list_heads: list[Node] = []
     for value in graph.objects(prop_shape, SH_CLASS):
         if value == RDF.nil:
             raise UnsupportedShapeError(
@@ -185,25 +203,82 @@ def _class_values(
                 f"sh:class value {value!r} on {prop_shape} is not an IRI "
                 "(SHACL §7.1.1: values are IRIs or lists of IRIs)"
             )
-        if not isinstance(value, URIRef):
-            raise UnsupportedShapeError(
-                f"{at}: the sh:class list form (union of target classes, SHACL 1.2 "
-                "§7.1.1) is not lowered yet — declare one class per property until "
-                "polymorphic relationships land"
-                + (
-                    " (a list cannot express the binding union beside sh:node either)"
-                    if node_ref is not None
-                    else ""
-                )
-            )
+        if isinstance(value, URIRef):
+            flat.add(value)
+        else:
+            list_heads.append(value)
+    if len(list_heads) > 1:
+        raise UnsupportedShapeError(
+            f"{at}: multiple sh:class list forms — the spec conjoins them "
+            "(§3.1.1) and intersecting unions has no lowering; declare one list"
+        )
+    list_classes = _list_form_classes(graph, list_heads[0], at=at) if list_heads else ()
     flat.update(_and_class_values(graph, prop_shape))
+    if flat and list_classes:
+        raise UnsupportedShapeError(
+            f"{at}: flat values (sh:class, sh:and) beside the list form — the "
+            "spec conjoins them (§3.1.1) and intersecting a union has no "
+            "lowering; declare one form"
+        )
     values = tuple(sorted(flat, key=str))
     if len(values) > 1 and node_ref is None:
         raise UnsupportedShapeError(
             f"{at}: multiple conjoined classes (sh:class, sh:and) intersect "
             "(SHACL §7.1.1) but name no shape — add sh:node to select the target"
         )
-    return values
+    return values, list_classes
+
+
+def _relationship_value_lane(
+    graph: Graph,
+    prop_shape: Node,
+    *,
+    shape_iri: URIRef,
+    field_name: str,
+    node_ref: URIRef | None,
+) -> tuple[tuple[URIRef, ...], list[UnionMember], bool]:
+    """The property's value-classification lane: flat binding classes plus
+    raw polymorphic members from the ``sh:class`` list form and the
+    ``sh:or`` member lane (ADR-0025/0026). An empty ``sh:or`` is consumed
+    here as warn-and-ignored (:func:`sh_or_members` emits the warning) —
+    it never trips the beside-anchor rejection and never voids an anchor's
+    resolution.
+
+    Raises:
+        UnsupportedShapeError: On a non-empty ``sh:or`` beside a direct
+            ``sh:node``/``sh:class``/``sh:datatype`` anchor, or any malformed
+            list form (via :func:`_class_values`).
+    """
+    value_classes, list_classes = _class_values(graph, prop_shape, node_ref=node_ref)
+    or_members = sh_or_members(
+        graph, prop_shape, shape_iri=shape_iri, field_name=field_name
+    )
+    has_datatype = any(graph.objects(prop_shape, SH.datatype))
+    if or_members and (
+        node_ref is not None or value_classes or list_classes or has_datatype
+    ):
+        anchors = "/".join(
+            label
+            for label, present in (
+                ("sh:node", node_ref is not None),
+                ("sh:class", bool(value_classes or list_classes)),
+                ("sh:datatype", has_datatype),
+            )
+            if present
+        )
+        raise UnsupportedShapeError(
+            f"sh:or on {shape_iri} field {field_name!r} beside a direct "
+            f"{anchors} constraint — the spec conjoins them "
+            "(SHACL §3.1.1) and the intersection has no GraphQL lowering; "
+            "declare the union alone"
+        )
+    raw_members = [
+        UnionMember(shape_iri=node_ref, class_iri=class_iri)
+        for class_iri in list_classes
+    ]
+    if or_members is not None:
+        raw_members.extend(or_members)
+    return value_classes, raw_members, or_members is not None
 
 
 def _sole_node_ref(graph: Graph, prop_shape: Node) -> URIRef | None:
@@ -274,10 +349,12 @@ def parse_property_shape(
             (§7.2); derived-field and default-value boundary violations
             (ADR-0015); datatype/``sh:or`` forms fastshaql cannot lower
             (:func:`~fastshaql.core.parser.datatypes.datatypes_from_shape`);
-            and the targeting forms with no lowering (ADR-0025): the
-            ``sh:class`` list form (§7.1.1 union — ADR-0026), conjoined
+            the targeting forms with no lowering (ADR-0025): conjoined
             classes without ``sh:node``, multiple ``sh:node`` values, or a
-            blank-node ``sh:node`` (inline node shape).
+            blank-node ``sh:node`` (inline node shape); and the polymorphic
+            forms with no lowering (ADR-0026): a non-empty ``sh:or`` beside a
+            direct anchor, heterogeneous ``sh:or`` members, or flat ``sh:class``
+            beside the list form.
     """
     path = parse_shacl_path(graph, prop_shape)
 
@@ -296,7 +373,13 @@ def parse_property_shape(
     )
 
     node_ref = _sole_node_ref(graph, prop_shape)
-    value_classes = _class_values(graph, prop_shape, node_ref=node_ref)
+    value_classes, raw_members, sh_or_consumed = _relationship_value_lane(
+        graph,
+        prop_shape,
+        shape_iri=shape_iri,
+        field_name=field_name,
+        node_ref=node_ref,
+    )
 
     in_values = parse_shacl_in(graph, prop_shape)
     if in_values == ():
@@ -308,7 +391,7 @@ def parse_property_shape(
     values_expr = parse_node_expr(graph, prop_shape)
     default_expr = parse_default_value(graph, prop_shape)
 
-    is_relationship = bool(value_classes) or node_ref is not None
+    is_relationship = bool(value_classes) or node_ref is not None or bool(raw_members)
     if is_relationship and in_values is not None:
         logger.warning(
             "Relationship-overlay sh:in on %s field %r — read-ignored; fastshaql performs no write-validation",
@@ -317,7 +400,11 @@ def parse_property_shape(
         )
 
     datatypes = datatypes_from_shape(
-        graph, prop_shape, shape_iri=shape_iri, field_name=field_name
+        graph,
+        prop_shape,
+        shape_iri=shape_iri,
+        field_name=field_name,
+        include_sh_or=not sh_or_consumed,
     )
     min_count = object_int(graph, prop_shape, SH.minCount, what="sh:minCount")
     max_count = object_int(graph, prop_shape, SH.maxCount, what="sh:maxCount")
@@ -367,6 +454,7 @@ def parse_property_shape(
         max_count=max_count,
         value_classes=value_classes,
         value_shape_iri=node_ref,
+        union_members=tuple(raw_members),
         in_values=in_values,
         values_expr=values_expr,
         default_expr=default_expr,

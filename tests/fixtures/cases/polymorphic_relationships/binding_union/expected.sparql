@@ -1,0 +1,14 @@
+SELECT ?iri ?title ?asset_iri ?asset_caption
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Article> .
+  ?iri <http://example.org/title> ?title .
+  OPTIONAL {
+    ?iri <http://example.org/asset> ?asset_iri .
+    VALUES ?asset_iri__member {
+      <http://example.org/Photo>
+      <http://example.org/Video>
+    }
+    ?asset_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* ?asset_iri__member .
+    ?asset_iri <http://example.org/caption> ?asset_caption .
+  }
+}

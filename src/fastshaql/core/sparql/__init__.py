@@ -33,6 +33,7 @@ from .patterns import (
     TriplePattern,
     ValuesPattern,
     contain_row_eliminating,
+    contain_row_keeping,
 )
 from .queries import SelectQuery
 
@@ -66,4 +67,5 @@ __all__ = [
     "ZeroOrMorePath",
     "ZeroOrOnePath",
     "contain_row_eliminating",
+    "contain_row_keeping",
 ]

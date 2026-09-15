@@ -16,7 +16,11 @@ from fastshaql.core.ir.node_shape import NodeShapeIR
 from fastshaql.core.registry import ShapeRegistry
 from fastshaql.core.translation.field_binding import FieldBindings
 from fastshaql.core.translation.scope import TranslationScope
-from fastshaql.core.translation.variables import VariableAllocator, VariableMap
+from fastshaql.core.translation.variables import (
+    RelationshipBinding,
+    VariableAllocator,
+    VariableMap,
+)
 from support.builders import scalar_property
 
 
@@ -118,9 +122,8 @@ def test_assert_promoted_bound_accepts_field_bound_by_walk() -> None:
 def test_assert_promoted_bound_accepts_relationship_binding() -> None:
     scope = _empty_scope()
     join_var = Variable("employer_iri")
-    scope.relationships["employer"] = (
-        join_var,
-        VariableMap(subject_var=join_var, fields={}, relationships={}),
+    scope.relationships["employer"] = RelationshipBinding.single(
+        join_var, VariableMap(subject_var=join_var, fields={}, relationships={})
     )
     bindings = FieldBindings(promoted=frozenset({"employer"}))
     bindings.assert_promoted_bound(scope)  # no raise
