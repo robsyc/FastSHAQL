@@ -57,8 +57,8 @@ dev = [
     "beautifulsoup4>=4.12",
     "complexipy>=7.0.1",
     "lefthook>=2.1.11",
-    "mutmut==3.7.0",
-    "tach==0.35.0",
+    "mutmut==3.8.0",
+    "tach==0.35.1",
     "pyshacl>=0.40.1",
 ]
 
