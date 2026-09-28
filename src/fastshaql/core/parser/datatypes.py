@@ -2,7 +2,8 @@
 
 ``sh:datatype`` in its IRI and SHACL-list forms and datatype-only ``sh:or``
 are the union syntaxes — both normalize into one datatype tuple; any other
-``sh:or`` is parse-recognized-and-inert.
+``sh:or`` is parse-recognized-and-inert (the ``sh:class``/``sh:node`` member
+lane is parsed by :mod:`unions`).
 
 See: https://www.w3.org/TR/shacl12-core/#datatype
 See: https://www.w3.org/TR/shacl12-core/#or
@@ -18,6 +19,7 @@ from rdflib import RDF, SH, URIRef
 from fastshaql.core.kernel.constants import STRING_FAMILY_DATATYPES
 
 from .errors import UnsupportedShapeError
+from .unions import NON_VALIDATING_MEMBER_PREDICATES
 from .util import strict_rdf_list
 
 if TYPE_CHECKING:
@@ -33,6 +35,7 @@ def datatypes_from_shape(
     *,
     shape_iri: URIRef,
     field_name: str,
+    include_sh_or: bool = True,
 ) -> tuple[URIRef, ...]:
     """Declared datatype constraints from ``sh:datatype`` / datatype-only
     ``sh:or`` (SHACL 1.2 Core §7.1.2, §7.7.3) — both union syntaxes
@@ -41,7 +44,10 @@ def datatypes_from_shape(
     Rules: a single ``sh:datatype`` IRI is the classic form; a ``sh:datatype``
     SHACL list and an ``sh:or`` list whose members' only constraint is a
     single ``sh:datatype`` IRI are the union forms. Any other ``sh:or`` is
-    parse-recognized-and-inert (warning; datatypes unchanged). Multi-entry
+    parse-recognized-and-inert (warning; datatypes unchanged) — except an
+    ``sh:or`` claimed by the member lane in :mod:`unions` (polymorphic
+    members, or the empty warn-and-ignore reading), excluded via
+    ``include_sh_or=False`` so it is not walked twice. Multi-entry
     sets are restricted to the string family
     (:data:`STRING_FAMILY_DATATYPES`) — outside it, loud rejection:
     silently flattening e.g. a numeric/string union to ``String`` would
@@ -58,7 +64,7 @@ def datatypes_from_shape(
     """
     at = f"sh:datatype/sh:or on {shape_iri} field {field_name!r}"
     datatypes = _datatype_objects(graph, prop_shape, at=at)
-    or_values = list(graph.objects(prop_shape, SH["or"]))
+    or_values = list(graph.objects(prop_shape, SH["or"])) if include_sh_or else []
     if datatypes and or_values:
         raise UnsupportedShapeError(
             f"{at}: sh:datatype and sh:or together is unsupported "
@@ -123,7 +129,9 @@ def _or_datatypes(
     field_name: str,
 ) -> tuple[URIRef, ...] | None:
     """Datatypes of a datatype-only ``sh:or`` list, or ``None`` when any
-    member carries another constraint (that ``sh:or`` is inert — warning)."""
+    member carries another constraint (that ``sh:or`` is inert — warning).
+    A memberless list has no datatypes; the parse path claims an empty
+    ``sh:or`` in :mod:`unions` first, so this walks members only."""
     members = strict_rdf_list(
         graph, or_head, what=f"sh:or on {shape_iri} field {field_name!r}"
     )
@@ -144,8 +152,9 @@ def _or_datatypes(
 
 def _sole_datatype_constraint(graph: Graph, member: Node) -> URIRef | None:
     """The member's single ``sh:datatype`` IRI when it is the member's only
-    constraint, else ``None``."""
-    predicates = set(graph.predicates(member, None))
+    value constraint, else ``None``. Non-validating §8 metadata never blocks
+    recognition (:data:`NON_VALIDATING_MEMBER_PREDICATES`)."""
+    predicates = set(graph.predicates(member, None)) - NON_VALIDATING_MEMBER_PREDICATES
     if predicates != {SH.datatype}:
         return None
     objects = list(graph.objects(member, SH.datatype))

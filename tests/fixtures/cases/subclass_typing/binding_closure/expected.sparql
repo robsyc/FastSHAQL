@@ -1,0 +1,10 @@
+SELECT ?iri ?label ?heldBy_iri ?heldBy_name
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Asset> .
+  ?iri <http://example.org/label> ?label .
+  OPTIONAL {
+    ?iri <http://example.org/heldBy> ?heldBy_iri .
+    ?heldBy_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Custodian> .
+    ?heldBy_iri <http://example.org/name> ?heldBy_name .
+  }
+}

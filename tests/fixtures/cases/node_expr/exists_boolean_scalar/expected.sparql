@@ -1,6 +1,6 @@
 SELECT ?iri ?hasGene
 WHERE {
-  ?iri a <http://example.org/genomics/Variant> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/genomics/Variant> .
   BIND(EXISTS {
     ?iri <http://example.org/genomics/inGene> ?_exists_hasGene .
   } AS ?hasGene)

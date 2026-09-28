@@ -20,8 +20,9 @@ from graphql.type import (
 
 from fastshaql.core.ir import NodeShapeIR, PropertyShapeIR, ValueType
 from fastshaql.core.kernel.identifiers import (
-    enum_filter_type_name,
-    enum_type_name,
+    filter_input_name,
+    first_free_name,
+    property_type_name,
 )
 from fastshaql.core.kernel.operators import EQUALITY_OPS, MEMBERSHIP_OPS
 
@@ -31,26 +32,19 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
 
-def build_enum_type(
-    prop: PropertyShapeIR,
-    *,
-    parent_graphql_type_name: str,
-) -> GraphQLEnumType:
-    """Build a per-property ``GraphQLEnumType`` from ``sh:in`` values."""
-    type_name = enum_type_name(
-        parent_graphql_type_name=parent_graphql_type_name,
-        graphql_field_name=prop.graphql_field_name,
-    )
+def build_enum_type(prop: PropertyShapeIR, *, name: str) -> GraphQLEnumType:
+    """Build a per-property ``GraphQLEnumType`` under an allocated *name*."""
     values = {
-        name: GraphQLEnumValue(value=str(term))
-        for name, term in prop.enum_term_by_name.items()
+        member: GraphQLEnumValue(value=str(term))
+        for member, term in prop.enum_term_by_name.items()
     }
-    return enum_type(type_name, values)
+    return enum_type(name, values)
 
 
-def build_enum_filter_type(enum_type: GraphQLEnumType) -> GraphQLInputObjectType:
+def build_enum_filter_type(
+    enum_type: GraphQLEnumType, *, name: str
+) -> GraphQLInputObjectType:
     """Build a per-enum filter input with eq/neq/in/notIn only."""
-    name = enum_filter_type_name(enum_type.name)
     scalar_field = GraphQLInputField(enum_type)
     list_field = GraphQLInputField(GraphQLList(GraphQLNonNull(enum_type)))
     fields = dict.fromkeys(EQUALITY_OPS, scalar_field)
@@ -60,30 +54,42 @@ def build_enum_filter_type(enum_type: GraphQLEnumType) -> GraphQLInputObjectType
 
 def collect_enum_types(
     registry_shapes: Sequence[NodeShapeIR],
-) -> dict[str, GraphQLEnumType]:
-    """Walk *registry_shapes* and build every enum output type, keyed by name.
+    taken: set[str],
+) -> dict[tuple[str, str], GraphQLEnumType]:
+    """Walk *registry_shapes* and build every enum output type, keyed by
+    ``(parent type name, field name)`` — stable while the type names
+    themselves may suffix.
 
-    Enum type names embed the consuming shape (``enum_type_name``), so an
-    inherited enum field (ADR-0005) intentionally produces one type per child
-    shape — correct nominal typing, not duplication. Do not dedupe by
-    ``PropertyShapeIR.iri``; that would collapse distinct GraphQL types.
+    Names are ``{TypeName}{FieldName}`` allocated through *taken* (numeric
+    suffix on collision, ADR-0006); an inherited enum field (ADR-0005)
+    intentionally produces one type per child shape — correct nominal
+    typing, not duplication. Do not dedupe by ``PropertyShapeIR.iri``;
+    that would collapse distinct GraphQL types.
     """
-    result: dict[str, GraphQLEnumType] = {}
+    result: dict[tuple[str, str], GraphQLEnumType] = {}
     for shape in registry_shapes:
         for prop in shape.property_shapes.values():
             if prop.value_type is ValueType.ENUM:
-                enum_type = build_enum_type(
-                    prop, parent_graphql_type_name=shape.graphql_type_name
+                base = property_type_name(
+                    parent_graphql_type_name=shape.graphql_type_name,
+                    graphql_field_name=prop.graphql_field_name,
                 )
-                result[enum_type.name] = enum_type
+                result[(shape.graphql_type_name, prop.graphql_field_name)] = (
+                    build_enum_type(prop, name=first_free_name(base, taken))
+                )
     return result
 
 
 def collect_enum_filter_types(
-    enum_types: dict[str, GraphQLEnumType],
-) -> dict[str, GraphQLInputObjectType]:
-    """Build filter input types for each enum output type."""
+    enum_types: dict[tuple[str, str], GraphQLEnumType],
+    taken: set[str],
+) -> dict[tuple[str, str], GraphQLInputObjectType]:
+    """Build filter input types for each enum output type, keyed by the
+    same ``(parent type name, field name)``."""
     return {
-        enum_filter_type_name(name): build_enum_filter_type(enum_type)
-        for name, enum_type in enum_types.items()
+        key: build_enum_filter_type(
+            enum_type,
+            name=first_free_name(filter_input_name(enum_type.name), taken),
+        )
+        for key, enum_type in enum_types.items()
     }

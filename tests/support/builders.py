@@ -56,6 +56,26 @@ def thing_shape(properties: str) -> str:
     """
 
 
+POLY_ARTICLE_SHAPES = f"""{PREFIXES}
+ex:ParagraphShape a sh:NodeShape ;
+    sh:codeIdentifier "Paragraph" ;
+    sh:targetClass ex:Paragraph ;
+    sh:property [ sh:path ex:text ; sh:datatype xsd:string ] .
+ex:ImageShape a sh:NodeShape ;
+    sh:codeIdentifier "Image" ;
+    sh:targetClass ex:Image ;
+    sh:property [ sh:path ex:url ; sh:datatype xsd:string ] .
+ex:ArticleShape a sh:NodeShape ;
+    sh:codeIdentifier "Article" ;
+    sh:targetClass ex:Article ;
+    sh:property [ sh:path ex:title ; sh:datatype xsd:string ] ;
+    sh:property [ sh:path ex:block ;
+        sh:or ( [ sh:class ex:Paragraph ] [ sh:node ex:ImageShape ] ) ] .
+"""
+"""The minimal Article/Paragraph/Image polymorphic fixture (ADR-0026) for
+schema-build and translation unit tests needing extra shapes on top."""
+
+
 def _resolve_datatypes(
     datatype: URIRef | None, datatypes: tuple[URIRef, ...] | None
 ) -> tuple[URIRef, ...]:
@@ -111,7 +131,7 @@ def relationship_property(
         datatypes=(),
         min_count=min_count,
         max_count=max_count,
-        value_class=value_class,
+        value_classes=(value_class,) if value_class is not None else (),
         value_shape_iri=value_shape_iri,
     )
 

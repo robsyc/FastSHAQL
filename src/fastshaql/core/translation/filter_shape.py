@@ -13,7 +13,7 @@ from __future__ import annotations
 from itertools import count
 from typing import assert_never
 
-from rdflib import RDF, RDFS, Literal, URIRef, Variable
+from rdflib import RDFS, Literal, URIRef, Variable
 
 from fastshaql.core.ir.filter_shape import (
     FilterClass,
@@ -34,13 +34,14 @@ from fastshaql.core.sparql import (
     FunctionCall,
     Pattern,
     PredicatePath,
+    SequencePath,
     TermExpr,
     TriplePattern,
     ValuesPattern,
     ZeroOrMorePath,
 )
 
-from .paths import map_shacl_path_to_sparql_path
+from .paths import SHACL_INSTANCE_PATH, map_shacl_path_to_sparql_path
 
 _SUBCLASS_STAR = ZeroOrMorePath(PredicatePath(RDFS.subClassOf))
 """``rdfs:subClassOf*`` — the ``sh:rootClass`` walk (Core §7.9.4): the value
@@ -69,7 +70,7 @@ def _translate_conjunct(
             ]
         case FilterClass(classes=classes):
             return _union_patterns(
-                node_var, PredicatePath(RDF.type), classes, counter, "cls"
+                node_var, SHACL_INSTANCE_PATH, classes, counter, "cls"
             )
         case FilterRootClass(roots=roots):
             return _union_patterns(node_var, _SUBCLASS_STAR, roots, counter, "root")
@@ -117,7 +118,7 @@ def _translate_conjunct(
 
 def _union_patterns(
     node_var: Variable,
-    path: PredicatePath | ZeroOrMorePath,
+    path: PredicatePath | SequencePath | ZeroOrMorePath,
     terms: tuple[URIRef, ...],
     counter: count,
     role: str,

@@ -277,7 +277,18 @@ def _filtered(nodes: NodeExprIR, shape: FilterShapeIR) -> NodeExprIR:
     that lowers to conditioned ``OPTIONAL``s. Without it the conjuncts would
     be emitted *after* the arms that bind the candidate variable, so a focus
     node matching neither branch would admit every candidate in the graph.
+
+    A ``sh:sparqlExpr`` candidate rejects: its ``BIND`` needs the focus
+    binding, so it cannot live in the containing sub-SELECT, and uncontained
+    its erroring rows fabricate candidates under the conjuncts.
     """
+    if isinstance(nodes, SparqlExprNodeExpr):
+        raise UnsupportedShapeError(
+            f"shnex:filterShape cannot filter {arm_label(nodes)} candidates — "
+            "an erroring BIND keeps the row with the value unbound and the "
+            "conjuncts would admit every candidate; use shnex:pathValues or "
+            "sh:select as the shnex:nodes arm"
+        )
     if isinstance(nodes, IfNodeExpr):
         return IfNodeExpr(
             cond=nodes.cond,

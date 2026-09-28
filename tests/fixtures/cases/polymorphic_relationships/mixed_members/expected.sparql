@@ -1,0 +1,21 @@
+SELECT ?iri ?title ?block_iri ?block_member ?block_1_text ?block_2_url
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Article> .
+  ?iri <http://example.org/title> ?title .
+  OPTIONAL {
+    ?iri <http://example.org/block> ?block_iri .
+    VALUES ?block_member {
+      <http://example.org/Paragraph>
+      <http://example.org/Image>
+    }
+    ?block_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* ?block_member .
+    OPTIONAL {
+      ?block_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Paragraph> .
+      ?block_iri <http://example.org/text> ?block_1_text .
+    }
+    OPTIONAL {
+      ?block_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Image> .
+      ?block_iri <http://example.org/url> ?block_2_url .
+    }
+  }
+}

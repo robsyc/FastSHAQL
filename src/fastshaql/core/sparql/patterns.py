@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING
 
 from rdflib import Literal, URIRef, Variable
 
+from .expressions import FunctionCall, TermExpr
+from .queries import SelectQuery
 from .terms import RenderTerm, render_term
 
 if TYPE_CHECKING:
@@ -21,7 +23,6 @@ if TYPE_CHECKING:
 
     from .expressions import Expression
     from .paths import SparqlPropertyPath
-    from .queries import SelectQuery
 
 type Pattern = (
     TriplePattern
@@ -190,3 +191,35 @@ def contain_row_eliminating(patterns: Sequence[Pattern]) -> list[Pattern]:
     if all(isinstance(p, ROW_KEEPING) for p in patterns):
         return list(patterns)
     return [OptionalPattern(GroupPattern(children=tuple(patterns)))]
+
+
+def contain_row_keeping(
+    patterns: Sequence[Pattern],
+    projection: tuple[Variable, ...],
+    bound_var: Variable,
+) -> list[Pattern]:
+    """Wrap *patterns* in a projecting sub-SELECT with ``FILTER(BOUND(bound_var))``
+    (SubSelect, SPARQL §12) — no-value solutions drop before a following
+    guard joins.
+
+    The guard-side twin of :func:`contain_row_eliminating`: a row-keeping
+    emission (an author ``sh:select`` body that leaves its projection
+    unbound, an erroring ``BIND``) keeps the solution with *bound_var*
+    unbound, and a following conjunct triple re-binds the variable freely,
+    fabricating values (the ADR-0026 hazard). The sub-SELECT drops those
+    solutions where the guard cannot see them; *projection* carries the
+    variables the caller still needs out — the focus (when a variable) and
+    the value.
+    """
+    return [
+        SelectQuery(
+            projection=projection,
+            where=GroupPattern(
+                children=(
+                    *patterns,
+                    FilterPattern(FunctionCall("BOUND", (TermExpr(bound_var),))),
+                )
+            ),
+            as_subquery=True,
+        )
+    ]

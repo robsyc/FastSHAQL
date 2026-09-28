@@ -21,7 +21,7 @@ from ._gql import ID, object_type
 from .fields import build_field
 
 if TYPE_CHECKING:
-    from graphql.type.definition import GraphQLEnumType
+    from graphql.type.definition import GraphQLEnumType, GraphQLUnionType
 
     from fastshaql.core.ir import NodeShapeIR
     from fastshaql.core.registry import ShapeRegistry
@@ -32,7 +32,8 @@ def build_object_type(
     types: dict[str, GraphQLObjectType],
     registry: ShapeRegistry,
     *,
-    enum_types: dict[str, GraphQLEnumType],
+    enum_types: dict[tuple[str, str], GraphQLEnumType],
+    union_types: dict[tuple[str, str], GraphQLUnionType],
 ) -> GraphQLObjectType:
     """Build a GraphQL object type with ``iri: ID!`` plus property shape fields.
 
@@ -43,6 +44,11 @@ def build_object_type(
         shape: The node shape to build a type for.
         types: GraphQL object types indexed by ``graphql_type_name``.
         registry: Shape registry for dereferencing ``value_shape_iri``.
+        enum_types: Shared enum types keyed by
+            ``(parent type name, field name)``.
+        union_types: Polymorphic union types keyed by
+            ``(parent type name, field name)`` — may still be empty here;
+            the fields thunk reads it lazily (ADR-0026).
 
     Returns:
         A graphql-core ``GraphQLObjectType``.
@@ -60,6 +66,7 @@ def build_object_type(
                     registry,
                     parent_graphql_type_name=shape.graphql_type_name,
                     enum_types=enum_types,
+                    union_types=union_types,
                 )
                 for name, prop in shape.property_shapes.items()
             },

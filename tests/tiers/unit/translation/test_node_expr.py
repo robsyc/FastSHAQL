@@ -43,6 +43,7 @@ from fastshaql.core.sparql import (
     OptionalPattern,
     RawGraphPattern,
     RawSparqlExpr,
+    SelectQuery,
     TermExpr,
     TriplePattern,
     ValuesPattern,
@@ -406,7 +407,12 @@ def test_filter_shape_lowering_conjuncts() -> None:
     )
     assert patterns[1] == TriplePattern(
         subject=Variable("candidate"),
-        predicate=SparqlPredicatePath(RDF.type),
+        predicate=SparqlSequencePath(
+            (
+                SparqlPredicatePath(RDF.type),
+                SparqlZeroOrMorePath(SparqlPredicatePath(RDFS.subClassOf)),
+            )
+        ),
         object=EX + "Person",
     )
 
@@ -445,15 +451,106 @@ def test_filter_shape_class_list_lowers_as_values_union() -> None:
     )
     assert patterns[1] == TriplePattern(
         subject=Variable("pet"),
-        predicate=SparqlPredicatePath(RDF.type),
+        predicate=SparqlSequencePath(
+            (
+                SparqlPredicatePath(RDF.type),
+                SparqlZeroOrMorePath(SparqlPredicatePath(RDFS.subClassOf)),
+            )
+        ),
         object=Variable("pet_cls0"),
     )
     assert patterns[2] == ValuesPattern(Variable("pet_cls0"), (EX + "Cat", EX + "Dog"))
     assert patterns[3] == TriplePattern(
         subject=Variable("pet"),
-        predicate=SparqlPredicatePath(RDF.type),
+        predicate=SparqlSequencePath(
+            (
+                SparqlPredicatePath(RDF.type),
+                SparqlZeroOrMorePath(SparqlPredicatePath(RDFS.subClassOf)),
+            )
+        ),
         object=EX + "Pet",
     )
+
+
+def test_filter_shape_select_nodes_arm_is_contained() -> None:
+    """A row-keeping ``shnex:nodes`` arm — an author ``sh:select`` can leave
+    its projection unbound — is contained in a projecting sub-SELECT with
+    ``FILTER(BOUND(value))`` before the conjuncts join: uncontained, a
+    conjunct triple would re-bind the unbound candidate freely (the
+    ADR-0026 fabrication hazard)."""
+    patterns = translate_node_expr(
+        FilterShapeNodeExpr(
+            nodes=SelectNodeExpr(
+                body="OPTIONAL { $this <http://example.org/ex#advisor> ?tag }",
+                projection_var="tag",
+            ),
+            shape=FilterShapeIR(conjuncts=(FilterClass((EX + "Senior",)),)),
+        ),
+        focus_term=Variable("iri"),
+        value_var=Variable("tag"),
+    )
+    assert len(patterns) == 2
+    subselect, conjunct = patterns
+    assert subselect == SelectQuery(
+        projection=(Variable("iri"), Variable("tag")),
+        where=GroupPattern(
+            children=(
+                RawGraphPattern(
+                    "OPTIONAL { ?iri <http://example.org/ex#advisor> ?tag }"
+                ),
+                FilterPattern(FunctionCall("BOUND", (TermExpr(Variable("tag")),))),
+            )
+        ),
+        as_subquery=True,
+    )
+    assert conjunct == TriplePattern(
+        subject=Variable("tag"),
+        predicate=SparqlSequencePath(
+            (
+                SparqlPredicatePath(RDF.type),
+                SparqlZeroOrMorePath(SparqlPredicatePath(RDFS.subClassOf)),
+            )
+        ),
+        object=EX + "Senior",
+    )
+
+
+def test_filter_shape_path_values_nodes_arm_stays_flat() -> None:
+    """A triple-join arm dies with its row — no containment, the conjunct
+    joins directly on the bound candidate."""
+    patterns = translate_node_expr(
+        FilterShapeNodeExpr(
+            nodes=PathValuesNodeExpr(path=PredicatePath(EX + "advisor")),
+            shape=FilterShapeIR(conjuncts=(FilterClass((EX + "Senior",)),)),
+        ),
+        focus_term=Variable("iri"),
+        value_var=Variable("tag"),
+    )
+    assert len(patterns) == 2
+    assert not any(isinstance(pattern, SelectQuery) for pattern in patterns)
+    assert patterns[0] == TriplePattern(
+        subject=Variable("iri"),
+        predicate=SparqlPredicatePath(EX + "advisor"),
+        object=Variable("tag"),
+    )
+
+
+def test_filter_shape_containment_omits_constant_focus_from_projection() -> None:
+    """At target position the focus is the shape-IRI constant — only the
+    value variable projects out of the containing sub-SELECT."""
+    (subselect,) = translate_node_expr(
+        FilterShapeNodeExpr(
+            nodes=SelectNodeExpr(
+                body="$this <http://example.org/ex#member> ?v",
+                projection_var="v",
+            ),
+            shape=FilterShapeIR(conjuncts=()),
+        ),
+        focus_term=EX + "RootShape",
+        value_var=Variable("v"),
+    )
+    assert isinstance(subselect, SelectQuery)
+    assert subselect.projection == (Variable("v"),)
 
 
 def test_filter_shape_root_class_lowers_subclass_star_walk() -> None:
@@ -514,7 +611,12 @@ def test_filter_shape_inside_multivalued_if_branches_stays_in_each_arm() -> None
     assert len(patterns) == 2
     type_triple = TriplePattern(
         subject=Variable("links"),
-        predicate=SparqlPredicatePath(RDF.type),
+        predicate=SparqlSequencePath(
+            (
+                SparqlPredicatePath(RDF.type),
+                SparqlZeroOrMorePath(SparqlPredicatePath(RDFS.subClassOf)),
+            )
+        ),
         object=EX + "Target",
     )
     for arm, predicate in zip(patterns, ("goodLink", "badLink"), strict=True):
@@ -1102,9 +1204,10 @@ def test_if_filter_shape_branch_materializes_condition_first() -> None:
     the condition materialises into ``?_cond_{base}`` *first* — keeping any
     ``EXISTS`` ahead of later ``BIND`` s — the branch sub-emission is
     contained in its own ``OPTIONAL`` (a failed conjunct means "no then
-    value", never a dropped or corrupted row), and the trailing value
-    ``BIND`` references variables only (the rdflib always-true trap;
-    module docstring)."""
+    value", never a dropped or corrupted row), a row-keeping inner (here
+    ``sh:sparqlExpr``) is itself contained in a projecting sub-SELECT ahead
+    of the conjunct, and the trailing value ``BIND`` references variables
+    only (the rdflib always-true trap; module docstring)."""
     ir = IfNodeExpr(
         cond=_exists("flag"),
         then=FilterShapeNodeExpr(
@@ -1123,9 +1226,9 @@ def test_if_filter_shape_branch_materializes_condition_first() -> None:
     assert cond_bind.var == Variable("_cond_chosen")
     assert isinstance(cond_bind.expr, ExistsExpr)
     assert isinstance(then_optional, OptionalPattern)
-    branch_bind, conjunct = then_optional.child.children
-    assert isinstance(branch_bind, BindPattern)
-    assert branch_bind.var == Variable("_then_chosen")
+    branch_subselect, conjunct = then_optional.child.children
+    assert isinstance(branch_subselect, SelectQuery)
+    assert branch_subselect.projection == (Variable("iri"), Variable("_then_chosen"))
     assert isinstance(conjunct, FilterPattern)
     assert conjunct.expression == CompareExpr(
         "=", TermExpr(Variable("_then_chosen")), TermExpr(Literal("x"))

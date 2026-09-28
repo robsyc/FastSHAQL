@@ -62,19 +62,26 @@ def _validation_copy(shapes: Graph) -> Graph:
         ):
             continue  # the sh:values/sh:defaultValue arm is the source of the value (ADR-0015; Core §6.8.2)
         out.add((s, p, o))
-    for prop, dt_list in shapes.subject_objects(SH.datatype):
-        if not isinstance(dt_list, BNode):
-            continue  # (Core §7.1.2) the datatype list form is the sh:or of its members
-        out.remove((prop, SH.datatype, dt_list))
-        head: object = RDF.nil
-        for datatype in reversed(list(shapes.items(dt_list))):
-            member, cell = BNode(), BNode()
-            out.add((member, SH.datatype, datatype))
-            out.add((cell, RDF.first, member))
-            out.add((cell, RDF.rest, head))
-            head = cell
-        out.add((prop, SH["or"], head))
+    _expand_list_forms(shapes, out)
     return out
+
+
+def _expand_list_forms(shapes: Graph, out: Graph) -> None:
+    """Rewrite the sh:datatype/sh:class SHACL 1.2 list forms into the exact
+    1.1 sh:or of their members (Core §7.1.1/§7.1.2)."""
+    for predicate in (SH.datatype, SH["class"]):
+        for prop, list_head in shapes.subject_objects(predicate):
+            if not isinstance(list_head, BNode):
+                continue
+            out.remove((prop, predicate, list_head))
+            head: object = RDF.nil
+            for value in reversed(list(shapes.items(list_head))):
+                member, cell = BNode(), BNode()
+                out.add((member, predicate, value))
+                out.add((cell, RDF.first, member))
+                out.add((cell, RDF.rest, head))
+                head = cell
+            out.add((prop, SH["or"], head))
 
 
 @pytest.mark.parametrize("group", GROUPS)

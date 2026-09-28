@@ -1,5 +1,5 @@
 SELECT ?iri ?status
 WHERE {
-  ?iri a <http://example.org/Observation> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Observation> .
   ?iri <http://example.org/status> ?status .
 }

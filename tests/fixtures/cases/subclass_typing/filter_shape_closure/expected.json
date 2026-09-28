@@ -1,0 +1,25 @@
+{
+  "data": {
+    "custodian": [
+      {
+        "name": "Bank",
+        "heldAssets": [
+          {
+            "label": "Mona Lisa"
+          },
+          {
+            "label": "Ledger"
+          }
+        ]
+      },
+      {
+        "name": "Museum",
+        "heldAssets": [
+          {
+            "label": "David"
+          }
+        ]
+      }
+    ]
+  }
+}

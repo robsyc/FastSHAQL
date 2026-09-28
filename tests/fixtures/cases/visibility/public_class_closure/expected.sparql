@@ -1,5 +1,5 @@
 SELECT ?iri ?name
 WHERE {
-  ?iri a <http://example.org/Dog> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Dog> .
   ?iri <http://example.org/name> ?name .
 }

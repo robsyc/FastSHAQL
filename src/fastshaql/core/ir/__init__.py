@@ -19,6 +19,7 @@ from .property_shape import (
     FieldKind,
     LiteralSpace,
     PropertyShapeIR,
+    UnionMember,
     ValueSource,
     ValueType,
 )
@@ -42,6 +43,7 @@ __all__ = [
     "ShaclPropertyPath",
     "ShapeIR",
     "SparqlExprNodeExpr",
+    "UnionMember",
     "ValueSource",
     "ValueType",
     "is_multivalued_capable",

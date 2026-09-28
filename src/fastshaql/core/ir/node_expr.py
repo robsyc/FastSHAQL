@@ -4,9 +4,10 @@ A closed-sum typed union mirroring :mod:`fastshaql.core.ir.shacl_path`. The
 union spans the SHACL-SPARQL escape tier (``sh:select``, ``sh:sparqlExpr``,
 constants) and the ``shnex:`` algebra (ADR-0015 — ``pathValues``,
 ``filterShape``, ``if``, ``exists``, ``ListExpression``), extended additively.
-This module is inert data plus the shared structural predicate
-:func:`is_multivalued_capable` (mirroring ``iter_path_predicates`` beside the
-path sum); parsing lives in ``core/parser/node_expr/parse.py`` and emission in
+This module is inert data plus the shared structural predicates
+(:func:`is_multivalued_capable`, :func:`is_total`, :func:`is_row_keeping`,
+mirroring ``iter_path_predicates`` beside the path sum); parsing lives in
+``core/parser/node_expr/parse.py`` and emission in
 ``core/translation/node_expr.py``.
 
 See:
@@ -237,6 +238,40 @@ def is_total(ir: NodeExprIR) -> bool:
             | FilterShapeNodeExpr()
             | InstancesOfNodeExpr()
             | IfNodeExpr()
+        ):
+            return False
+        case _ as unreachable:
+            assert_never(unreachable)  # pragma: no mutate
+
+
+def is_row_keeping(ir: NodeExprIR) -> bool:
+    """Whether the arm can keep a solution with the value variable unbound.
+
+    Row-keeping: an erroring ``sh:sparqlExpr`` ``BIND`` and an author
+    ``sh:select`` body that leaves its projection unbound keep the row
+    without a value; ``shnex:if`` keeps it when no branch matches (under
+    ``shnex:filterShape`` it cannot occur — the parser distributes the
+    filter into the branches, ``_filtered``); ``shnex:filterShape`` recurses
+    into its ``shnex:nodes``. Every other arm either always binds
+    (constants, ``VALUES``, ``shnex:exists``) or is a triple join that dies
+    with its row (``shnex:pathValues``, ``shnex:instancesOf``).
+
+    Consumer: the translator's filterShape arm — a following conjunct
+    triple would re-bind an unbound candidate freely (the ADR-0026
+    fabrication hazard), so a row-keeping inner is contained first.
+    Exhaustive by construction, like the sibling predicates.
+    """
+    match ir:
+        case SparqlExprNodeExpr() | SelectNodeExpr() | IfNodeExpr():
+            return True
+        case FilterShapeNodeExpr(nodes=nodes):
+            return is_row_keeping(nodes)
+        case (
+            ConstantNodeExpr()
+            | ConstantListNodeExpr()
+            | PathValuesNodeExpr()
+            | InstancesOfNodeExpr()
+            | ExistsNodeExpr()
         ):
             return False
         case _ as unreachable:

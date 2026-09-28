@@ -81,7 +81,7 @@ def test_translate_int_operator_filters(
             '{ persons(where: { name: { contains: "Ali" } }) { name } }',
             """SELECT ?iri ?name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   FILTER(CONTAINS(?name, "Ali"))
 }""",
@@ -90,7 +90,7 @@ WHERE {
             '{ persons(where: { name: { regex: "^A" } }) { name } }',
             """SELECT ?iri ?name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   FILTER(REGEX(?name, "^A"))
 }""",
@@ -99,7 +99,7 @@ WHERE {
             '{ persons(where: { name: { in: ["Alice", "Bob"] } }) { name } }',
             """SELECT ?iri ?name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   FILTER(?name IN ("Alice", "Bob"))
 }""",
@@ -108,7 +108,7 @@ WHERE {
             '{ persons(where: { name: { notIn: ["Alice", "Bob"] } }) { name } }',
             """SELECT ?iri ?name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   FILTER(!(?name IN ("Alice", "Bob")))
 }""",
@@ -117,7 +117,7 @@ WHERE {
             '{ persons(where: { iri: { eq: "http://example.org/alice" } }) { name } }',
             """SELECT ?iri ?name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   FILTER(?iri = <http://example.org/alice>)
 }""",
@@ -126,7 +126,7 @@ WHERE {
             '{ persons(where: { name: { eq: "A", contains: "B" } }) { name } }',
             """SELECT ?iri ?name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   FILTER(?name = "A" && CONTAINS(?name, "B"))
 }""",

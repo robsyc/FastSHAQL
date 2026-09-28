@@ -23,7 +23,7 @@ from graphql.type import (
 )
 
 from fastshaql.core.ir import NodeShapeIR, ValueType
-from fastshaql.core.kernel.identifiers import enum_filter_type_name, enum_type_name
+from fastshaql.core.kernel.identifiers import filter_input_name
 from fastshaql.core.kernel.operators import (
     EQUALITY_OPS,
     MEMBERSHIP_OPS,
@@ -77,11 +77,6 @@ _OPERATOR_FIELD_SPECS: dict[str, dict[str, GraphQLInputField]] = {
 }
 
 
-def filter_input_name(graphql_type_name: str) -> str:
-    """Filter input type name for a node shape."""
-    return f"{graphql_type_name}Filter"
-
-
 def _combinator_fields(
     self_type: GraphQLInputObjectType,
 ) -> dict[str, GraphQLInputField]:
@@ -107,7 +102,7 @@ def build_filter_type(
     operator_inputs: dict[str, GraphQLInputObjectType],
     registry: ShapeRegistry,
     *,
-    enum_filter_types: dict[str, GraphQLInputObjectType],
+    enum_filter_types: dict[tuple[str, str], GraphQLInputObjectType],
 ) -> GraphQLInputObjectType:
     """Build a per-shape filter input with thunked fields for recursion."""
     type_name = filter_input_name(shape.graphql_type_name)
@@ -117,16 +112,14 @@ def build_filter_type(
         result: dict[str, GraphQLInputField] = {}
         for name, prop in shape.property_shapes.items():
             match prop.value_type:
+                case ValueType.RELATIONSHIP if prop.is_polymorphic:
+                    pass  # member-keyed filter inputs arrive with the filter slice (ADR-0026)
                 case ValueType.RELATIONSHIP:
                     target = registry.resolve_relationship_target(prop)
                     result[name] = _input_field(filter_types[target.graphql_type_name])
                 case ValueType.ENUM:
-                    type_name = enum_type_name(
-                        parent_graphql_type_name=shape.graphql_type_name,
-                        graphql_field_name=prop.graphql_field_name,
-                    )
                     result[name] = _input_field(
-                        enum_filter_types[enum_filter_type_name(type_name)]
+                        enum_filter_types[(shape.graphql_type_name, name)]
                     )
                 # ``case`` fall-through below the last arm is unreachable:
                 # the ValueType union is closed (no wildcard arm).

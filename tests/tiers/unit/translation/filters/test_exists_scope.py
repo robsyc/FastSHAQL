@@ -21,6 +21,7 @@ from fastshaql.core.sparql import (
     BindPattern,
     ExistsExpr,
     RawGraphPattern,
+    SelectQuery,
     TriplePattern,
 )
 from fastshaql.core.translation.field_binding import FieldBindings
@@ -28,8 +29,12 @@ from fastshaql.core.translation.filters.exists_scope import (
     ExistsContext,
     RootFilterContext,
 )
-from fastshaql.core.translation.variables import VariableMap
+from fastshaql.core.translation.variables import (
+    RelationshipBinding,
+    VariableMap,
+)
 from support.builders import derived_property
+from support.cases import registry_for
 from support.translation import translation_scope
 
 # --- Root flat scalar var ---
@@ -70,13 +75,15 @@ def test_root_filter_context_isolated_reemit_selected_scalar(
 def test_root_filter_context_isolated_relationship_reemit(
     relationship_registry,
 ) -> None:
+    """The isolated re-emission is the guarded link alone — the typing guard
+    lives inside the EXISTS block, never duplicated at the re-emission site
+    (ADR-0026 containment)."""
     person = relationship_registry.by_type_name["Person"]
     employer_prop = person.property_shapes["employer"]
     scope = translation_scope(relationship_registry)
     join_var = Variable("employer_iri")
-    scope.relationships["employer"] = (
-        join_var,
-        VariableMap(subject_var=join_var, fields={}, relationships={}),
+    scope.relationships["employer"] = RelationshipBinding.single(
+        join_var, VariableMap(subject_var=join_var, fields={}, relationships={})
     )
     bindings = FieldBindings(isolated=True)
     bindings.note_selected("employer")
@@ -104,8 +111,42 @@ def test_root_filter_context_isolated_relationship_reemit(
     patterns, expr = ctx.translate_relationship(
         "employer", node, employer_prop, relationship_registry
     )
-    assert len(patterns) == 2
-    assert all(isinstance(p, TriplePattern) for p in patterns)
+    assert len(patterns) == 1
+    assert isinstance(patterns[0], TriplePattern)
+    assert isinstance(expr, ExistsExpr)
+
+
+def test_nested_exists_derived_relationship_link_is_contained() -> None:
+    """A derived link inside a nested EXISTS is contained — the inner EXISTS
+    typing guard must never re-bind an unbound child (ADR-0026)."""
+    registry = registry_for("derived_relationships")
+    prop = registry.by_type_name["Member"].property_shapes["recommendedBooks"]
+    ctx = ExistsContext(subject=Variable("member_iri"), rf_prefix="member")
+    node = ObjectValueNode(
+        fields=(
+            ObjectFieldNode(
+                name=NameNode(value="title"),
+                value=ObjectValueNode(
+                    fields=(
+                        ObjectFieldNode(
+                            name=NameNode(value="eq"),
+                            value=StringValueNode(value="SPARQL 101"),
+                        ),
+                    )
+                ),
+            ),
+        )
+    )
+    patterns, expr = ctx.translate_relationship(
+        "recommendedBooks", node, prop, registry
+    )
+    assert len(patterns) == 1
+    contained = patterns[0]
+    assert isinstance(contained, SelectQuery)
+    assert contained.projection == (
+        Variable("member_iri"),
+        Variable("member_recommendedBooks_iri"),
+    )
     assert isinstance(expr, ExistsExpr)
 
 

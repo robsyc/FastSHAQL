@@ -5,7 +5,10 @@ from __future__ import annotations
 from rdflib import URIRef, Variable
 
 from fastshaql.core.registry import ShapeRegistry
-from fastshaql.core.translation.variables import VariableMap
+from fastshaql.core.translation.variables import (
+    RelationshipBinding,
+    VariableMap,
+)
 
 ALICE = URIRef("http://example.org/alice")
 BOB = URIRef("http://example.org/bob")
@@ -62,7 +65,7 @@ def nested_converter_case(
             subject_var=Variable(f"{relationship}_iri"),
             fields={name: Variable(f"{relationship}_{name}") for name in child_fields},
             relationships={
-                nested: (
+                nested: RelationshipBinding.single(
                     Variable(f"{grand_prefix}_iri"),
                     VariableMap(
                         subject_var=Variable(f"{grand_prefix}_iri"),
@@ -79,6 +82,8 @@ def nested_converter_case(
         subject_var=Variable("iri"),
         fields={name: Variable(name) for name in root_fields},
         relationships={
-            relationship: (Variable(f"{relationship}_iri"), child),
+            relationship: RelationshipBinding.single(
+                Variable(f"{relationship}_iri"), child
+            ),
         },
     )

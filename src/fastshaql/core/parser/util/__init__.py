@@ -19,6 +19,7 @@ from .identifiers import (
     synthesize_inline_shape_iri,
 )
 from .namespaces import (
+    SH_AND,
     SH_CLASS,
     SH_CODE_IDENTIFIER,
     SH_IN,
@@ -34,6 +35,7 @@ from .namespaces import (
 
 __all__ = [
     "SHNEX",
+    "SH_AND",
     "SH_CLASS",
     "SH_CODE_IDENTIFIER",
     "SH_IN",

@@ -167,6 +167,8 @@ def test_relationship_overlay_logs_warning(caplog: pytest.LogCaptureFixture) -> 
     overlay = [r for r in caplog.records if "Relationship-overlay sh:in" in r.message]
     assert len(overlay) == 1
     assert "employer" in overlay[0].message
+    # The shape is named alongside the field — never "on None".
+    assert "on urn:fastshaql:inline:PersonEmployer" in overlay[0].getMessage()
 
 
 def test_empty_sh_in_list_returns_empty_tuple() -> None:

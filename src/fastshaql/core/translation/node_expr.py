@@ -37,9 +37,9 @@ bindings it needs.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import assert_never
+from typing import TYPE_CHECKING, assert_never
 
-from rdflib import RDF, RDFS, Literal, URIRef, Variable
+from rdflib import Literal, URIRef, Variable
 
 from fastshaql.core.ir.node_expr import (
     ConstantListNodeExpr,
@@ -53,6 +53,7 @@ from fastshaql.core.ir.node_expr import (
     SelectNodeExpr,
     SparqlExprNodeExpr,
     is_multivalued_capable,
+    is_row_keeping,
     is_total,
 )
 from fastshaql.core.sparql import (
@@ -72,36 +73,20 @@ from fastshaql.core.sparql import (
     TriplePattern,
     ValuesPattern,
     contain_row_eliminating,
+    contain_row_keeping,
 )
 from fastshaql.core.sparql.lex import THIS_REF, map_code_spans
-from fastshaql.core.sparql.paths import (
-    PredicatePath as SparqlPredicatePath,
-)
-from fastshaql.core.sparql.paths import (
-    SequencePath as SparqlSequencePath,
-)
-from fastshaql.core.sparql.paths import (
-    ZeroOrMorePath as SparqlZeroOrMorePath,
-)
 from fastshaql.core.sparql.terms import RenderTerm, render_term
 
 from .filter_shape import translate_filter_shape
+from .paths import SHACL_INSTANCE_PATH as _SHACL_INSTANCE_PATH
 from .paths import map_shacl_path_to_sparql_path
+
+if TYPE_CHECKING:
+    from fastshaql.core.ir.filter_shape import FilterShapeIR
 
 _TRUE = Literal(True)
 _FALSE = Literal(False)
-
-_SHACL_INSTANCE_PATH = SparqlSequencePath(
-    (
-        SparqlPredicatePath(RDF.type),
-        SparqlZeroOrMorePath(SparqlPredicatePath(RDFS.subClassOf)),
-    )
-)
-"""``rdf:type/rdfs:subClassOf*`` — the subclass-closing instance path.
-
-SHACL instances of a class are nodes typed with the class or any subclass
-(Core §1.1); the closure reads the queried graphs only — the spec's §6.3
-shapes-graph ``rdfs:subClassOf`` lookup is a documented deviation (ADR-0016)."""
 
 
 def _substitute_focus_var(text: str, focus_term: RenderTerm) -> str:
@@ -206,10 +191,7 @@ def _translate(
                 )
             ]
         case FilterShapeNodeExpr(nodes=nodes, shape=shape):
-            inner = _translate(
-                nodes, focus_term=focus_term, value_var=value_var, base=base
-            )
-            patterns = [*inner, *translate_filter_shape(shape, value_var)]
+            patterns = _filtered_emission(nodes, shape, focus_term, value_var, base)
         case ConstantListNodeExpr(values=values):
             patterns = [ValuesPattern(value_var, values)]
         case InstancesOfNodeExpr(classes=classes):
@@ -227,6 +209,30 @@ def role_var(role: str, base: Variable) -> Variable:
     """A fresh sub-expression variable ``_{role}_{base}`` — the single mint
     of underscore-role names (see module docstring for the role inventory)."""
     return Variable(f"_{role}_{base}")
+
+
+def _filtered_emission(
+    nodes: NodeExprIR,
+    shape: FilterShapeIR,
+    focus_term: RenderTerm,
+    value_var: Variable,
+    base: Variable,
+) -> list[Pattern]:
+    """The ``shnex:filterShape`` arm: the candidate emission of *nodes*,
+    then the conjuncts (node-expr §4.2.5).
+
+    A row-keeping candidate arm keeps no-value solutions — a conjunct
+    triple (class, nested property path) would re-bind the candidate freely
+    (the ADR-0026 fabrication hazard) — so it is contained in a projecting
+    sub-SELECT where the conjuncts cannot see them; the focus projects
+    alongside the value unless it is the target-position constant."""
+    inner = _translate(nodes, focus_term=focus_term, value_var=value_var, base=base)
+    if is_row_keeping(nodes):
+        projection = tuple(
+            term for term in (focus_term, value_var) if isinstance(term, Variable)
+        )
+        inner = contain_row_keeping(inner, projection, value_var)
+    return [*inner, *translate_filter_shape(shape, value_var)]
 
 
 def _instances_of_patterns(

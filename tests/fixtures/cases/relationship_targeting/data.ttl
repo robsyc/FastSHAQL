@@ -1,0 +1,39 @@
+@prefix ex: <http://example.org/> .
+
+ex:cust-a a ex:Customer ; ex:name "A" ;
+    ex:address ex:addr-1 ;
+    ex:note ex:note-1 ;
+    ex:billing ex:bill-1 ;
+    ex:shipping ex:ship-1 ;
+    ex:registered ex:reg-1 .
+
+ex:cust-b a ex:Customer ; ex:name "B" ;
+    ex:address ex:addr-2 ;
+    ex:note ex:note-2 ;
+    ex:shipping ex:ship-2 .
+
+# addr-1 carries the target class — survives auto-typing; addr-2 is
+# untyped — the typing path drops it.
+ex:addr-1 a ex:PostalAddress ; ex:street "Dam 1" .
+ex:addr-2 ex:street "Dam 2" .
+
+# Class-less target: no typing is emitted — the untyped note survives.
+ex:note-1 ex:text "first" .
+ex:note-2 ex:text "second" .
+
+# Explicit classes replace the implicit PostalAddress typing: bill-1 is
+# VerifiedAddress only — surviving the link proves replace (under implicit
+# conjoining it would drop). bill-2 is PostalAddress only — linked through
+# the sh:values constant lane below (invisible to pySHACL), where the
+# VerifiedAddress typing drops it.
+ex:bill-1 a ex:VerifiedAddress ; ex:street "Invoice Way 1" .
+ex:bill-2 a ex:PostalAddress ; ex:street "Invoice Way 2" .
+
+# Declared class equals the target's class — one path either way; both
+# shipping values are PostalAddress-typed and survive.
+ex:ship-1 a ex:PostalAddress ; ex:street "Depot 1" .
+ex:ship-2 a ex:PostalAddress ; ex:street "Depot 2" .
+
+# Conjunction: both declared classes bind (one path each); reg-1 carries
+# both and survives.
+ex:reg-1 a ex:PrimeAddress , ex:VerifiedAddress ; ex:street "Registry Way 1" .

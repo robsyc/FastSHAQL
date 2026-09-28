@@ -127,7 +127,6 @@ def test_public_entry_normalizes_both_union_syntaxes() -> None:
     """``datatypes_from_shape`` — the module's public entry — reads both
     union syntaxes to the same tuple when called directly on the graph."""
     prop_shape = URIRef("http://example.org/noteShape")
-    kwargs = {"shape_iri": prop_shape, "field_name": "note"}
     list_form = Graph()
     list_form.parse(
         data=f"""{_PREFIXES}
@@ -142,13 +141,29 @@ ex:noteShape sh:or ( [ sh:datatype xsd:string ] [ sh:datatype rdf:langString ] )
 """,
         format="turtle",
     )
-    assert datatypes_from_shape(list_form, prop_shape, **kwargs) == (
-        XSD.string,
-        RDF.langString,
+    assert datatypes_from_shape(
+        list_form, prop_shape, shape_iri=prop_shape, field_name="note"
+    ) == (XSD.string, RDF.langString)
+    assert datatypes_from_shape(
+        or_form, prop_shape, shape_iri=prop_shape, field_name="note"
+    ) == (XSD.string, RDF.langString)
+
+
+def test_public_entry_empty_sh_or_has_no_datatypes() -> None:
+    """The public entry stays total on the empty form — a memberless list
+    yields no datatypes (the parse path claims empty ``sh:or`` in the
+    member lane, :mod:`unions`, where the warning lives)."""
+    prop_shape = URIRef("http://example.org/noteShape")
+    graph = Graph()
+    graph.parse(
+        data=f"""{_PREFIXES}
+ex:noteShape sh:or ( ) .
+""",
+        format="turtle",
     )
-    assert datatypes_from_shape(or_form, prop_shape, **kwargs) == (
-        XSD.string,
-        RDF.langString,
+    assert (
+        datatypes_from_shape(graph, prop_shape, shape_iri=prop_shape, field_name="note")
+        == ()
     )
 
 
@@ -176,14 +191,17 @@ def test_sh_or_with_literal_member_is_inert() -> None:
     assert prop.datatypes == ()
 
 
-def test_sh_or_member_with_type_annotation_is_inert() -> None:
-    """The recognized member's predicate set is exactly ``{sh:datatype}`` —
-    even an ``a sh:NodeShape`` annotation routes to the inert lane."""
+def test_sh_or_member_with_type_annotation_normalizes() -> None:
+    """Non-validating metadata (``rdf:type``, §8) adds no value constraint —
+    the member still normalizes into the datatype tuple (ADR-0026)."""
     prop = _parse_property("sh:or ( [ a sh:NodeShape ; sh:datatype xsd:string ] ) ;")
-    assert prop.datatypes == ()
+    assert prop.datatypes == (XSD.string,)
 
 
-def test_empty_sh_or_list_is_inert() -> None:
+def test_empty_sh_or_list_contributes_no_datatypes() -> None:
+    """A memberless ``sh:or`` contributes no datatypes — the parse path
+    claims the empty form in the member lane (:mod:`unions`,
+    warn-and-ignore)."""
     prop = _parse_property("sh:or ( ) ;")
     assert prop.datatypes == ()
 

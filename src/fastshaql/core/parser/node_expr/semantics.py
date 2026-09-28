@@ -2,8 +2,9 @@
 
 Union knowledge about :class:`NodeExprIR` that the property-shape boundary
 needs before accepting a parsed expression: what to call an arm in error
-messages, and whether any path it reads targets another derived property
-(rule chaining, rejected per ADR-0015). The structural capability predicate
+messages, whether any path it reads targets another derived property
+(rule chaining, rejected per ADR-0015), and whether a ``sh:sparqlExpr``
+text reads the focus node. The structural capability predicate
 :func:`is_multivalued_capable` lives beside the IR union it dispatches on
 (``core/ir/node_expr.py``) — import it from there directly.
 """
@@ -28,6 +29,7 @@ from fastshaql.core.ir.node_expr import (
     SparqlExprNodeExpr,
 )
 from fastshaql.core.ir.shacl_path import ShaclPropertyPath, iter_path_predicates
+from fastshaql.core.sparql.lex import THIS_REF, map_code_spans
 
 from ..errors import UnsupportedShapeError
 from ..util import SH_VALUES
@@ -38,8 +40,26 @@ if TYPE_CHECKING:
 
 __all__ = [
     "arm_label",
+    "reads_focus",
     "reject_derived_path_targets",
 ]
+
+_FOCUS_SENTINEL = "\x00focus\x00"
+"""A NUL-bearing marker no legal SPARQL text can contain — flags a focus
+reference found in code position."""
+
+
+def reads_focus(expr: str) -> bool:
+    """Whether a ``sh:sparqlExpr`` text references the focus node.
+
+    Runs the same protected-region transform as focus substitution
+    (:func:`fastshaql.core.sparql.lex.map_code_spans` +
+    :data:`THIS_REF`) — a ``$this`` inside a string literal, IRI, or comment
+    is a literal value, not a focus reference, so the rejection and the
+    substitution cannot disagree on what reads the focus.
+    """
+    marked = map_code_spans(expr, lambda code: THIS_REF.sub(_FOCUS_SENTINEL, code))
+    return _FOCUS_SENTINEL in marked
 
 
 def arm_label(ir: NodeExprIR) -> str:

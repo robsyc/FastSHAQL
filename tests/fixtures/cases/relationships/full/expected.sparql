@@ -1,20 +1,20 @@
 SELECT ?iri ?name ?employer_iri ?employer_name ?employer_locatedIn_iri ?employer_locatedIn_name ?knows_iri ?knows_name
 WHERE {
-  ?iri a <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
   ?iri <http://example.org/name> ?name .
   OPTIONAL {
     ?iri <http://example.org/employer> ?employer_iri .
-    ?employer_iri a <http://example.org/Company> .
+    ?employer_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Company> .
     ?employer_iri <http://example.org/name> ?employer_name .
     OPTIONAL {
       ?employer_iri <http://example.org/locatedIn> ?employer_locatedIn_iri .
-      ?employer_locatedIn_iri a <http://example.org/City> .
+      ?employer_locatedIn_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/City> .
       ?employer_locatedIn_iri <http://example.org/name> ?employer_locatedIn_name .
     }
   }
   OPTIONAL {
     ?iri <http://example.org/knows> ?knows_iri .
-    ?knows_iri a <http://example.org/Person> .
+    ?knows_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
     ?knows_iri <http://example.org/name> ?knows_name .
   }
 }

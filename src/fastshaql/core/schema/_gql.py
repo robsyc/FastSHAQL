@@ -22,6 +22,7 @@ from graphql.type import (
     GraphQLObjectType,
     GraphQLScalarType,
     GraphQLString,
+    GraphQLUnionType,
 )
 
 if TYPE_CHECKING:
@@ -59,3 +60,18 @@ def object_type(
 def enum_type(name: str, values: Mapping[str, object]) -> GraphQLEnumType:
     """Construct a ``GraphQLEnumType`` without the cast noise."""
     return cast(GraphQLEnumType, GraphQLEnumType(name, values))
+
+
+def union_type(
+    name: str,
+    types: tuple[GraphQLObjectType, ...],
+    *,
+    description: str | None = None,
+) -> GraphQLUnionType:
+    """Construct a ``GraphQLUnionType`` without the cast noise. No custom
+    ``resolve_type`` — the ``__typename`` stamp drives graphql-core's
+    default type resolver (ADR-0026)."""
+    return cast(
+        GraphQLUnionType,
+        GraphQLUnionType(name, types, description=description),
+    )

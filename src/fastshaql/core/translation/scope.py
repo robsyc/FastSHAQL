@@ -10,7 +10,7 @@ from __future__ import annotations
 import dataclasses
 from typing import TYPE_CHECKING
 
-from .variables import VariableAllocator, VariableMap
+from .variables import RelationshipBinding, VariableAllocator, VariableMap
 
 if TYPE_CHECKING:
     from rdflib import Variable
@@ -44,14 +44,24 @@ class TranslationScope:
     fields: dict[str, Variable] = dataclasses.field(default_factory=dict)
     """Scalar field name → bound variable at this nesting level."""
 
-    relationships: dict[str, tuple[Variable, VariableMap]] = dataclasses.field(
+    relationships: dict[str, RelationshipBinding] = dataclasses.field(
         default_factory=dict
     )
-    """Relationship field name → (child subject variable, child map)."""
+    """Relationship field name → conversion binding (ADR-0026)."""
 
     lang_tags: tuple[str, ...] = ()
     """Language preference chain for language-accepting bindings (ADR-0012):
     the request's chain, inherited by child scopes."""
+
+    @classmethod
+    def child(cls, subject: Variable, parent: TranslationScope) -> TranslationScope:
+        """A child level sharing the allocator, registry, and language chain."""
+        return cls(
+            subject=subject,
+            allocator=parent.allocator,
+            registry=parent.registry,
+            lang_tags=parent.lang_tags,
+        )
 
     def append_projection(self, var: Variable) -> None:
         """Append *var* to :attr:`projection` once."""

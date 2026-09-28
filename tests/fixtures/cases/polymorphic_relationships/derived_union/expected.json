@@ -1,0 +1,39 @@
+{
+  "data": {
+    "article": [
+      {
+        "title": "Syntax highlights",
+        "related": [
+          {
+            "text": "Related paragraph"
+          },
+          {
+            "url": "https://example.org/img-2.png"
+          }
+        ]
+      },
+      {
+        "title": "Dual types",
+        "related": [
+          {
+            "text": "Related paragraph"
+          },
+          {
+            "url": "https://example.org/img-2.png"
+          }
+        ]
+      },
+      {
+        "title": "Childless",
+        "related": [
+          {
+            "text": "Related paragraph"
+          },
+          {
+            "url": "https://example.org/img-2.png"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -95,8 +95,20 @@ A member of an enum property's `sh:in` list — homogeneous in term kind. GraphQ
 _Avoid_: enum member, code
 
 **Relationship**:
-A Property whose value is another RDF resource (`sh:class` or `sh:node`).
+A Property whose value is another RDF resource — `sh:node` names the linked shape (the target), `sh:class` types the binding (ADR-0025).
 _Avoid_: link, reference, association
+
+**Polymorphic relationship**:
+A relationship Property whose values may conform to any of several member shapes (`sh:or` members carrying `sh:class`/`sh:node`, or the `sh:class` list form) — one link traversing several object types; lowered to a union type.
+_Avoid_: polymorphic field, union relationship (repeats the String-union Property syntax/concept confusion), "or property"
+
+**Member shape**:
+One target candidate of a polymorphic relationship — an `sh:or` member carrying `sh:class` or `sh:node`, or one class of the `sh:class` list form. Must resolve to a class (the **member discriminator** — lane guard and `__typename` source); single-target relationships are exempt.
+_Avoid_: branch (that is the GraphQL inline-fragment selection), variant, alternative (collides with alternativePath)
+
+**Union type**:
+The GraphQL artifact for a polymorphic relationship: a synthesized `GraphQLUnionType` over the member shapes' object types, selected via inline fragments; the concrete type per row is stamped as `__typename`.
+_Avoid_: interface (a distinct future derivation), abstract type
 
 **Derived field**:
 A Property whose values are computed by a node expression (`sh:values`), not read from asserted triples (ADR-0015).
@@ -167,6 +179,18 @@ _Avoid_: field (ambiguous with Property), node (ambiguous with RDF)
 **Filter**:
 The composable input type per Shape (`{TypeName}Filter`) passed as `where` on root query fields (ADR-0009).
 _Avoid_: search criteria, filter input
+
+**Member-keyed filter**:
+The filter-input shape for a polymorphic relationship: one field per member, keyed by the member's discriminator name (the member type name; the binding class for a binding union), each holding that member's Filter, plus the Type-discrimination operator. The keys form one disjunctive predicate — a value matches when it is-a any keyed member and satisfies that member's conditions; requiring different members independently composes at the parent level (AND of separate filters). A key matches by class-guard is-a (subclass-closed), independent of member-order priority, which governs only `__typename` stamping.
+_Avoid_: branch filter (branch is the selection concept), lane filter (lowering mechanism, not the input)
+
+**Quantifier operator**:
+`some`/`every`/`none` over a to-many relationship's values: some as FILTER EXISTS, none as single negation, every as double negation — vacuously true on an empty value set, documented rather than silently redefined. To-many relationships carry them inside a wrapper input; to-one relationships stay the bare object (exists-and-match — one value quantifies nothing). The quantified member-keyed predicate is strict: it predicates over all values, not per-member subsets.
+_Avoid_: nested object filter (that is the bare to-one object), wrapper (the shape, not the operator)
+
+**Type-discrimination operator**:
+The filter operator constraining which member types a polymorphic relationship's values may have — "only Employees" is a `where` concern; fragments select fields, never members.
+_Avoid_: type filter (ambiguous with scalar filters), typename filter
 
 **Relationship-filter variable**:
 Fresh `_rf_`-prefixed SPARQL variables inside `FILTER EXISTS` blocks — avoid colliding with selection-walk variables.

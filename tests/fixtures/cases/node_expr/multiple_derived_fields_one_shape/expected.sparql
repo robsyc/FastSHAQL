@@ -1,6 +1,6 @@
 SELECT ?iri ?refAllele ?geneSymbol ?annotationStatus ?hasGene ?evidenceTags
 WHERE {
-  ?iri a <http://example.org/genomics/Variant> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/genomics/Variant> .
   ?iri <http://example.org/genomics/refAllele> ?refAllele .
   OPTIONAL {
     ?iri <http://example.org/genomics/inGene>/<http://example.org/genomics/symbol> ?geneSymbol .

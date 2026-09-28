@@ -1,5 +1,5 @@
 SELECT ?iri ?level
 WHERE {
-  ?iri a <http://example.org/Rating> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Rating> .
   ?iri <http://example.org/level> ?level .
 }
