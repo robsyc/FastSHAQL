@@ -1,6 +1,0 @@
-query IntegerLiteralEnumFilter {
-  rating(where: { level: { eq: _1 } }) {
-    iri
-    level
-  }
-}

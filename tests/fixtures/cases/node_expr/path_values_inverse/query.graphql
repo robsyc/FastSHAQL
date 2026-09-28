@@ -1,3 +1,8 @@
+"""Walking a link backwards: each gene lists the variants that point at it
+through the same gene link — no asserted back-reference exists in the data.
+BRCA1 collects two variants; a gene no variant points at would get an empty
+list, never null.
+In the SPARQL: the inverse path renders as ^<…inGene>."""
 query PathValuesInverse {
   gene {
     iri

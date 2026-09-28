@@ -2,6 +2,7 @@
   "data": {
     "patient": [
       {
+        "medicalRecordNumber": "MRN-1001",
         "hasCondition": [
           {
             "mostSpecificClass": "http://example.org/clinical/NonAlcoholicSteatohepatitis"
@@ -9,6 +10,7 @@
         ]
       },
       {
+        "medicalRecordNumber": "MRN-1002",
         "hasCondition": [
           {
             "mostSpecificClass": "http://example.org/clinical/HepatitisB"
@@ -16,6 +18,15 @@
         ]
       },
       {
+        "medicalRecordNumber": "MRN-1003",
+        "hasCondition": [
+          {
+            "mostSpecificClass": "http://example.org/clinical/Condition"
+          }
+        ]
+      },
+      {
+        "medicalRecordNumber": "MRN-1004",
         "hasCondition": []
       }
     ]

@@ -1,0 +1,46 @@
+{
+  "data": {
+    "variant": [
+      {
+        "iri": "http://example.org/genomics/v1",
+        "curationBadges": [
+          "evidence-backed",
+          "traceable"
+        ]
+      },
+      {
+        "iri": "http://example.org/genomics/v2",
+        "curationBadges": []
+      },
+      {
+        "iri": "http://example.org/genomics/v3",
+        "curationBadges": [
+          "evidence-backed",
+          "traceable"
+        ]
+      },
+      {
+        "iri": "http://example.org/genomics/v4",
+        "curationBadges": []
+      },
+      {
+        "iri": "http://example.org/genomics/v5",
+        "curationBadges": [
+          "evidence-backed",
+          "traceable"
+        ]
+      },
+      {
+        "iri": "http://example.org/genomics/v6",
+        "curationBadges": []
+      },
+      {
+        "iri": "http://example.org/genomics/v7",
+        "curationBadges": [
+          "evidence-backed",
+          "traceable"
+        ]
+      }
+    ]
+  }
+}

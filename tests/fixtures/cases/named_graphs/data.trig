@@ -1,19 +1,42 @@
 @prefix ex: <http://example.org/> .
 
-# Default (unnamed) graph — present so the ``from_replaces_default`` case can pin
-# that an explicit ``FROM`` makes it unreachable (SPARQL §13.2: the FROM-described
-# dataset is "used in place of" the store's default; ADR-0011).
-ex:thing-default a ex:Thing ;
-    ex:label "Default" .
+# Legacy backlog in the unnamed default graph: items accessioned before the
+# consortium split its store into per-member graphs. The graph has no IRI, so
+# no FROM clause can list it — it answers only when a query carries no read
+# scope at all.
+ex:item-legacy a ex:Item ;
+    ex:title "Crate of unlabelled lantern slides" .
 
-# Named graph g1.
-<urn:ex:g1> {
-    ex:thing-1 a ex:Thing ;
-        ex:label "Alpha" .
+# The shared thesaurus graph — subject terms maintained centrally; every
+# member's items link into it.
+<urn:ex:thesaurus> {
+    ex:subject-lighthouse a ex:Subject ;
+        ex:name "Lighthouses" .
+
+    ex:subject-shipwreck a ex:Subject ;
+        ex:name "Shipwrecks" .
 }
 
-# Named graph g2.
-<urn:ex:g2> {
-    ex:thing-2 a ex:Thing ;
-        ex:label "Beta" .
+# The maritime museum's collection graph.
+<urn:ex:maritime-museum> {
+    ex:item-logbook a ex:Item ;
+        ex:title "Lightkeeper's logbook, 1902" ;
+        ex:subject ex:subject-lighthouse .
+
+    ex:item-chart a ex:Item ;
+        ex:title "Chart of the Merestone shoals" ;
+        ex:subject ex:subject-shipwreck .
+}
+
+# The city archive's collection graph. It keeps a local copy of the Shipwrecks
+# term — an exact duplicate of the thesaurus entry, so a scope listing both
+# graphs still shows the term once: a merged default graph is one set of
+# triples, not a pile of graphs.
+<urn:ex:city-archive> {
+    ex:item-ledger a ex:Item ;
+        ex:title "Salvage ledger of the Anne" ;
+        ex:subject ex:subject-shipwreck .
+
+    ex:subject-shipwreck a ex:Subject ;
+        ex:name "Shipwrecks" .
 }

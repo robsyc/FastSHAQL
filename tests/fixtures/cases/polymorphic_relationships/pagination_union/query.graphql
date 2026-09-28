@@ -1,7 +1,9 @@
+"""Root pagination composes with unions: the limit applies to articles,
+not to their blocks."""
 query PolymorphicPaginationUnion {
   article(limit: 2) {
     title
-    block {
+    body {
       __typename
       ... on Paragraph {
         text

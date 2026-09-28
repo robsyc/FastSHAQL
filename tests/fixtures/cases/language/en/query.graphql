@@ -1,15 +1,22 @@
-query LanguagePreferenceChain {
-  person {
-    iri
-    name
-    bio
-    altLabel
-    note
-    plain
-    summary
-    employer {
-      iri
-      label
+"""An English-only chain: every label field resolves to its English value
+or to nothing. "en" is a range, so the American-English tour label serves
+too — while the Dutch and French works drop out entirely: their required
+titles resolve to null, and a required field never shows null. Plain
+caption text still arrives (the Great Wave's loan note) through the
+caption's own untagged fallback, and the alias list keeps only English.
+The Sunflowers shows no artist: Vincent's only name is Dutch, and a
+required name either resolves or the artist disappears.
+In the SPARQL: one OPTIONAL step per field, then BIND(COALESCE(...))
+taking the first step that matched."""
+query MuseumEnglishOnly {
+  artwork {
+    title
+    caption
+    altTitle
+    inventoryNumber
+    teaser
+    artist {
+      name
     }
   }
 }

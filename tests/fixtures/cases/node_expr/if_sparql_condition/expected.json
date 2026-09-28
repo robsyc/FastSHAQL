@@ -1,0 +1,21 @@
+{
+  "data": {
+    "gene": [
+      {
+        "iri": "http://example.org/genomics/g1",
+        "symbol": "BRCA1",
+        "supportTier": "high"
+      },
+      {
+        "iri": "http://example.org/genomics/g2",
+        "symbol": "TP53",
+        "supportTier": "standard"
+      },
+      {
+        "iri": "http://example.org/genomics/g3",
+        "symbol": "KRAS",
+        "supportTier": "standard"
+      }
+    ]
+  }
+}

@@ -1,3 +1,7 @@
+"""The audit log has no root field — there is no way to ask for every
+account event — yet it is fully reachable through the customer it belongs
+to. Maria's entry travels with her record; Jules has none yet, so his
+audit field is null."""
 query ProtectedReachable {
   person {
     name

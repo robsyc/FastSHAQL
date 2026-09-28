@@ -1,7 +1,22 @@
 {
   "data": {
-    "person": [
-      { "name": "Alice" }
+    "artwork": [
+      {
+        "title": "The Starry Night",
+        "year": 1889,
+        "onLoan": false,
+        "artist": {
+          "name": "Vincent van Gogh"
+        }
+      },
+      {
+        "title": "Night Watch",
+        "year": 1642,
+        "onLoan": false,
+        "artist": {
+          "name": "Rembrandt van Rijn"
+        }
+      }
     ]
   }
 }

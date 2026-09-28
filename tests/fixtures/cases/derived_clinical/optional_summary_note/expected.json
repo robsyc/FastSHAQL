@@ -2,20 +2,34 @@
   "data": {
     "patient": [
       {
+        "medicalRecordNumber": "MRN-1001",
         "hasCondition": [
           {
+            "mostSpecificClass": "http://example.org/clinical/NonAlcoholicSteatohepatitis",
             "summaryNote": "NASH management plan"
           }
         ]
       },
       {
+        "medicalRecordNumber": "MRN-1002",
         "hasCondition": [
           {
+            "mostSpecificClass": "http://example.org/clinical/HepatitisB",
             "summaryNote": null
           }
         ]
       },
       {
+        "medicalRecordNumber": "MRN-1003",
+        "hasCondition": [
+          {
+            "mostSpecificClass": "http://example.org/clinical/Condition",
+            "summaryNote": "Pending workup"
+          }
+        ]
+      },
+      {
+        "medicalRecordNumber": "MRN-1004",
         "hasCondition": []
       }
     ]

@@ -1,5 +1,7 @@
-query EmptyLimit {
-  person(limit: 0) {
-    name
+"""A zero limit asks for a zero-width window and gets a legal empty page:
+an empty list, never null — the same answer an empty catalog would give."""
+query ZeroLimit {
+  book(limit: 0) {
+    title
   }
 }

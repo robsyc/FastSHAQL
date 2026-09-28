@@ -1,3 +1,7 @@
+"""Customers and their pickup addresses are both published, so each is a
+root field on the query. Traversal reads them together: Maria's address
+comes along in the same request, while Jules — new, no address on file —
+gets null, never a missing key."""
 query PublicSelect {
   person {
     name

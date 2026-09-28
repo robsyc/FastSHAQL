@@ -2,23 +2,24 @@
   "data": {
     "custodian": [
       {
-        "name": "Bank",
-        "heldAssets": [
+        "name": "City Bank",
+        "heldItems": [
           {
             "label": "Mona Lisa"
-          },
-          {
-            "label": "Ledger"
           }
         ]
       },
       {
-        "name": "Museum",
-        "heldAssets": [
+        "name": "National Museum",
+        "heldItems": [
           {
             "label": "David"
           }
         ]
+      },
+      {
+        "name": "Museum Annex",
+        "heldItems": []
       }
     ]
   }

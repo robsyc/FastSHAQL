@@ -1,0 +1,10 @@
+{
+  "data": {
+    "reading": [
+      {
+        "iri": "http://example.org/reading-202",
+        "site": "MAIN_OUTFALL_2"
+      }
+    ]
+  }
+}

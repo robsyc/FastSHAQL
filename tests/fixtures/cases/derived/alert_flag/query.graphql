@@ -1,0 +1,10 @@
+"""A crossing carrying a disruption notice is flagged; one without is false —
+never null. The flag does not read a stored boolean: it asks whether any
+alert exists, and that answer always exists.
+In the SPARQL: a BIND of an EXISTS test rather than a triple read."""
+query AlertFlag {
+  crossing {
+    code
+    isAlerted
+  }
+}

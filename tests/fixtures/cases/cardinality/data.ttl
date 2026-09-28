@@ -1,20 +1,27 @@
 @prefix ex: <http://example.org/> .
 
-ex:thing-1 a ex:Thing ;
-    ex:label "Alpha" ;
-    ex:subtitle "The First" ;
-    ex:tag "red" ;
-    ex:tag "blue" ;
-    ex:altLabel "A" ;
-    ex:altLabel "B" .
+# The menu card. Every blend names itself and lists its ingredients; only
+# the House Black stays silent on caffeine — the shape's default answers.
 
-ex:thing-2 a ex:Thing ;
-    ex:label "Beta" ;
-    ex:tag "green" .
+ex:tea-1 a ex:Tea ;
+    ex:name "Earl Grey Bravo" ;
+    ex:tagline "Bergamot-forward, brisk enough for the morning rush" ;
+    ex:ingredients "Assam black tea", "Ceylon black tea", "Bergamot peel" ;
+    ex:flavor "citrus", "floral" ;
+    ex:caffeine "high" ;
+    ex:awards "Great Taste 2024" .
 
-ex:thing-3 a ex:Thing ;
-    ex:label "Gamma" ;
-    ex:subtitle "The Third" ;
-    ex:tag "red" ;
-    ex:tag "green" ;
-    ex:tag "blue" .
+# The lean entry: no tagline (null), no tasting notes (empty list), and a
+# single ingredient — still a list, never a bare string.
+ex:tea-2 a ex:Tea ;
+    ex:name "Snow Sprout" ;
+    ex:ingredients "Green tea buds" ;
+    ex:caffeine "low" .
+
+# Caffeine unstated, so the default serves "medium". Two of the three
+# award slots are used — the cap is the shape's, not the query's.
+ex:tea-3 a ex:Tea ;
+    ex:name "House Black" ;
+    ex:tagline "The everyday pot behind the counter" ;
+    ex:ingredients "Kenyan black tea", "Yunnan black tea" ;
+    ex:awards "County Fair 2023", "Growers' Cup 2022" .

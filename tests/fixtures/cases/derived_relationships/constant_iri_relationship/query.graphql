@@ -1,9 +1,0 @@
-query ConstantIriRelationship {
-  member {
-    iri
-    homeBranch {
-      iri
-      name
-    }
-  }
-}

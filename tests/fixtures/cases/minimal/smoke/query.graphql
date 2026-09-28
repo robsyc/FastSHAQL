@@ -1,3 +1,8 @@
+"""The whole bridge in one operation: the shape becomes a root query
+field, the selection lowers to one SPARQL SELECT, and both rows come
+back with their IRIs and their one required label. In the SPARQL: the
+type pattern admits subclasses, and each selected field names its own
+SPARQL variable (?iri, ?label)."""
 query SmokeThings {
   thing {
     iri

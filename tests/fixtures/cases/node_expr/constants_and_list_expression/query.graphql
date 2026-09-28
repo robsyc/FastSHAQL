@@ -1,3 +1,9 @@
+"""Values that live in the shapes, not the data: every gene carries the same
+registry code and the same list of assay panels, whatever its triples say.
+The scalar binds one constant; the list is a fixed set of members in
+declaration order.
+In the SPARQL: a constant BIND and a VALUES block — no triple pattern is
+involved."""
 query ConstantsAndListExpression {
   gene {
     iri

@@ -1,3 +1,8 @@
+"""A branch on existence with constant outcomes: every variant is classified
+"annotated" when it sits in a known gene and "novel" otherwise. The unplaced
+variant reads novel, not null — one of the two arms always answers.
+In the SPARQL: the whole branch compiles to a single
+BIND(IF(EXISTS { … }, "annotated", "novel"))."""
 query IfExistsConstantBranches {
   variant {
     iri

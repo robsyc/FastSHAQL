@@ -1,6 +1,14 @@
+"""Scoping a read to the maritime museum's graph answers with that member's
+items alone — the city archive's shelves and the legacy backlog are
+invisible, and even the shared thesaurus is out of reach: each item keeps
+its title, but its subject link finds no term, so every subject comes back
+null. A relationship resolves only inside the graphs the scope lists.
+In the SPARQL: one FROM clause, naming the museum's graph."""
 query ScopeSingle {
-  thing {
-    iri
-    label
+  item {
+    title
+    subject {
+      name
+    }
   }
 }

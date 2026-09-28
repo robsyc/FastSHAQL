@@ -1,0 +1,19 @@
+SELECT ?iri ?name ?tagline ?ingredients ?flavor ?caffeine ?awards
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Tea> .
+  ?iri <http://example.org/name> ?name .
+  OPTIONAL {
+    ?iri <http://example.org/tagline> ?tagline .
+  }
+  ?iri <http://example.org/ingredients> ?ingredients .
+  OPTIONAL {
+    ?iri <http://example.org/flavor> ?flavor .
+  }
+  OPTIONAL {
+    ?iri <http://example.org/caffeine> ?_dv_caffeine .
+  }
+  BIND(COALESCE(?_dv_caffeine, "medium") AS ?caffeine)
+  OPTIONAL {
+    ?iri <http://example.org/awards> ?awards .
+  }
+}

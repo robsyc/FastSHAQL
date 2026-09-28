@@ -1,6 +1,0 @@
-query OptionalDerived {
-  item {
-    iri
-    isFlagged
-  }
-}

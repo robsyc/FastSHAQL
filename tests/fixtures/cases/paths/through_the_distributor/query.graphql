@@ -1,0 +1,16 @@
+"""Distributor facts without the distributor. A film's distributor name and
+release country arrive as ordinary fields that walk to the distributor and
+read on from there — the distributor itself never becomes a type you can ask
+about. Meridian was self-distributed: no distributor triples exist at all, so
+both fields answer null and the film does not disappear from the results.
+In the SPARQL: each field is one triple pattern whose predicate is the
+two-step path ex:distributor/ex:name or ex:distributor/ex:country."""
+query ThroughTheDistributor {
+  movie {
+    title
+    distributorName
+    originCountry {
+      name
+    }
+  }
+}

@@ -1,5 +1,7 @@
-query OffsetPastEnd {
-  person(offset: 10) {
-    name
+"""An offset past the last book starts the window beyond the catalog's end:
+nothing wraps around, the page is simply empty."""
+query OffsetBeyondTheEnd {
+  book(offset: 10) {
+    title
   }
 }

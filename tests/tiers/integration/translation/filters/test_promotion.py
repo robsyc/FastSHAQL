@@ -21,42 +21,46 @@ if TYPE_CHECKING:
 
 
 def test_translate_promotion_optional_field_in_filter_bound(
-    cardinality_thing_shape,
+    cardinality_tea_shape,
     cardinality_registry: ShapeRegistry,
 ) -> None:
     query = (
-        '{ things(where: { subtitle: { eq: "The First" } }) { iri label subtitle } }'
+        '{ tea(where: { tagline: { eq: "The everyday pot behind the counter" } })'
+        " { iri name tagline } }"
     )
     result = translate_query(
-        cardinality_thing_shape, root_field_node(query), cardinality_registry
+        cardinality_tea_shape, root_field_node(query), cardinality_registry
     )
     assert result.query.render() == (
-        """SELECT ?iri ?label ?subtitle
+        """SELECT ?iri ?name ?tagline
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Thing> .
-  ?iri <http://example.org/label> ?label .
-  ?iri <http://example.org/subtitle> ?subtitle .
-  FILTER(?subtitle = "The First")
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Tea> .
+  ?iri <http://example.org/name> ?name .
+  ?iri <http://example.org/tagline> ?tagline .
+  FILTER(?tagline = "The everyday pot behind the counter")
 }"""
     )
     assert "OPTIONAL" not in result.query.render()
 
 
 def test_translate_promotion_filtered_field_not_selected(
-    cardinality_thing_shape,
+    cardinality_tea_shape,
     cardinality_registry: ShapeRegistry,
 ) -> None:
-    query = '{ things(where: { subtitle: { eq: "The First" } }) { iri label } }'
+    query = (
+        '{ tea(where: { tagline: { eq: "The everyday pot behind the counter" } })'
+        " { iri name } }"
+    )
     result = translate_query(
-        cardinality_thing_shape, root_field_node(query), cardinality_registry
+        cardinality_tea_shape, root_field_node(query), cardinality_registry
     )
     assert result.query.render() == (
-        """SELECT ?iri ?label
+        """SELECT ?iri ?name
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Thing> .
-  ?iri <http://example.org/label> ?label .
-  ?iri <http://example.org/subtitle> ?subtitle .
-  FILTER(?subtitle = "The First")
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Tea> .
+  ?iri <http://example.org/name> ?name .
+  ?iri <http://example.org/tagline> ?tagline .
+  FILTER(?tagline = "The everyday pot behind the counter")
 }"""
     )
     assert "subtitle" not in result.query.render().split("SELECT")[1].split("WHERE")[0]

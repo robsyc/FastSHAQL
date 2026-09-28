@@ -1,0 +1,34 @@
+{
+  "data": {
+    "workshop": [
+      {
+        "iri": "http://example.org/stained-glass",
+        "heldOn": "2026-05-14",
+        "venue": {
+          "name": "Stora Hallen",
+          "district": "Riverside"
+        },
+        "host": {
+          "name": "Pia Lindqvist"
+        },
+        "format": "IN_PERSON",
+        "capacity": 18,
+        "skillLevel": "BEGINNER"
+      },
+      {
+        "iri": "http://example.org/night-drawing",
+        "heldOn": "2026-05-20",
+        "venue": {
+          "name": "Lilla Studion",
+          "district": "Old Town"
+        },
+        "host": {
+          "name": "Pia Lindqvist"
+        },
+        "format": "ONLINE",
+        "capacity": 40,
+        "skillLevel": "INTERMEDIATE"
+      }
+    ]
+  }
+}

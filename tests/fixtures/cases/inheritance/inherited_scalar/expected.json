@@ -1,15 +1,15 @@
 {
   "data": {
-    "manager": [
+    "concert": [
       {
-        "iri": "http://example.org/alice",
-        "managerName": "Alice",
-        "employeeId": "E-001"
+        "iri": "http://example.org/string-quartet",
+        "heldOn": "2026-05-15",
+        "tagline": "Strings at dusk"
       },
       {
-        "iri": "http://example.org/bob",
-        "managerName": "Bob",
-        "employeeId": "E-002"
+        "iri": "http://example.org/lunch-recital",
+        "heldOn": "2026-05-17",
+        "tagline": null
       }
     ]
   }

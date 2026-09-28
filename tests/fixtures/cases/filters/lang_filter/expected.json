@@ -1,9 +1,12 @@
 {
   "data": {
-    "person": [
-      { "name": "Alice", "bio": ["Hello"] },
-      { "name": "Bob", "bio": [] },
-      { "name": "Carol", "bio": [] }
+    "artwork": [
+      {
+        "title": "Night Watch",
+        "caption": [
+          "De schutterij op doek."
+        ]
+      }
     ]
   }
 }

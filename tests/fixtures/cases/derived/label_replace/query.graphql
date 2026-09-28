@@ -1,6 +1,0 @@
-query LabelReplace {
-  item(where: { iri: { eq: "http://example.org/widget" } }) {
-    iri
-    label
-  }
-}

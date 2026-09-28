@@ -1,0 +1,7 @@
+SELECT ?iri ?title ?year
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Artwork> .
+  ?iri <http://example.org/title> ?title .
+  ?iri <http://example.org/year> ?year .
+  FILTER(CONTAINS(?title, "Night") && ?year >= "1800"^^<http://www.w3.org/2001/XMLSchema#integer>)
+}

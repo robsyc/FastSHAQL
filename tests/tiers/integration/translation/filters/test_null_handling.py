@@ -21,21 +21,37 @@ from support.sparql_goldens import PERSON_NAME_ONLY_SPARQL
 if TYPE_CHECKING:
     from fastshaql.core.registry import ShapeRegistry
 
+
+def _unfiltered_title_baseline(
+    filter_artwork_shape, filters_registry: ShapeRegistry
+) -> str:
+    """Rendered SPARQL for the same selection with no ``where`` — the baseline
+    no-op filter results must match (the Artwork counterpart of
+    ``PERSON_NAME_ONLY_SPARQL`` for the relationships set)."""
+    return translate_query(
+        filter_artwork_shape,
+        root_field_node("{ artwork { title } }"),
+        filters_registry,
+    ).query.render()
+
+
 # ---------------------------------------------------------------------------
 # Argument-level null — the whole ``where`` / ``limit`` / ``offset`` is null.
 # ---------------------------------------------------------------------------
 
 
 def test_where_argument_null_equals_baseline(
-    filter_person_shape,
+    filter_artwork_shape,
     filters_registry: ShapeRegistry,
 ) -> None:
     """``where: null`` is absent — identical to no ``where`` argument."""
-    query = "{ persons(where: null) { name } }"
+    query = "{ artwork(where: null) { title } }"
     result = translate_query(
-        filter_person_shape, root_field_node(query), filters_registry
+        filter_artwork_shape, root_field_node(query), filters_registry
     )
-    assert result.query.render() == PERSON_NAME_ONLY_SPARQL
+    assert result.query.render() == _unfiltered_title_baseline(
+        filter_artwork_shape, filters_registry
+    )
 
 
 def test_limit_offset_null_produces_no_pagination(
@@ -62,9 +78,9 @@ def test_limit_offset_null_produces_no_pagination(
 @pytest.mark.parametrize(
     "where_fragment",
     [
-        "name: null",
-        "name: { eq: null }",
-        "name: { in: null }",
+        "title: null",
+        "title: { eq: null }",
+        "title: { in: null }",
         "iri: null",
         "iri: { eq: null }",
     ],
@@ -77,28 +93,30 @@ def test_limit_offset_null_produces_no_pagination(
     ],
 )
 def test_null_field_or_operator_produces_no_filter(
-    filter_person_shape,
+    filter_artwork_shape,
     filters_registry: ShapeRegistry,
     where_fragment: str,
 ) -> None:
     """A null scalar field, operator operand, or IRI filter is a no-op."""
-    query = f"{{ persons(where: {{ {where_fragment} }}) {{ name }} }}"
+    query = f"{{ artwork(where: {{ {where_fragment} }}) {{ title }} }}"
     result = translate_query(
-        filter_person_shape, root_field_node(query), filters_registry
+        filter_artwork_shape, root_field_node(query), filters_registry
     )
     rendered = result.query.render()
     assert "FILTER" not in rendered
-    assert rendered == PERSON_NAME_ONLY_SPARQL
+    assert rendered == _unfiltered_title_baseline(
+        filter_artwork_shape, filters_registry
+    )
 
 
 def test_null_relationship_field_produces_no_filter(
-    filter_person_shape,
+    filter_artwork_shape,
     filters_registry: ShapeRegistry,
 ) -> None:
-    """``employer: null`` emits no FILTER (relationship null is absent)."""
-    query = "{ persons(where: { employer: null }) { name } }"
+    """``artist: null`` emits no FILTER (relationship null is absent)."""
+    query = "{ artwork(where: { artist: null }) { title } }"
     result = translate_query(
-        filter_person_shape, root_field_node(query), filters_registry
+        filter_artwork_shape, root_field_node(query), filters_registry
     )
     assert "FILTER" not in result.query.render()
 
@@ -113,14 +131,14 @@ def test_null_relationship_field_produces_no_filter(
     ["AND", "OR", "NOT"],
 )
 def test_null_combinator_produces_no_filter(
-    filter_person_shape,
+    filter_artwork_shape,
     filters_registry: ShapeRegistry,
     combinator: str,
 ) -> None:
     """A null combinator value (``AND: null`` etc.) is a no-op."""
-    query = f"{{ persons(where: {{ {combinator}: null }}) {{ name }} }}"
+    query = f"{{ artwork(where: {{ {combinator}: null }}) {{ title }} }}"
     result = translate_query(
-        filter_person_shape, root_field_node(query), filters_registry
+        filter_artwork_shape, root_field_node(query), filters_registry
     )
     assert "FILTER" not in result.query.render()
 
@@ -131,51 +149,57 @@ def test_null_combinator_produces_no_filter(
 
 
 def test_empty_or_list_is_no_op(
-    filter_person_shape,
+    filter_artwork_shape,
     filters_registry: ShapeRegistry,
 ) -> None:
     """``OR: []`` has no branches — no FILTER, matches baseline."""
-    query = "{ persons(where: { OR: [] }) { name } }"
+    query = "{ artwork(where: { OR: [] }) { title } }"
     result = translate_query(
-        filter_person_shape, root_field_node(query), filters_registry
+        filter_artwork_shape, root_field_node(query), filters_registry
     )
-    assert result.query.render() == PERSON_NAME_ONLY_SPARQL
+    assert result.query.render() == _unfiltered_title_baseline(
+        filter_artwork_shape, filters_registry
+    )
 
 
 def test_single_element_or_unwraps_to_single_filter(
-    filter_person_shape,
+    filter_artwork_shape,
     filters_registry: ShapeRegistry,
 ) -> None:
     """A single OR branch is not wrapped in ``||`` — emits the bare filter."""
-    query = '{ persons(where: { OR: [{ name: { eq: "Alice" } }] }) { name } }'
+    query = (
+        '{ artwork(where: { OR: [{ title: { eq: "The Starry Night" } }] }) { title } }'
+    )
     result = translate_query(
-        filter_person_shape, root_field_node(query), filters_registry
+        filter_artwork_shape, root_field_node(query), filters_registry
     )
     rendered = result.query.render()
-    assert 'FILTER(?name = "Alice")' in rendered
+    assert 'FILTER(?title = "The Starry Night")' in rendered
     assert "||" not in rendered
 
 
 def test_not_empty_object_is_no_op(
-    filter_person_shape,
+    filter_artwork_shape,
     filters_registry: ShapeRegistry,
 ) -> None:
     """``NOT: {}`` negates nothing — no FILTER, matches baseline."""
-    query = "{ persons(where: { NOT: {} }) { name } }"
+    query = "{ artwork(where: { NOT: {} }) { title } }"
     result = translate_query(
-        filter_person_shape, root_field_node(query), filters_registry
+        filter_artwork_shape, root_field_node(query), filters_registry
     )
-    assert result.query.render() == PERSON_NAME_ONLY_SPARQL
+    assert result.query.render() == _unfiltered_title_baseline(
+        filter_artwork_shape, filters_registry
+    )
 
 
 def test_not_empty_nested_relationship_produces_no_filter(
-    filter_person_shape,
+    filter_artwork_shape,
     filters_registry: ShapeRegistry,
 ) -> None:
-    """``NOT: { employer: {} }`` — empty inner expression, no FILTER."""
-    query = "{ persons(where: { NOT: { employer: {} } }) { name } }"
+    """``NOT: { artist: {} }`` — empty inner expression, no FILTER."""
+    query = "{ artwork(where: { NOT: { artist: {} } }) { title } }"
     result = translate_query(
-        filter_person_shape, root_field_node(query), filters_registry
+        filter_artwork_shape, root_field_node(query), filters_registry
     )
     assert "FILTER" not in result.query.render()
 
@@ -189,8 +213,8 @@ def test_null_enum_compare_operator_produces_no_filter(
     enums_registry: ShapeRegistry,
 ) -> None:
     """``status: { eq: null }`` on an enum drops the operator."""
-    shape = enums_registry.by_type_name["Observation"]
-    query = "{ observations(where: { status: { eq: null } }) { status } }"
+    shape = enums_registry.by_type_name["Reading"]
+    query = "{ reading(where: { status: { eq: null } }) { status } }"
     result = translate_query(shape, root_field_node(query), enums_registry)
     assert "FILTER" not in result.query.render()
 
@@ -199,8 +223,8 @@ def test_null_enum_membership_produces_no_filter(
     enums_registry: ShapeRegistry,
 ) -> None:
     """``status: { in: null }`` on an enum drops the membership."""
-    shape = enums_registry.by_type_name["Observation"]
-    query = "{ observations(where: { status: { in: null } }) { status } }"
+    shape = enums_registry.by_type_name["Reading"]
+    query = "{ reading(where: { status: { in: null } }) { status } }"
     result = translate_query(shape, root_field_node(query), enums_registry)
     assert "FILTER" not in result.query.render()
 
@@ -211,13 +235,13 @@ def test_null_enum_membership_produces_no_filter(
 
 
 def test_null_string_function_operand_produces_no_filter(
-    filter_person_shape,
+    filter_artwork_shape,
     filters_registry: ShapeRegistry,
 ) -> None:
-    """``name: { startsWith: null }`` drops the string function."""
-    query = "{ persons(where: { name: { startsWith: null } }) { name } }"
+    """``title: { startsWith: null }`` drops the string function."""
+    query = "{ artwork(where: { title: { startsWith: null } }) { title } }"
     result = translate_query(
-        filter_person_shape, root_field_node(query), filters_registry
+        filter_artwork_shape, root_field_node(query), filters_registry
     )
     assert "FILTER" not in result.query.render()
 
@@ -228,13 +252,13 @@ def test_null_string_function_operand_produces_no_filter(
 
 
 def test_empty_nested_relationship_in_exists_produces_no_inner_filter(
-    filter_person_shape,
+    filter_artwork_shape,
     filters_registry: ShapeRegistry,
 ) -> None:
-    """``employer: { locatedIn: {} }`` — empty nested rel inside EXISTS."""
-    query = "{ persons(where: { employer: { locatedIn: {} } }) { name } }"
+    """``artist: { representedBy: {} }`` — empty nested rel inside EXISTS."""
+    query = "{ artwork(where: { artist: { representedBy: {} } }) { title } }"
     result = translate_query(
-        filter_person_shape, root_field_node(query), filters_registry
+        filter_artwork_shape, root_field_node(query), filters_registry
     )
     rendered = result.query.render()
     assert "FILTER(EXISTS" in rendered
@@ -248,13 +272,13 @@ def test_empty_nested_relationship_in_exists_produces_no_inner_filter(
 
 
 def test_and_branch_with_relationship_filter_wraps_in_exists(
-    filter_person_shape,
+    filter_artwork_shape,
     filters_registry: ShapeRegistry,
 ) -> None:
     """Paginated AND branch with a relationship filter produces ExistsExpr wrapping."""
-    query = '{ persons(limit: 10, where: { AND: [{ employer: { name: { eq: "Acme" } } }] }) { name employer { name } } }'
+    query = '{ artwork(limit: 10, where: { AND: [{ artist: { name: { eq: "Vincent van Gogh" } } }] }) { title artist { name } } }'
     result = translate_query(
-        filter_person_shape, root_field_node(query), filters_registry
+        filter_artwork_shape, root_field_node(query), filters_registry
     )
     rendered = result.query.render()
     assert "FILTER" in rendered

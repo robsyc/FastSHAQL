@@ -1,9 +1,14 @@
-query RelationshipOverlay {
-  person {
+"""An sh:in beside a relationship anchor narrows what a validator would
+accept — the credited analyst must be on the roster — but reads ignore
+it: the link is traversed to whoever the data names, as a full nested
+selection rather than an enum name. The pH reading credits no analyst,
+and its optional link is null.
+In the SPARQL: no FILTER or VALUES guards the join — the roster leaves
+no trace in a read."""
+query EnumRelationshipOverlay {
+  reading {
     iri
-    name
-    employer {
-      iri
+    analyst {
       name
     }
   }

@@ -1,0 +1,12 @@
+"""A shelf can require that something exists at all: reviewed titles are
+the books carrying a review. The review's text is never read — only its
+presence decides."""
+query ReviewedTitles {
+  member {
+    iri
+    reviewedTitles {
+      iri
+      title
+    }
+  }
+}

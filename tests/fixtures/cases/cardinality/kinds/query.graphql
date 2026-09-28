@@ -1,0 +1,19 @@
+"""One menu card, every count shape a field can take. A blend must state
+its name and at least one ingredient, and may carry a tagline, tasting
+notes, and up to three awards. An unstated caffeine level is served as
+"medium" — the default fills the gap, so that field is never null. A
+missing tagline reads as null, missing notes and awards as empty lists,
+and Snow Sprout's lone ingredient still arrives as a list.
+In the SPARQL: required fields bind as plain triples, optional fields sit
+inside OPTIONAL, and caffeine is an OPTIONAL plus a COALESCE onto
+"medium"."""
+query CardinalityKinds {
+  tea {
+    name
+    tagline
+    ingredients
+    flavor
+    caffeine
+    awards
+  }
+}

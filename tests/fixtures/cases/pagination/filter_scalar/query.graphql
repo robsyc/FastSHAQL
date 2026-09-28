@@ -1,5 +1,0 @@
-query ScalarFilterPlacement {
-  person(where: { name: { eq: "Alice" } }, limit: 1) {
-    name
-  }
-}

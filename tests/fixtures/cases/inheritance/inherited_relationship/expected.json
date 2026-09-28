@@ -1,17 +1,17 @@
 {
   "data": {
-    "manager": [
+    "guidedTour": [
       {
-        "iri": "http://example.org/alice",
-        "managerName": "Alice",
-        "workLocation": {
-          "locationName": "Headquarters"
-        }
-      },
-      {
-        "iri": "http://example.org/bob",
-        "managerName": "Bob",
-        "workLocation": null
+        "iri": "http://example.org/fresco-tour",
+        "theme": "Frescoes of the riverside wing",
+        "host": {
+          "name": "Rahul Mehta"
+        },
+        "venue": {
+          "name": "Stora Hallen",
+          "district": "Riverside"
+        },
+        "venueDistrict": "Riverside"
       }
     ]
   }

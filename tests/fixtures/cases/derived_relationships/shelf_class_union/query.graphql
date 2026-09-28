@@ -1,0 +1,14 @@
+"""A shelf can admit a union of classes: sponsored items count as special
+collections when they are rare books or manuscripts. The annotated codex is
+both and appears exactly once; the plain folder matches neither class and
+drops; the hand-set rare book matches the union but fails the collection
+anchor that types the link."""
+query SpecialCollections {
+  member {
+    iri
+    specialCollections {
+      iri
+      title
+    }
+  }
+}

@@ -24,6 +24,8 @@ from rdflib.namespace import RDF, RDFS
 from fastshaql.core.kernel.constants import SYNTHETIC_SHAPE_PREFIX
 from fastshaql.core.registry import Visibility, VisibilityMap
 
+from .util.graph_reads import first_localized_str
+
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
@@ -185,15 +187,23 @@ def _reject_excluded_targets(
             )
 
 
-def resolve_visibility(graph: Graph, shapes: Sequence[NodeShapeIR]) -> VisibilityMap:
+def resolve_visibility(
+    graph: Graph,
+    shapes: Sequence[NodeShapeIR],
+    *,
+    description_language: str = "en",
+) -> VisibilityMap:
     """Resolve visibility for every shape in *shapes* from *graph* declarations.
 
     Args:
         graph: RDF graph containing ``graphql:Schema`` declarations (if any).
         shapes: Parsed node shapes to classify.
+        description_language: BCP 47 tag for selecting the schema resource's
+            description (ADR-0007).
 
     Returns:
-        A total map from each shape's resource IRI to its :class:`Visibility`.
+        A total map from each shape's resource IRI to its :class:`Visibility`,
+        carrying the schema resource's description when one is declared.
 
     Raises:
         VisibilityError: On multiple schemas or closed-world relationship violations.
@@ -208,6 +218,13 @@ def resolve_visibility(graph: Graph, shapes: Sequence[NodeShapeIR]) -> Visibilit
     if not isinstance(schema, URIRef):
         raise VisibilityError("graphql:Schema resource must be an IRI")
 
+    schema_description = first_localized_str(
+        graph,
+        schema,
+        RDFS.comment,
+        RDFS.label,
+        lang=description_language,
+    )
     declarations = _read_declarations(graph, schema)
 
     if any(graph.objects(schema, GRAPHQL_PUBLIC_NAMESPACE)):
@@ -216,4 +233,4 @@ def resolve_visibility(graph: Graph, shapes: Sequence[NodeShapeIR]) -> Visibilit
     result = _classify_shapes(shapes, declarations)
     _demote_untargeted_public_shapes(shapes, result)
     _enforce_closed_world(shapes, result)
-    return VisibilityMap(result)
+    return VisibilityMap(result, schema_description=schema_description)

@@ -1,6 +1,0 @@
-query FilterExistsBoolean {
-  item(where: { isFlagged: { eq: true } }) {
-    iri
-    isFlagged
-  }
-}

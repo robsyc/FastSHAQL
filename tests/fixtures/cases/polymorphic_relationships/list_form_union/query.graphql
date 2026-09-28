@@ -1,0 +1,18 @@
+"""The sh:class list form declares a union in one line, no member brackets.
+A sidebar mixes paragraphs and images; query it with fragments like any
+union.
+In the SPARQL: the lowering is indistinguishable from the sh:or form."""
+query PolymorphicListFormUnion {
+  article {
+    title
+    sidebar {
+      __typename
+      ... on Paragraph {
+        text
+      }
+      ... on Image {
+        url
+      }
+    }
+  }
+}

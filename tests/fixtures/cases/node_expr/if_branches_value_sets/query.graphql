@@ -1,3 +1,10 @@
+"""Both arms of a branch can produce value sets: tags come from the reviewed
+evidence when a review exists, otherwise from the provisional tags. Two edge
+variants show the arm discipline — the reviewed variant carrying no evidence
+tags gets an empty list rather than the provisional fallback, and the variant
+carrying both kinds of tag yields only its reviewed ones.
+In the SPARQL: two conditioned OPTIONAL arms share one value variable, each
+guarded by the same existence test."""
 query IfBranchesValueSets {
   variant {
     iri

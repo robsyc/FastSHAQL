@@ -193,7 +193,7 @@ def test_build_schema_enum_mangle_collision_disambiguates(
     ``_4`` suffixes; the reverse map recovers each distinct rdflib term."""
     schema = build_schema(enums_registry)
 
-    comparator = schema.get_type("QuantityComparator")
+    comparator = schema.get_type("ReadingComparator")
     assert isinstance(comparator, GraphQLEnumType)
     assert list(comparator.values) == ["_", "_2", "_3", "_4"]
     assert [value.value for value in comparator.values.values()] == [
@@ -203,7 +203,7 @@ def test_build_schema_enum_mangle_collision_disambiguates(
         ">",
     ]
 
-    prop = enums_registry.by_type_name["Quantity"].property_shapes["comparator"]
+    prop = enums_registry.by_type_name["Reading"].property_shapes["comparator"]
     assert prop.enum_term_by_name == {
         "_": Literal("<"),
         "_2": Literal("<="),

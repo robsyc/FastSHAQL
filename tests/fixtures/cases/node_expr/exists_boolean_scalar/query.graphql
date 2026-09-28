@@ -1,3 +1,8 @@
+"""An existence test as a plain boolean field: hasGene reads true when the
+variant sits in a known gene and false otherwise. The unplaced variant reads
+false — the test always answers, so the field is never null, unlike a walk
+that finds nothing.
+In the SPARQL: BIND(EXISTS { … } AS ?hasGene)."""
 query ExistsBooleanScalar {
   variant {
     iri

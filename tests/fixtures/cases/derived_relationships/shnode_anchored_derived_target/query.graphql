@@ -1,4 +1,10 @@
-query ShnodeAnchoredDerivedTarget {
+"""A computed link names its target by shape: the sponsored folio is
+exposed through the RareBook type, and the author's own SPARQL gathers it.
+Alice and Cara each sponsor exactly one qualifying folio; Bob sponsors
+nothing and gets null — single-valued, so never an empty list.
+In the SPARQL: the author's ?edition is renamed onto the field's variable
+inside the merged body."""
+query FeaturedEdition {
   member {
     iri
     name

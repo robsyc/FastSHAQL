@@ -1,6 +1,0 @@
-query IntegerLiteralEnum {
-  rating {
-    iri
-    level
-  }
-}

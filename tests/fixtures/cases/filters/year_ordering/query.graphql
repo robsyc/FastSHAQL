@@ -1,0 +1,11 @@
+"""Two constraints AND-combine across fields: the title must mention night
+and the year must be 1800 or later. The Night Watch (1642) fails the year,
+and the Night Study — undated — never reaches the comparison at all: a work
+with no value for a filtered field drops out of the result rather than
+matching loosely."""
+query YearOrdering {
+  artwork(where: { title: { contains: "Night" }, year: { gte: 1800 } }) {
+    title
+    year
+  }
+}

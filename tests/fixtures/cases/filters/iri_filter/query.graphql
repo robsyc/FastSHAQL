@@ -1,0 +1,14 @@
+"""The built-in iri field addresses entities directly — a shortlist lookup
+that sidesteps every other property."""
+query IriFilter {
+  artwork(
+    where: {
+      iri: {
+        in: ["http://example.org/starry-night", "http://example.org/water-lilies"]
+      }
+    }
+  ) {
+    iri
+    title
+  }
+}

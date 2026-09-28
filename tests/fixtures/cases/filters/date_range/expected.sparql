@@ -1,0 +1,7 @@
+SELECT ?iri ?title ?acquired
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Artwork> .
+  ?iri <http://example.org/title> ?title .
+  ?iri <http://example.org/acquired> ?acquired .
+  FILTER(?acquired >= "1940-01-01"^^<http://www.w3.org/2001/XMLSchema#date> && ?acquired < "1950-01-01"^^<http://www.w3.org/2001/XMLSchema#date>)
+}

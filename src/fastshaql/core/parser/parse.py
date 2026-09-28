@@ -397,5 +397,7 @@ def parse_shapes(graph: Graph, *, description_language: str = "en") -> ShapeRegi
         [*resolved, *synthetics.values()],
         key=lambda s: s.graphql_type_name,
     )
-    visibility = resolve_visibility(graph, all_shapes)
+    visibility = resolve_visibility(
+        graph, all_shapes, description_language=description_language
+    )
     return ShapeRegistry(all_shapes, visibility=visibility)

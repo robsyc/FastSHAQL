@@ -1,0 +1,13 @@
+"""QA grades are typed literals — xsd:integer — and an enum name cannot
+start with a digit, so 1, 2 and 3 become _1, _2 and _3. The pH reading
+carries no grade yet: an optional enum resolves to null, not to a name
+and not to a zero.
+In the SPARQL: the unbound grade variable survives as an OPTIONAL, and
+null is what reaches the JSON."""
+query EnumGradeSelect {
+  reading {
+    iri
+    parameter
+    grade
+  }
+}

@@ -1,0 +1,7 @@
+SELECT ?iri ?parameter ?grade
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Reading> .
+  ?iri <http://example.org/parameter> ?parameter .
+  ?iri <http://example.org/grade> ?grade .
+  FILTER(?grade = "2"^^<http://www.w3.org/2001/XMLSchema#integer>)
+}

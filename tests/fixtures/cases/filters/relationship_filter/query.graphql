@@ -1,5 +1,9 @@
+"""A relationship filter follows the link two hops deep: the artist, then
+the gallery representing that artist. Both Van Gogh works are the answer —
+no other artist in the inventory is represented in Amsterdam.
+In the SPARQL: one FILTER EXISTS nested inside another."""
 query RelationshipFilter {
-  person(where: { employer: { name: { eq: "Acme" } } }) {
-    name
+  artwork(where: { artist: { representedBy: { city: { eq: "Amsterdam" } } } }) {
+    title
   }
 }

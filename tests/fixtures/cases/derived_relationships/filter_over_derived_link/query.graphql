@@ -1,0 +1,11 @@
+"""Filters reach through computed links: the where argument follows
+recommendedBooks into the books' own fields, though no triple records the
+link. Only members whose computed recommendations include SPARQL 101 come
+back.
+In the SPARQL: the computed link is re-emitted inside FILTER EXISTS."""
+query FilterThroughComputedLink {
+  member(where: { recommendedBooks: { title: { eq: "SPARQL 101" } } }) {
+    iri
+    name
+  }
+}

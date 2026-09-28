@@ -1,8 +1,0 @@
-query PathSequence {
-  employerCityPerson {
-    name
-    employerCity {
-      name
-    }
-  }
-}

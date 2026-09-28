@@ -1,0 +1,12 @@
+"""A shelf can match a pattern: titles beginning with "SPARQL". The
+co-authored title mentions SPARQL later in the string — the anchored
+pattern does not reach it."""
+query SparqlTitles {
+  member {
+    iri
+    sparqlTitles {
+      iri
+      title
+    }
+  }
+}

@@ -1,0 +1,13 @@
+"""A computed link can be a curated list: the branch network exactly as
+written down. The airport kiosk is named in the list but typed as nothing,
+so the branch anchor drops it — curation cannot override the declared
+class."""
+query SisterBranches {
+  member {
+    iri
+    friendBranches {
+      iri
+      name
+    }
+  }
+}

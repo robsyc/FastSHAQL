@@ -1,0 +1,10 @@
+{
+  "data": {
+    "deletionVariant": [
+      {
+        "iri": "http://example.org/variant-104",
+        "label": "BRCA1 exon-13 rearrangement"
+      }
+    ]
+  }
+}

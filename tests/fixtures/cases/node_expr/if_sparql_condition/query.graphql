@@ -1,0 +1,20 @@
+"""The branch test can be any single-valued expression, including author
+SPARQL: the support tier tests the support study's score against a 0.9
+threshold. BRCA1's 0.95 reads high; a gene with no support study, or a study
+that states no score, reads standard — the test simply comes out false, the
+same as a plainly low score.
+In the SPARQL: the author's EXISTS text is inlined into the BIND's IF test,
+compared strictly against true and guarded by COALESCE, so a test that
+cannot be evaluated would land on the else arm.
+REVIEW: author SPARQL like `$this/a/b > 0.9` puts a property path in
+expression position — outside the SPARQL grammar — is accepted by lenient
+engines, and errors on every row, so a shape author gets no signal that a
+branch condition written that way never fires — worth deciding whether to
+warn on path syntax inside sh:sparqlExpr text."""
+query IfSparqlCondition {
+  gene {
+    iri
+    symbol
+    supportTier
+  }
+}

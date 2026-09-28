@@ -1,0 +1,15 @@
+SELECT ?iri ?heldOn ?venue_iri ?venue_name ?venue_district ?host_iri ?host_name ?format ?capacity ?skillLevel
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Workshop> .
+  ?iri <http://example.org/heldOn> ?heldOn .
+  ?iri <http://example.org/venue> ?venue_iri .
+  ?venue_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Venue> .
+  ?venue_iri <http://example.org/name> ?venue_name .
+  ?venue_iri <http://example.org/district> ?venue_district .
+  ?iri <http://example.org/host> ?host_iri .
+  ?host_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+  ?host_iri <http://example.org/name> ?host_name .
+  ?iri <http://example.org/format> ?format .
+  ?iri <http://example.org/capacity> ?capacity .
+  ?iri <http://example.org/skillLevel> ?skillLevel .
+}

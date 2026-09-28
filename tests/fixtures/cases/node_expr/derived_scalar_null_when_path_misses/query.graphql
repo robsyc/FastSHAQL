@@ -1,3 +1,9 @@
+"""A single-valued derived field reads null when its walk finds nothing:
+BRCA1's support study carries a score, but the gene with no support study at
+all and the gene whose study states no score both read null — a miss at any
+hop of the walk is just a miss.
+In the SPARQL: the walk is an OPTIONAL triple pattern, so the gene row
+survives with the value unbound."""
 query DerivedScalarNullWhenPathMisses {
   gene {
     iri

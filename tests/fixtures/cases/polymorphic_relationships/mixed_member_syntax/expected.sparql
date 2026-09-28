@@ -1,0 +1,21 @@
+SELECT ?iri ?title ?spotlight_iri ?spotlight_member ?spotlight_1_url ?spotlight_2_caption
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Article> .
+  ?iri <http://example.org/title> ?title .
+  OPTIONAL {
+    ?iri <http://example.org/spotlight> ?spotlight_iri .
+    VALUES ?spotlight_member {
+      <http://example.org/Image>
+      <http://example.org/Asset>
+    }
+    ?spotlight_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* ?spotlight_member .
+    OPTIONAL {
+      ?spotlight_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Image> .
+      ?spotlight_iri <http://example.org/url> ?spotlight_1_url .
+    }
+    OPTIONAL {
+      ?spotlight_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Asset> .
+      ?spotlight_iri <http://example.org/caption> ?spotlight_2_caption .
+    }
+  }
+}

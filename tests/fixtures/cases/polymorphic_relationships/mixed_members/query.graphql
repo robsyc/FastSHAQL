@@ -1,7 +1,10 @@
+"""A value typed as two members resolves to the first declared one: the
+dual-typed block is a Paragraph, and its image side stays hidden. An
+article with no body gets an empty list, never null."""
 query PolymorphicMixedMembers {
   article {
     title
-    block {
+    body {
       __typename
       ... on Paragraph {
         text

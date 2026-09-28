@@ -1,0 +1,17 @@
+"""Members can name a shape or a class in the same union: a spotlight pulls
+images from the image library by shape and media by class. The vector art
+reaches the Asset member through its superclass chain."""
+query PolymorphicMixedMemberSyntax {
+  article {
+    title
+    spotlight {
+      __typename
+      ... on Image {
+        url
+      }
+      ... on Asset {
+        caption
+      }
+    }
+  }
+}

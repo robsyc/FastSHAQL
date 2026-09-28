@@ -1,0 +1,17 @@
+"""Direct reports are the management chain seen from above: reports is the
+inverse of manager, so no report triples exist — the link reads the manager
+triples backwards. Nested one level, Dana's tree opens into Bob and opens
+again into Alice; Bob's holds Alice alone; and a leaf employee's reports
+resolve to an empty list, never null. In the SPARQL: the join runs through
+the inverse path (^ex:manager), a traversal like any other."""
+query ReportsTree {
+  person {
+    name
+    reports {
+      name
+      reports {
+        name
+      }
+    }
+  }
+}

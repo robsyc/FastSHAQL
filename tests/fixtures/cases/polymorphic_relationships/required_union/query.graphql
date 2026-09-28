@@ -1,3 +1,7 @@
+"""A union field can be required: every article has exactly one lead,
+resolving to a single non-null object.
+In the SPARQL: the lead link is bound outside any OPTIONAL — the one place
+cardinality is visible."""
 query PolymorphicRequiredUnion {
   article {
     title

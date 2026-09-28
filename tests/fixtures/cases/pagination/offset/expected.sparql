@@ -1,12 +1,12 @@
-SELECT ?iri ?name
+SELECT ?iri ?title
 WHERE {
   {
     SELECT DISTINCT ?iri
     WHERE {
-      ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+      ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Book> .
     }
     ORDER BY ?iri
     OFFSET 2
   }
-  ?iri <http://example.org/name> ?name .
+  ?iri <http://example.org/title> ?title .
 }

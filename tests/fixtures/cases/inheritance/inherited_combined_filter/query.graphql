@@ -1,10 +1,13 @@
+"""Filters reach through parent bundles exactly like selections: finding
+the on-site workshops hosted by Pia constrains a format inherited from
+the program-item bundle and, one level further up, matches the host by
+name inside the bundle's relationship."""
 query InheritedCombinedFilter {
-  manager(where: { employeeId: { eq: "E-001" } }) {
-    managerName
-    employeeId
-    employmentStatus
-    workLocation {
-      locationName
+  workshop(where: { format: { eq: IN_PERSON }, host: { name: { eq: "Pia Lindqvist" } } }) {
+    iri
+    skillLevel
+    venue {
+      name
     }
   }
 }

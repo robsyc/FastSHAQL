@@ -1,35 +1,29 @@
 {
   "data": {
-    "customer": [
+    "album": [
       {
-        "name": "A",
-        "billing": {
-          "street": "Invoice Way 1"
+        "title": "Blue Portal",
+        "composer": {
+          "name": "Ray Okuda"
         },
-        "shipping": {
-          "street": "Depot 1"
+        "producer": {
+          "name": "Ivy Stone"
         },
-        "contacts": [
+        "houseCredits": [
           {
-            "street": "Invoice Way 1"
+            "name": "Ivy Stone"
           }
-        ],
-        "registered": {
-          "street": "Registry Way 1"
-        }
+        ]
       },
       {
-        "name": "B",
-        "billing": null,
-        "shipping": {
-          "street": "Depot 2"
-        },
-        "contacts": [
+        "title": "Night Ferry",
+        "composer": null,
+        "producer": null,
+        "houseCredits": [
           {
-            "street": "Invoice Way 1"
+            "name": "Ivy Stone"
           }
-        ],
-        "registered": null
+        ]
       }
     ]
   }

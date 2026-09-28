@@ -1,8 +1,0 @@
-{
-  "data": {
-    "colorSample": [
-      { "iri": "http://example.org/sample1", "color": "PINK" },
-      { "iri": "http://example.org/sample2", "color": "PURPLE" }
-    ]
-  }
-}

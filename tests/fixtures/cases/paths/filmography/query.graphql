@@ -1,0 +1,22 @@
+"""Everything by the film's director, two ways. Films point at their director
+with a single link, and the director's filmography is that same link read from
+the other end — inside Dune Drifter, Jin's list also names Meridian, and the
+film you started from reappears in it. The flattened field walks the same
+round trip in one go: out to the director, then back out along every film they
+directed — Jin's two films, this one included.
+In the SPARQL: the inversion renders as ^ex:director once on its own and once
+as the second step of the ex:director/^ex:director sequence."""
+query Filmography {
+  movie {
+    title
+    director {
+      name
+      filmography {
+        title
+      }
+    }
+    alsoByDirector {
+      title
+    }
+  }
+}

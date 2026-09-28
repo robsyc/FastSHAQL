@@ -1,0 +1,15 @@
+SELECT ?iri ?title ?sequels_iri ?sequels_title ?franchise_iri ?franchise_title
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Movie> .
+  ?iri <http://example.org/title> ?title .
+  OPTIONAL {
+    ?iri (^<http://example.org/predecessor>)+ ?sequels_iri .
+    ?sequels_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Movie> .
+    ?sequels_iri <http://example.org/title> ?sequels_title .
+  }
+  OPTIONAL {
+    ?iri (^<http://example.org/predecessor>)* ?franchise_iri .
+    ?franchise_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Movie> .
+    ?franchise_iri <http://example.org/title> ?franchise_title .
+  }
+}

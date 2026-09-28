@@ -52,29 +52,29 @@ def _translate(registry, inner: str):
     ("inner", "error", "match"),
     [
         (
-            "block { text }",
+            "body { text }",
             TypeError,
-            r"bare field 'text' on union field 'block'",
+            r"bare field 'text' on union field 'body'",
         ),
         (
-            "block { ...frag }",
+            "body { ...frag }",
             TypeError,
             r"named fragments are not supported \(got 'FragmentSpreadNode'\)",
         ),
         (
-            "block { ... { text } }",
+            "body { ... { text } }",
             TypeError,
             r"inline fragment without a type condition",
         ),
         (
-            "block { ... on Paragraph { text } ... on Paragraph { text } }",
+            "body { ... on Paragraph { text } ... on Paragraph { text } }",
             ValueError,
             r"two inline fragments on 'Paragraph'",
         ),
         (
-            "block { ... on Table { rows } }",
+            "body { ... on Table { rows } }",
             ValueError,
-            r"inline fragment on non-member type \['Table'\] of union field 'block'",
+            r"inline fragment on non-member type \['Table'\] of union field 'body'",
         ),
     ],
     ids=["bare_field", "named_spread", "conditionless", "duplicate", "non_member"],
@@ -112,17 +112,17 @@ def test_directives_on_union_member_fragments_reject(registry) -> None:
         TypeError,
         match=(
             r"Directives on selections are not supported "
-            r"\(on an inline fragment in union field 'block'\)"
+            r"\(on an inline fragment in union field 'body'\)"
         ),
     ):
-        _translate(registry, "block { ... on Paragraph @include(if: true) { text } }")
+        _translate(registry, "body { ... on Paragraph @include(if: true) { text } }")
 
 
 @pytest.mark.parametrize(
     ("inner", "field"),
     [
         ("title @include(if: true)", "title"),
-        ("block { ... on Paragraph { text @skip(if: false) } }", "text"),
+        ("body { ... on Paragraph { text @skip(if: false) } }", "text"),
     ],
     ids=["object_level", "inside_member_fragment"],
 )
@@ -163,17 +163,17 @@ def test_union_level_typename_meta_field_is_skipped(registry) -> None:
     and may stand alone: a fragment-free selection keeps the discriminator
     with every member field-less, and with one member fragment touched the
     untouched member's lane stays guard-only."""
-    alone = _translate(registry, "block { __typename }")
-    binding = alone.var_map.relationships["block"]
-    assert binding.discriminator == Variable("block_member")
+    alone = _translate(registry, "body { __typename }")
+    binding = alone.var_map.relationships["body"]
+    assert binding.discriminator == Variable("body_member")
     paragraph_map, image_map = (m.map for m in binding.members)
     assert paragraph_map.fields == {}
     assert image_map.fields == {}
-    result = _translate(registry, "block { __typename ... on Image { url } }")
-    binding = result.var_map.relationships["block"]
+    result = _translate(registry, "body { __typename ... on Image { url } }")
+    binding = result.var_map.relationships["body"]
     paragraph_map, image_map = (m.map for m in binding.members)
     assert paragraph_map.fields == {}
-    assert image_map.fields == {"url": Variable("block_2_url")}
+    assert image_map.fields == {"url": Variable("body_2_url")}
 
 
 def test_field_after_a_fragment_survives_flattening(registry) -> None:
@@ -202,9 +202,9 @@ def test_matching_fragments_flatten_inside_member_fragments(registry) -> None:
     """The union member walk hands its member type name down — matching
     fragments flatten inside a member fragment too."""
     result = _translate(
-        registry, "block { ... on Paragraph { ... on Paragraph { text } } }"
+        registry, "body { ... on Paragraph { ... on Paragraph { text } } }"
     )
-    binding = result.var_map.relationships["block"]
+    binding = result.var_map.relationships["body"]
     paragraph_map, _image_map = (m.map for m in binding.members)
     assert set(paragraph_map.fields) == {"text"}
 
@@ -212,11 +212,11 @@ def test_matching_fragments_flatten_inside_member_fragments(registry) -> None:
 def test_relationship_inside_member_fragment_walks_member_scope(registry) -> None:
     """A member fragment may select a nested relationship — the walk
     recurses into the member's scope and allocates its variables there."""
-    result = _translate(registry, "block { ... on Paragraph { text author { name } } }")
-    binding = result.var_map.relationships["block"]
+    result = _translate(registry, "body { ... on Paragraph { text author { name } } }")
+    binding = result.var_map.relationships["body"]
     paragraph_map, _image_map = (m.map for m in binding.members)
     author = paragraph_map.relationships["author"]
-    assert author.subject_var == Variable("block_1_author_iri")
+    assert author.subject_var == Variable("body_1_author_iri")
     assert set(author.single_map.fields) == {"name"}
 
 
@@ -267,11 +267,11 @@ def test_filter_on_polymorphic_field_rejects_loudly(registry) -> None:
     slice, per ADR-0026)."""
     shape = registry.by_type_name["Article"]
     root = root_field_node(
-        'query { article(where: { block: { iri: { eq: "x" } } }) { title } }'
+        'query { article(where: { body: { iri: { eq: "x" } } }) { title } }'
     )
     with pytest.raises(
         ValueError,
-        match=r"Filters on polymorphic field 'block' are not supported yet .*\(ADR-0026\)",
+        match=r"Filters on polymorphic field 'body' are not supported yet .*\(ADR-0026\)",
     ):
         translate_query(shape, root, registry)
 
@@ -282,10 +282,10 @@ def test_promoted_polymorphic_field_rejects_even_with_null_filter(registry) -> N
     boundary, but promotion binding still rejects (slice 3): no completing
     translation ever reaches a promoted polymorphic field."""
     shape = registry.by_type_name["Article"]
-    root = root_field_node("query { article(where: { block: null }) { title } }")
+    root = root_field_node("query { article(where: { body: null }) { title } }")
     with pytest.raises(
         ValueError,
-        match=r"Filters on polymorphic field 'block' are not supported yet .*\(ADR-0026\)",
+        match=r"Filters on polymorphic field 'body' are not supported yet .*\(ADR-0026\)",
     ):
         translate_query(shape, root, registry)
 
@@ -296,9 +296,9 @@ def test_empty_where_object_on_polymorphic_field_rejects_with_teaching_message(
     """The empty where-object must hit the filter boundary's teaching
     message, not slip through promotion to the registry chokepoint."""
     shape = registry.by_type_name["Article"]
-    root = root_field_node("query { article(where: { block: {} }) { title } }")
+    root = root_field_node("query { article(where: { body: {} }) { title } }")
     with pytest.raises(
-        ValueError, match=r"Filters on polymorphic field 'block' are not supported yet"
+        ValueError, match=r"Filters on polymorphic field 'body' are not supported yet"
     ):
         translate_query(shape, root, registry)
 
@@ -333,8 +333,8 @@ def test_root_filter_context_backstop_rejects_polymorphic(registry) -> None:
     raises first)."""
     scope = translation_scope(registry)
     ctx = RootFilterContext.from_scope(scope, bindings=FieldBindings())
-    prop = registry.by_type_name["Article"].property_shapes["block"]
+    prop = registry.by_type_name["Article"].property_shapes["body"]
     with pytest.raises(
-        ValueError, match=r"Filters on polymorphic field 'block' are not supported yet"
+        ValueError, match=r"Filters on polymorphic field 'body' are not supported yet"
     ):
-        ctx.translate_relationship("block", ObjectValueNode(fields=()), prop, registry)
+        ctx.translate_relationship("body", ObjectValueNode(fields=()), prop, registry)

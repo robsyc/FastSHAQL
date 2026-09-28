@@ -1,6 +1,6 @@
 {
   "data": {
-    "variantBranch": [
+    "importedTerm": [
       {
         "iri": "http://example.org/variant/StructuralVariant",
         "label": "structural variant"

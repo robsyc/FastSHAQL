@@ -1,13 +1,15 @@
-SELECT ?iri ?managerName ?employeeId ?employmentStatus ?workLocation_iri ?workLocation_locationName
+SELECT ?iri ?skillLevel ?venue_iri ?venue_name
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Manager> .
-  ?iri <http://example.org/managerName> ?managerName .
-  ?iri <http://example.org/employeeId> ?employeeId .
-  ?iri <http://example.org/employmentStatus> ?employmentStatus .
-  OPTIONAL {
-    ?iri <http://example.org/workLocation> ?workLocation_iri .
-    ?workLocation_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Location> .
-    ?workLocation_iri <http://example.org/locationName> ?workLocation_locationName .
-  }
-  FILTER(?employeeId = "E-001")
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Workshop> .
+  ?iri <http://example.org/skillLevel> ?skillLevel .
+  ?iri <http://example.org/venue> ?venue_iri .
+  ?venue_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Venue> .
+  ?venue_iri <http://example.org/name> ?venue_name .
+  ?iri <http://example.org/format> ?format .
+  ?iri <http://example.org/host> ?host_iri .
+  FILTER(?format = "in_person" && EXISTS {
+    ?host_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+    ?host_iri <http://example.org/name> ?_rf_host_name .
+    FILTER(?_rf_host_name = "Pia Lindqvist")
+  })
 }

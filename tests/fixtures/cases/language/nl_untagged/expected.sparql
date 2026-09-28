@@ -1,0 +1,51 @@
+SELECT ?iri ?title ?caption ?altTitle ?inventoryNumber ?teaser ?artist_iri ?artist_name
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Artwork> .
+  OPTIONAL {
+    ?iri <http://example.org/title> ?_l0_title .
+    FILTER(langMatches(LANG(?_l0_title), "nl"))
+  }
+  OPTIONAL {
+    ?iri <http://example.org/title> ?_l1_title .
+    FILTER(LANG(?_l1_title) = "")
+  }
+  BIND(COALESCE(?_l0_title, ?_l1_title) AS ?title)
+  FILTER(BOUND(?title))
+  OPTIONAL {
+    ?iri <http://example.org/caption> ?_l0_caption .
+    FILTER(langMatches(LANG(?_l0_caption), "nl"))
+  }
+  OPTIONAL {
+    ?iri <http://example.org/caption> ?_l1_caption .
+    FILTER(LANG(?_l1_caption) = "")
+  }
+  BIND(COALESCE(?_l0_caption, ?_l1_caption) AS ?caption)
+  OPTIONAL {
+    ?iri <http://example.org/altTitle> ?altTitle .
+    FILTER(langMatches(LANG(?altTitle), "nl") || LANG(?altTitle) = "")
+  }
+  ?iri <http://example.org/inventoryNumber> ?inventoryNumber .
+  OPTIONAL {
+    ?iri <http://example.org/marketingLine> ?_l0_teaser .
+    FILTER(langMatches(LANG(?_l0_teaser), "nl"))
+  }
+  OPTIONAL {
+    ?iri <http://example.org/marketingLine> ?_l1_teaser .
+    FILTER(LANG(?_l1_teaser) = "")
+  }
+  BIND(COALESCE(?_l0_teaser, ?_l1_teaser) AS ?teaser)
+  OPTIONAL {
+    ?iri <http://example.org/artist> ?artist_iri .
+    ?artist_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Artist> .
+    OPTIONAL {
+      ?artist_iri <http://example.org/name> ?_l0_artist_name .
+      FILTER(langMatches(LANG(?_l0_artist_name), "nl"))
+    }
+    OPTIONAL {
+      ?artist_iri <http://example.org/name> ?_l1_artist_name .
+      FILTER(LANG(?_l1_artist_name) = "")
+    }
+    BIND(COALESCE(?_l0_artist_name, ?_l1_artist_name) AS ?artist_name)
+    FILTER(BOUND(?artist_name))
+  }
+}

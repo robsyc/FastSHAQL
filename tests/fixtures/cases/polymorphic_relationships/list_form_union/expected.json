@@ -1,0 +1,27 @@
+{
+  "data": {
+    "article": [
+      {
+        "title": "Syntax highlights",
+        "sidebar": [
+          {
+            "__typename": "Paragraph",
+            "text": "Lead summary"
+          },
+          {
+            "__typename": "Image",
+            "url": "https://example.org/img-2.png"
+          }
+        ]
+      },
+      {
+        "title": "Dual types",
+        "sidebar": []
+      },
+      {
+        "title": "Childless",
+        "sidebar": []
+      }
+    ]
+  }
+}

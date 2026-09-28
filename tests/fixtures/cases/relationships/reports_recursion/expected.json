@@ -1,0 +1,36 @@
+{
+  "data": {
+    "person": [
+      {
+        "name": "Alice",
+        "reports": []
+      },
+      {
+        "name": "Bob",
+        "reports": [
+          {
+            "name": "Alice",
+            "reports": []
+          }
+        ]
+      },
+      {
+        "name": "Dana",
+        "reports": [
+          {
+            "name": "Bob",
+            "reports": [
+              {
+                "name": "Alice"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Carol",
+        "reports": []
+      }
+    ]
+  }
+}

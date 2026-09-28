@@ -1,0 +1,9 @@
+"""Acquisition dates travel as strings and still compare in date order:
+only works accessioned during the 1940s survive. The Night Study, never
+accessioned, has no date to compare and drops out."""
+query DateRange {
+  artwork(where: { acquired: { gte: "1940-01-01", lt: "1950-01-01" } }) {
+    title
+    acquired
+  }
+}

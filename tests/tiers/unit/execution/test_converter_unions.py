@@ -30,42 +30,42 @@ if TYPE_CHECKING:
 
 _PARAGRAPH_ROW: SparqlRow = {
     "iri": EX + "article",
-    "block_iri": URIRef(EX + "both-1"),
-    "block_member": EX + "Paragraph",
-    "block_1_text": Literal("Dual-typed"),
+    "body_iri": URIRef(EX + "both-1"),
+    "body_member": EX + "Paragraph",
+    "body_1_text": Literal("Dual-typed"),
 }
 _IMAGE_ROW: SparqlRow = {
     "iri": EX + "article",
-    "block_iri": URIRef(EX + "both-1"),
-    "block_member": EX + "Image",
-    "block_2_url": Literal("https://example.org/both.png"),
+    "body_iri": URIRef(EX + "both-1"),
+    "body_member": EX + "Image",
+    "body_2_url": Literal("https://example.org/both.png"),
 }
 
 
-def _block_var_map() -> VariableMap:
-    """A ``block`` binding over the fixture's two members, fields allocated
-    in lane order (``?block_1_text`` / ``?block_2_url``)."""
+def _body_var_map() -> VariableMap:
+    """A ``body`` binding over the fixture's two members, fields allocated
+    in lane order (``?body_1_text`` / ``?body_2_url``)."""
     return VariableMap(
         subject_var=Variable("iri"),
         fields={},
         relationships={
-            "block": RelationshipBinding(
-                subject_var=Variable("block_iri"),
-                discriminator=Variable("block_member"),
+            "body": RelationshipBinding(
+                subject_var=Variable("body_iri"),
+                discriminator=Variable("body_member"),
                 members=(
                     MemberBinding(
                         EX + "Paragraph",
                         VariableMap(
-                            subject_var=Variable("block_iri"),
-                            fields={"text": Variable("block_1_text")},
+                            subject_var=Variable("body_iri"),
+                            fields={"text": Variable("body_1_text")},
                             relationships={},
                         ),
                     ),
                     MemberBinding(
                         EX + "Image",
                         VariableMap(
-                            subject_var=Variable("block_iri"),
-                            fields={"url": Variable("block_2_url")},
+                            subject_var=Variable("body_iri"),
+                            fields={"url": Variable("body_2_url")},
                             relationships={},
                         ),
                     ),
@@ -92,9 +92,9 @@ def test_overlap_child_stamps_first_declared_member(
     stamps Paragraph whichever lane's row leads the group, and the Image
     lane's fields never enter the entity dict."""
     (entity,) = convert_rows(
-        rows, registry.by_type_name["Article"], _block_var_map(), registry
+        rows, registry.by_type_name["Article"], _body_var_map(), registry
     )
-    assert entity["block"] == [{"__typename": "Paragraph", "text": "Dual-typed"}]
+    assert entity["body"] == [{"__typename": "Paragraph", "text": "Dual-typed"}]
 
 
 def test_converter_drops_non_member_children(registry: ShapeRegistry) -> None:
@@ -103,13 +103,13 @@ def test_converter_drops_non_member_children(registry: ShapeRegistry) -> None:
     rows: list[SparqlRow] = [
         {
             "iri": EX + "article",
-            "block_iri": URIRef(EX + "none-1"),
+            "body_iri": URIRef(EX + "none-1"),
         }
     ]
     (entity,) = convert_rows(
-        rows, registry.by_type_name["Article"], _block_var_map(), registry
+        rows, registry.by_type_name["Article"], _body_var_map(), registry
     )
-    assert entity["block"] == []
+    assert entity["body"] == []
 
 
 def test_converter_single_valued_union_returns_entity_or_none(
@@ -118,19 +118,17 @@ def test_converter_single_valued_union_returns_entity_or_none(
     """A single-valued polymorphic field (maxCount 1) yields the entity or
     ``None`` — never a list."""
     article = registry.by_type_name["Article"]
-    single = dataclasses.replace(article.property_shapes["block"], max_count=1)
-    shape = shape_with(article, block=single)
+    single = dataclasses.replace(article.property_shapes["body"], max_count=1)
+    shape = shape_with(article, body=single)
     rows: list[SparqlRow] = [
         {
             "iri": EX + "article",
-            "block_iri": URIRef(EX + "para-1"),
-            "block_member": EX + "Paragraph",
-            "block_1_text": Literal("Intro"),
+            "body_iri": URIRef(EX + "para-1"),
+            "body_member": EX + "Paragraph",
+            "body_1_text": Literal("Intro"),
         }
     ]
-    (entity,) = convert_rows(rows, shape, _block_var_map(), registry)
-    assert entity["block"] == {"__typename": "Paragraph", "text": "Intro"}
-    (empty,) = convert_rows(
-        [{"iri": EX + "article"}], shape, _block_var_map(), registry
-    )
-    assert empty["block"] is None
+    (entity,) = convert_rows(rows, shape, _body_var_map(), registry)
+    assert entity["body"] == {"__typename": "Paragraph", "text": "Intro"}
+    (empty,) = convert_rows([{"iri": EX + "article"}], shape, _body_var_map(), registry)
+    assert empty["body"] is None

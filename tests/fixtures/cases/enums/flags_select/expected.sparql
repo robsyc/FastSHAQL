@@ -1,0 +1,7 @@
+SELECT ?iri ?flags
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Reading> .
+  OPTIONAL {
+    ?iri <http://example.org/flags> ?flags .
+  }
+}

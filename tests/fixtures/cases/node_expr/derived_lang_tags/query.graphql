@@ -1,3 +1,11 @@
+"""A derived field in language space: the gene's summary is its transcript's
+description, resolved like any language-tagged field through the request's
+language preference. BRCA1's transcript serves its English text; KRAS's
+transcript is German-only, so under an English preference the summary reads
+null — the derivation found values, but the language chain filtered them
+out, and no fallback exists.
+In the SPARQL: the language filter sits inside the OPTIONAL and a COALESCE
+binds the surviving value."""
 query DerivedLangTags {
   gene {
     iri

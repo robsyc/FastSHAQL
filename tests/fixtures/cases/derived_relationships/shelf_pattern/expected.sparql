@@ -1,0 +1,17 @@
+SELECT ?iri ?sparqlTitles_iri ?sparqlTitles_title
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/library/Member> .
+  OPTIONAL {
+    {
+      SELECT ?iri ?sparqlTitles_iri
+      WHERE {
+        <http://example.org/library/Book> ^a ?sparqlTitles_iri .
+        ?sparqlTitles_iri <http://example.org/library/title> ?sparqlTitles_iri_p0 .
+        FILTER(REGEX(STR(?sparqlTitles_iri_p0), "^SPARQL"))
+        FILTER(BOUND(?sparqlTitles_iri))
+      }
+    }
+    ?sparqlTitles_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/library/Book> .
+    ?sparqlTitles_iri <http://example.org/library/title> ?sparqlTitles_title .
+  }
+}

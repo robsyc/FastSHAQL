@@ -1,6 +1,10 @@
+"""Every program item carries a delivery format, so the workshop serves
+the inherited format beside its own skill level — two enum fields on one
+type, one borrowed through a parent bundle, one declared at home."""
 query InheritedEnum {
-  manager {
+  workshop {
     iri
-    employmentStatus
+    format
+    skillLevel
   }
 }

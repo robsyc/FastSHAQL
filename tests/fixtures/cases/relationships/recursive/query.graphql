@@ -1,8 +1,0 @@
-query RelationshipRecursive {
-  person {
-    name
-    knows {
-      name
-    }
-  }
-}

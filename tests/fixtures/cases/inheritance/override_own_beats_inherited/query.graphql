@@ -1,6 +1,14 @@
-query OverrideOwnField {
-  managerBadge {
+"""The community concert redeclares the tagline it could have inherited,
+and its own declaration wins wholesale: the field serves a list of the
+neighbourhood's proposals where the concert type serves a single string —
+same field name, same triples, a different shape through the child. The
+roots stay separate too — sharing fields is not subtyping, so the choir
+lists only here, never under the concert root. The validation side still
+sees both declarations, which keeps today's data at one proposal; the
+API follows the child alone."""
+query OverrideOwnBeatsInherited {
+  communityConcert {
     iri
-    badgeLevel
+    tagline
   }
 }

@@ -2,20 +2,24 @@
   "data": {
     "patient": [
       {
-        "iri": "http://example.org/clinical/patient-1",
+        "medicalRecordNumber": "MRN-1001",
         "applicableProtocolTitles": [
           "Low-sodium diet",
           "Exercise plan"
         ]
       },
       {
-        "iri": "http://example.org/clinical/patient-2",
+        "medicalRecordNumber": "MRN-1002",
         "applicableProtocolTitles": [
           "Antiviral therapy"
         ]
       },
       {
-        "iri": "http://example.org/clinical/patient-3",
+        "medicalRecordNumber": "MRN-1003",
+        "applicableProtocolTitles": []
+      },
+      {
+        "medicalRecordNumber": "MRN-1004",
         "applicableProtocolTitles": []
       }
     ]

@@ -1,0 +1,25 @@
+"""A directory card reads several links in one selection: through the
+employer to the city the company sits in, beside it the street address, and
+the department. Only the city is a required link — a company always sits
+somewhere — so it joins plainly inside the optional employer block, while
+Carol, who freelances, gets null down every branch. The department class has
+no shape of its own, yet the link still traverses and yields its bare IRI.
+In the SPARQL: the employer's whole subtree sits in one OPTIONAL, and the
+city join inside it is bound, never wrapped."""
+query DirectoryCard {
+  person {
+    name
+    employer {
+      name
+      locatedIn {
+        name
+      }
+    }
+    address {
+      street
+    }
+    department {
+      iri
+    }
+  }
+}

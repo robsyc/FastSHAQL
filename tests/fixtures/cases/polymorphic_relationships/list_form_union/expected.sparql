@@ -1,0 +1,21 @@
+SELECT ?iri ?title ?sidebar_iri ?sidebar_member ?sidebar_1_text ?sidebar_2_url
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Article> .
+  ?iri <http://example.org/title> ?title .
+  OPTIONAL {
+    ?iri <http://example.org/sidebar> ?sidebar_iri .
+    VALUES ?sidebar_member {
+      <http://example.org/Paragraph>
+      <http://example.org/Image>
+    }
+    ?sidebar_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* ?sidebar_member .
+    OPTIONAL {
+      ?sidebar_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Paragraph> .
+      ?sidebar_iri <http://example.org/text> ?sidebar_1_text .
+    }
+    OPTIONAL {
+      ?sidebar_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Image> .
+      ?sidebar_iri <http://example.org/url> ?sidebar_2_url .
+    }
+  }
+}

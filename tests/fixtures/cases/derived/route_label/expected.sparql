@@ -1,0 +1,9 @@
+SELECT ?iri ?route ?origin ?destination
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/fjord/Crossing> .
+  ?iri <http://example.org/fjord/origin> ?origin .
+  ?iri <http://example.org/fjord/destination> ?destination .
+  BIND(CONCAT(?origin, " – ", ?destination) AS ?route)
+  ?iri <http://example.org/fjord/origin> ?origin .
+  ?iri <http://example.org/fjord/destination> ?destination .
+}

@@ -31,8 +31,8 @@ def build_union_types(
     ``(parent type name, field name)`` — one per pair, no cross-field
     dedupe by member-set (ADR-0026).
 
-    Names are ``{ParentType}{FieldName}`` (``Article.block`` →
-    ``ArticleBlock``), numeric-suffixed on collision with anything in
+    Names are ``{ParentType}{FieldName}`` (``Article.body`` →
+    ``ArticleBody``), numeric-suffixed on collision with anything in
     *taken* — shape names, their filter inputs, enums, and earlier
     unions (the ADR-0006 precedent). Allocation walks shapes
     then properties in registry order, so it is deterministic. Call

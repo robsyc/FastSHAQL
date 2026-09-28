@@ -1,9 +1,14 @@
-SELECT ?iri ?hasCondition_iri ?hasCondition_summaryNote
+SELECT ?iri ?medicalRecordNumber ?hasCondition_iri ?hasCondition_mostSpecificClass ?hasCondition_summaryNote
 WHERE {
   ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/clinical/Patient> .
+  ?iri <http://example.org/clinical/medicalRecordNumber> ?medicalRecordNumber .
   OPTIONAL {
     ?iri <http://example.org/clinical/hasCondition> ?hasCondition_iri .
     ?hasCondition_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/clinical/Condition> .
+    ?hasCondition_iri a ?cls .
+    FILTER NOT EXISTS { ?hasCondition_iri a ?sub . ?sub <http://www.w3.org/2000/01/rdf-schema#subClassOf>+ ?cls . FILTER(?sub != ?cls) }
+    BIND(STR(?cls) AS ?label)
+    BIND(?label AS ?hasCondition_mostSpecificClass)
     OPTIONAL {
       ?hasCondition_iri <http://example.org/clinical/note> ?note
       BIND(?note AS ?hasCondition_summaryNote)

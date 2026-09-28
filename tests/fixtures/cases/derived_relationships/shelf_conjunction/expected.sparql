@@ -1,0 +1,19 @@
+SELECT ?iri ?prizedOnShelf_iri ?prizedOnShelf_title
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/library/Member> .
+  OPTIONAL {
+    {
+      SELECT ?iri ?prizedOnShelf_iri
+      WHERE {
+        <http://example.org/library/Book> ^a ?prizedOnShelf_iri .
+        ?prizedOnShelf_iri <http://example.org/library/prize> ?prizedOnShelf_iri_p0 .
+        FILTER(?prizedOnShelf_iri_p0 = "Rice Medal")
+        ?prizedOnShelf_iri <http://example.org/library/status> ?prizedOnShelf_iri_p1 .
+        FILTER(?prizedOnShelf_iri_p1 = "available")
+        FILTER(BOUND(?prizedOnShelf_iri))
+      }
+    }
+    ?prizedOnShelf_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/library/Book> .
+    ?prizedOnShelf_iri <http://example.org/library/title> ?prizedOnShelf_title .
+  }
+}

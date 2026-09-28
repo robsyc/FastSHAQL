@@ -2,16 +2,20 @@
   "data": {
     "patient": [
       {
-        "iri": "http://example.org/clinical/patient-1",
-        "protocolStatus": "assigned"
+        "medicalRecordNumber": "MRN-1001",
+        "protocolStatus": "on-protocol"
       },
       {
-        "iri": "http://example.org/clinical/patient-2",
-        "protocolStatus": "assigned"
+        "medicalRecordNumber": "MRN-1002",
+        "protocolStatus": "on-protocol"
       },
       {
-        "iri": "http://example.org/clinical/patient-3",
-        "protocolStatus": "unassigned"
+        "medicalRecordNumber": "MRN-1003",
+        "protocolStatus": "off-protocol"
+      },
+      {
+        "medicalRecordNumber": "MRN-1004",
+        "protocolStatus": "off-protocol"
       }
     ]
   }

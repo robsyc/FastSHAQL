@@ -1,7 +1,11 @@
+"""A concert lists the day it is held without declaring it: the field
+arrives from the timed bundle the concert builds on, while the tagline is
+the concert's own. A concert whose tagline is not yet written gets null —
+the absent value stays visible rather than dropping out."""
 query InheritedScalar {
-  manager {
+  concert {
     iri
-    managerName
-    employeeId
+    heldOn
+    tagline
   }
 }

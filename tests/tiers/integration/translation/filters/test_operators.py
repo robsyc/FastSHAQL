@@ -23,23 +23,36 @@ if TYPE_CHECKING:
     from fastshaql.core.registry import ShapeRegistry
 
 
+def _unfiltered_title_baseline(
+    filter_artwork_shape, filters_registry: ShapeRegistry
+) -> str:
+    """Rendered SPARQL for the same selection with no ``where`` — the baseline
+    no-op filter results must match (the Artwork counterpart of
+    ``PERSON_NAME_ONLY_SPARQL`` for the relationships set)."""
+    return translate_query(
+        filter_artwork_shape,
+        root_field_node("{ artwork { title } }"),
+        filters_registry,
+    ).query.render()
+
+
 @pytest.mark.parametrize(
     ("where_fragment", "filter_clause"),
     [
-        ('name: { neq: "Alice" }', 'FILTER(?name != "Alice")'),
-        ('name: { startsWith: "Al" }', 'FILTER(STRSTARTS(?name, "Al"))'),
-        ('name: { endsWith: "ce" }', 'FILTER(STRENDS(?name, "ce"))'),
+        ('title: { neq: "The Starry Night" }', 'FILTER(?title != "The Starry Night")'),
+        ('title: { startsWith: "The" }', 'FILTER(STRSTARTS(?title, "The"))'),
+        ('title: { endsWith: "Night" }', 'FILTER(STRENDS(?title, "Night"))'),
     ],
 )
 def test_translate_string_operator_filters(
-    filter_person_shape,
+    filter_artwork_shape,
     filters_registry: ShapeRegistry,
     where_fragment: str,
     filter_clause: str,
 ) -> None:
-    query = f"{{ persons(where: {{ {where_fragment} }}) {{ name }} }}"
+    query = f"{{ artwork(where: {{ {where_fragment} }}) {{ title }} }}"
     result = translate_query(
-        filter_person_shape, root_field_node(query), filters_registry
+        filter_artwork_shape, root_field_node(query), filters_registry
     )
     rendered = result.query.render()
     assert filter_clause in rendered
@@ -50,24 +63,24 @@ def test_translate_string_operator_filters(
     ("where_fragment", "filter_clause"),
     [
         (
-            "age: { gte: 18 }",
-            'FILTER(?age >= "18"^^<http://www.w3.org/2001/XMLSchema#integer>)',
+            "year: { gte: 1888 }",
+            'FILTER(?year >= "1888"^^<http://www.w3.org/2001/XMLSchema#integer>)',
         ),
         (
-            "age: { lte: 65 }",
-            'FILTER(?age <= "65"^^<http://www.w3.org/2001/XMLSchema#integer>)',
+            "year: { lte: 1940 }",
+            'FILTER(?year <= "1940"^^<http://www.w3.org/2001/XMLSchema#integer>)',
         ),
     ],
 )
 def test_translate_int_operator_filters(
-    filter_person_shape,
+    filter_artwork_shape,
     filters_registry: ShapeRegistry,
     where_fragment: str,
     filter_clause: str,
 ) -> None:
-    query = f"{{ persons(where: {{ {where_fragment} }}) {{ name age }} }}"
+    query = f"{{ artwork(where: {{ {where_fragment} }}) {{ title year }} }}"
     result = translate_query(
-        filter_person_shape, root_field_node(query), filters_registry
+        filter_artwork_shape, root_field_node(query), filters_registry
     )
     rendered = result.query.render()
     assert filter_clause in rendered
@@ -163,17 +176,17 @@ def test_translate_empty_where_is_no_op(
 
 
 def test_translate_boolean_operator_filter(
-    filter_person_shape,
+    filter_artwork_shape,
     filters_registry: ShapeRegistry,
 ) -> None:
-    """``active: { eq: true }`` emits an xsd:boolean-typed comparison
+    """``onLoan: { eq: true }`` emits an xsd:boolean-typed comparison
     (canonical SPARQL ``BooleanLiteral`` form)."""
-    query = "{ persons(where: { active: { eq: true } }) { name active } }"
+    query = "{ artwork(where: { onLoan: { eq: true } }) { title onLoan } }"
     result = translate_query(
-        filter_person_shape, root_field_node(query), filters_registry
+        filter_artwork_shape, root_field_node(query), filters_registry
     )
     rendered = result.query.render()
-    assert "FILTER(?active = true)" in rendered
+    assert "FILTER(?onLoan = true)" in rendered
 
 
 def test_translate_decimal_operator_filter(
@@ -200,33 +213,35 @@ def test_translate_decimal_operator_filter(
 
 
 def test_translate_empty_iri_operator_is_no_op(
-    filter_person_shape,
+    filter_artwork_shape,
     filters_registry: ShapeRegistry,
 ) -> None:
     """``iri: {}`` carries no operators — no FILTER, matches baseline."""
-    query = "{ persons(where: { iri: {} }) { name } }"
+    query = "{ artwork(where: { iri: {} }) { title } }"
     result = translate_query(
-        filter_person_shape, root_field_node(query), filters_registry
+        filter_artwork_shape, root_field_node(query), filters_registry
     )
     rendered = result.query.render()
     assert "FILTER" not in rendered
-    assert rendered == PERSON_NAME_ONLY_SPARQL
+    assert rendered == _unfiltered_title_baseline(
+        filter_artwork_shape, filters_registry
+    )
 
 
 def test_translate_iri_membership_filter(
-    filter_person_shape,
+    filter_artwork_shape,
     filters_registry: ShapeRegistry,
 ) -> None:
     """``iri: { in: [...] }`` emits an IRI membership filter."""
     query = (
-        "{ persons(where: { iri: { in: "
-        '["http://example.org/alice", "http://example.org/bob"] } }) { name } }'
+        "{ artwork(where: { iri: { in: "
+        '["http://example.org/starry-night", "http://example.org/water-lilies"] } }) { title } }'
     )
     result = translate_query(
-        filter_person_shape, root_field_node(query), filters_registry
+        filter_artwork_shape, root_field_node(query), filters_registry
     )
     rendered = result.query.render()
     assert (
-        "FILTER(?iri IN (<http://example.org/alice>, <http://example.org/bob>))"
+        "FILTER(?iri IN (<http://example.org/starry-night>, <http://example.org/water-lilies>))"
         in rendered
     )

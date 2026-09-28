@@ -1,69 +1,73 @@
-# Language-preference chain fixture (ADR-0012): every literal space and
-# cardinality lane over one Person shape — required/optional scalars, an
-# optional list, the string union (datatype-list form), a PLAIN control
-# field, a derived langString (sh:values), and a nested relationship whose
-# label inherits the chain.
-@prefix sh:    <http://www.w3.org/ns/shacl#> .
-@prefix ex:    <http://example.org/> .
-@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix shnex:   <http://www.w3.org/ns/shacl-node-expr#> .
+@prefix ex:      <http://example.org/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
 
-ex:PersonShape a sh:NodeShape ;
-    sh:codeIdentifier "Person" ;
-    sh:targetClass ex:Person ;
+# Museum wall labels: one collection, many languages.
+
+ex:MuseumApi a graphql:Schema ;
+    rdfs:comment "City-museum domain: artworks carry multilingual wall text — a required title, a caption that may be plain or language-tagged, historic aliases in several languages, and a ticket-page teaser mirrored from the marketing line — beside a language-independent inventory number and an optional artist whose own name is language-typed. The collection spans the telling situations: English and Dutch labels, an American-English touring label, a French-only loan, plain registry text with no language declared, and a sparse loan with little more than a title. The cases show language preference chains end to end: one ordered, request-level chain resolves every language-accepting field to its first matching value — no preference at all; a single tag whose range serves its subtags (en serves en-US, never the reverse); fallback through later steps; the untagged and any-language sentinels, each matching exactly what its name promises; and the same chain inherited by the nested artist." ;
+    graphql:publicShape ex:ArtworkShape ;
+    graphql:protectedShape ex:ArtistShape .
+
+ex:ArtworkShape a sh:NodeShape ;
+    sh:codeIdentifier "Artwork" ;
+    rdfs:comment "A work in the collection, labelled in the visitor's language." ;
+    sh:intent "Every text field except the inventory number resolves through the request's language preference chain." ,
+        "The caption is the union lane — plain or tagged text, with an untagged fallback of its own at the end of every chain." ,
+        "The teaser is derived from the marketing line; derived text resolves through the same chain." ;
+    sh:targetClass ex:Artwork ;
     sh:property [
-        sh:path ex:name ;
+        sh:path ex:title ;
+        sh:description "The title shown on the wall label." ;
         sh:datatype rdf:langString ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:bio ;
-        sh:datatype rdf:langString ;
-        sh:minCount 0 ;
-        sh:maxCount 1
-    ] ;
-    sh:property [
-        sh:path ex:altLabel ;
-        sh:datatype rdf:langString ;
-        sh:minCount 0
-    ] ;
-    # The string union in its SHACL 1.2 datatype-list form; the classic
-    # datatype-only sh:or syntax normalizes to the same IR (unit-pinned by
-    # test_both_union_syntaxes_normalize_identically).
-    sh:property [
-        sh:path ex:note ;
+        sh:path ex:caption ;
+        sh:description "A one-line caption beneath the title — plain or language-tagged text." ;
         sh:datatype ( xsd:string rdf:langString ) ;
-        sh:minCount 0 ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:plain ;
+        sh:path ex:altTitle ;
+        sh:description "Historic and translated titles the work has carried." ;
+        sh:datatype rdf:langString
+    ] ;
+    sh:property [
+        sh:path ex:inventoryNumber ;
+        sh:description "The registry's inventory number — language-independent." ;
         sh:datatype xsd:string ;
-        sh:minCount 0 ;
+        sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:summary ;
+        sh:path ex:teaser ;
+        sh:description "The ticket-page teaser, mirrored from the marketing line." ;
         sh:datatype rdf:langString ;
-        sh:minCount 0 ;
         sh:maxCount 1 ;
-        sh:values [ shnex:pathValues ex:summarySource ]
+        sh:values [ shnex:pathValues ex:marketingLine ]
     ] ;
     sh:property [
-        sh:path ex:employer ;
-        sh:class ex:Org ;
-        sh:minCount 0 ;
+        sh:path ex:artist ;
+        sh:description "The maker credited on the label." ;
+        sh:node ex:ArtistShape ;
         sh:maxCount 1
     ] .
 
-ex:OrgShape a sh:NodeShape ;
-    sh:codeIdentifier "Org" ;
-    sh:targetClass ex:Org ;
+ex:ArtistShape a sh:NodeShape ;
+    sh:codeIdentifier "Artist" ;
+    rdfs:comment "The maker of a work, named in whichever label languages the museum holds." ;
+    sh:intent "The name resolves through the same request chain — a name in no accepted language hides the artist entirely." ;
+    sh:targetClass ex:Artist ;
     sh:property [
-        sh:path ex:label ;
+        sh:path ex:name ;
+        sh:description "The artist's name as printed on the label." ;
         sh:datatype rdf:langString ;
-        sh:minCount 0 ;
+        sh:minCount 1 ;
         sh:maxCount 1
     ] .

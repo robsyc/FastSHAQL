@@ -1,0 +1,37 @@
+{
+  "data": {
+    "article": [
+      {
+        "title": "Syntax highlights",
+        "bookends": [
+          {
+            "__typename": "Paragraph",
+            "text": "Intro paragraph"
+          },
+          {
+            "__typename": "Image",
+            "url": "https://example.org/img-2.png"
+          }
+        ]
+      },
+      {
+        "title": "Dual types",
+        "bookends": [
+          {
+            "__typename": "Image",
+            "url": "https://example.org/img-1.png"
+          }
+        ]
+      },
+      {
+        "title": "Childless",
+        "bookends": [
+          {
+            "__typename": "Paragraph",
+            "text": "Lead summary"
+          }
+        ]
+      }
+    ]
+  }
+}

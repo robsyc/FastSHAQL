@@ -1,0 +1,18 @@
+SELECT ?iri ?title ?cast_iri ?cast_name ?cast_emails ?cast_rightsParties_iri ?cast_rightsParties_name
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Movie> .
+  ?iri <http://example.org/title> ?title .
+  OPTIONAL {
+    ?iri <http://example.org/cast> ?cast_iri .
+    ?cast_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+    ?cast_iri <http://example.org/name> ?cast_name .
+    OPTIONAL {
+      ?cast_iri <http://example.org/workEmail>|<http://example.org/personalEmail> ?cast_emails .
+    }
+    OPTIONAL {
+      ?cast_iri <http://example.org/agent>? ?cast_rightsParties_iri .
+      ?cast_rightsParties_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+      ?cast_rightsParties_iri <http://example.org/name> ?cast_rightsParties_name .
+    }
+  }
+}

@@ -1,31 +1,42 @@
-@prefix sh:  <http://www.w3.org/ns/shacl#> .
-@prefix ex:  <http://example.org/> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix shnex:   <http://www.w3.org/ns/shacl-node-expr#> .
+@prefix ex:      <http://example.org/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
 
-# ADR-0026 polymorphic relationships: sh:or members (and the sh:class
-# list form) derive one union-typed field; the sh:class list beside
-# sh:node (ADR-0025 row 5) stays single-target behind a VALUES guard.
+# Publishing kiosk: one article link traversing several content types.
+
+ex:ArticleApi a graphql:Schema ;
+    rdfs:comment "Publishing-kiosk domain: an article is composed of content blocks — paragraphs and images — with media assets attached (photos and videos) and people credited as paragraph authors. Articles are the entry point; every other type is reached through an article. Three articles cover the telling situations — fully populated, a dual-typed block, and childless — with subclasses (SubParagraph, VectorPhoto) widening the class hierarchy. The cases show polymorphic relationships end to end: one link traversing several object types — declared with sh:or members, the sh:class list form, or a mix of shapes and classes; required or optional; asserted, derived from curated picks, or computed from the article's own links — and the asset link spanning photo and video classes behind the single Asset type." ;
+    graphql:publicShape ex:ArticleShape ;
+    graphql:protectedShape ex:ParagraphShape, ex:ImageShape, ex:AssetShape, ex:PersonShape .
 
 ex:ParagraphShape a sh:NodeShape ;
     sh:codeIdentifier "Paragraph" ;
+    rdfs:comment "A block of prose text." ;
     sh:targetClass ex:Paragraph ;
     sh:property [
         sh:path ex:text ;
+        sh:description "The paragraph's text." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
         sh:path ex:author ;
+        sh:description "The person who wrote the paragraph." ;
         sh:node ex:PersonShape ;
         sh:maxCount 1
     ] .
 
 ex:PersonShape a sh:NodeShape ;
     sh:codeIdentifier "Person" ;
+    rdfs:comment "A person credited as an author." ;
     sh:targetClass ex:Person ;
     sh:property [
         sh:path ex:name ;
+        sh:description "The person's display name." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
@@ -33,9 +44,11 @@ ex:PersonShape a sh:NodeShape ;
 
 ex:ImageShape a sh:NodeShape ;
     sh:codeIdentifier "Image" ;
+    rdfs:comment "A picture referenced by URL." ;
     sh:targetClass ex:Image ;
     sh:property [
         sh:path ex:url ;
+        sh:description "The image's source URL." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
@@ -43,9 +56,12 @@ ex:ImageShape a sh:NodeShape ;
 
 ex:AssetShape a sh:NodeShape ;
     sh:codeIdentifier "Asset" ;
+    rdfs:comment "A media asset attached to an article." ;
+    sh:intent "Photos and videos both appear as Asset — several classes, one GraphQL type, no fragments." ;
     sh:targetClass ex:Asset ;
     sh:property [
         sh:path ex:caption ;
+        sh:description "The asset's caption text." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
@@ -53,38 +69,63 @@ ex:AssetShape a sh:NodeShape ;
 
 ex:ArticleShape a sh:NodeShape ;
     sh:codeIdentifier "Article" ;
+    rdfs:comment "An article composed of content blocks." ;
+    sh:intent "One link traverses several object types: query body, lead, sidebar, or picks with inline fragments." ,
+        "The same union can be declared with sh:or members, the sh:class list form, or a mix of shapes and classes." ,
+        "Union members can sit at an asserted path, arrive as derived constants, or be computed from the article's own links." ;
     sh:targetClass ex:Article ;
     sh:property [
         sh:path ex:title ;
+        sh:description "The article's headline." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
         sh:path ex:lead ;
+        sh:description "The single required lead block — a paragraph or an image." ;
         sh:or ( [ sh:class ex:Paragraph ] [ sh:class ex:Image ] ) ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:block ;
-        sh:or ( [ sh:class ex:Paragraph ] [ sh:node ex:ImageShape ] ) ;
-        sh:minCount 0
+        sh:path ex:body ;
+        sh:description "The article's content blocks in reading order — paragraphs and images." ;
+        sh:or ( [ sh:class ex:Paragraph ] [ sh:class ex:Image ] )
     ] ;
     sh:property [
-        sh:path ex:block ;
-        sh:codeIdentifier "chunk" ;
-        sh:class ( ex:Paragraph ex:Image ) ;
-        sh:minCount 0
+        sh:path ex:sidebar ;
+        sh:description "Side content shown beside the article — notes and imagery." ;
+        sh:class ( ex:Paragraph ex:Image )
     ] ;
     sh:property [
-        sh:path ex:related ;
+        sh:path ex:spotlight ;
+        sh:description "Highlighted visuals — a hero image or a featured media asset." ;
+        sh:or ( [ sh:node ex:ImageShape ] [ sh:class ex:Asset ] )
+    ] ;
+    sh:property [
+        sh:path ex:picks ;
+        sh:description "The editors' curated picks, surfaced alongside every article." ;
         sh:or ( [ sh:class ex:Paragraph ] [ sh:class ex:Image ] ) ;
         sh:values ( ex:para-2 ex:img-2 ex:none-1 )
     ] ;
     sh:property [
+        sh:path ex:bookends ;
+        sh:description "The article's opening and closing blocks, computed from its lead and closing links." ;
+        sh:or ( [ sh:class ex:Paragraph ] [ sh:class ex:Image ] ) ;
+        sh:values [
+            shnex:pathValues [ sh:alternativePath ( ex:lead ex:closing ) ]
+        ]
+    ] ;
+    sh:property [
+        sh:path ex:closing ;
+        sh:description "The optional closing image." ;
+        sh:class ex:Image ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
         sh:path ex:asset ;
+        sh:description "Attached media — a photo or a video, exposed as the single Asset type." ;
         sh:node ex:AssetShape ;
-        sh:class ( ex:Photo ex:Video ) ;
-        sh:minCount 0
+        sh:class ( ex:Photo ex:Video )
     ] .

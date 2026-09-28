@@ -1,15 +1,46 @@
-@prefix ex: <http://example.org/> .
+@prefix ex: <http://example.org/fjord/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ex:widget a ex:Item ;
-    ex:hasFlag ex:flagA ;
-    ex:givenName "Acme" ;
-    ex:familyName "Widget" ;
-    ex:label "ASSERTED-WRONG" .
+# The network's crossings. Derived values are never asserted here — except
+# the one stale route label that derivation must replace.
 
-ex:gadget a ex:Item ;
-    ex:givenName "Plain" ;
-    ex:familyName "Gadget" .
+ex:nb-101 a ex:Crossing ;
+    ex:origin "Bergen" ;
+    ex:destination "Rosendal" ;
+    ex:minutes 150 ;
+    ex:vessel ex:mv-skerry .
 
-ex:industrial-component a ex:Item ;
-    ex:givenName "Heavy" ;
-    ex:familyName "Industry" .
+ex:nb-102 a ex:Crossing ;
+    ex:origin "Bergen" ;
+    ex:destination "Stavanger" ;
+    ex:minutes 270 ;
+    ex:vessel ex:mv-hardanger ;
+    ex:alert "Vehicle deck closed for maintenance." .
+
+# Carries a route label from the printed timetable — the derived label must
+# replace it, never merge with it.
+ex:nb-103 a ex:Crossing ;
+    ex:origin "Stavanger" ;
+    ex:destination "Tau" ;
+    ex:minutes 30 ;
+    ex:vessel ex:ms-tau ;
+    ex:route "Stavanger - Tau (printed timetable)" .
+
+# A chartered seasonal crossing — no fixed vessel, so the derived vessel
+# name resolves to null rather than an error.
+ex:nb-104 a ex:Crossing ;
+    ex:origin "Rosendal" ;
+    ex:destination "Sundal" ;
+    ex:minutes 45 .
+
+ex:mv-skerry a ex:Vessel ;
+    ex:name "MV Skerry" ;
+    ex:passengers 290 .
+
+ex:mv-hardanger a ex:Vessel ;
+    ex:name "MV Hardanger" ;
+    ex:passengers 660 .
+
+ex:ms-tau a ex:Vessel ;
+    ex:name "MS Tau" ;
+    ex:passengers 400 .

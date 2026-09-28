@@ -1,6 +1,11 @@
+"""A derived note is optional: the hepatitis condition, which carries no
+note, keeps its row with a null, while the coded and the unclassified
+conditions read their notes through verbatim."""
 query OptionalSummaryNote {
   patient {
+    medicalRecordNumber
     hasCondition {
+      mostSpecificClass
       summaryNote
     }
   }

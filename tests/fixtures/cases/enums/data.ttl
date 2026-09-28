@@ -1,55 +1,61 @@
-@prefix ex:  <http://example.org/> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex:    <http://example.org/> .
+@prefix city:  <http://example.org/city/> .
+@prefix state: <http://example.org/state/> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
 
-ex:obs1 a ex:Observation ;
-    ex:status "active" .
+# The program's readings. Every coded value sits inside its sh:in list; the
+# twice-listed "verified" code is as legal as any other member. The pH
+# reading is the sparse one — no grade, no flags, no credited analyst.
 
-ex:obs2 a ex:Observation ;
-    ex:status "inactive" .
+ex:reading-101 a ex:Reading ;
+    ex:parameter "Dissolved oxygen" ;
+    ex:result 7.4 ;
+    ex:reportingLimit 5.0 ;
+    ex:comparator ">" ;
+    ex:status "collected" ;
+    ex:site city:main-outfall ;
+    ex:grade 1 ;
+    ex:flags "estimated", "held" ;
+    ex:analyst ex:ana-morgan .
 
-ex:obs3 a ex:Observation ;
-    ex:status "entered-in-error" .
+ex:reading-202 a ex:Reading ;
+    ex:parameter "Escherichia coli" ;
+    ex:result 41.0 ;
+    ex:reportingLimit 100.0 ;
+    ex:comparator "<" ;
+    ex:status "in-lab" ;
+    ex:site state:main-outfall ;
+    ex:grade 2 ;
+    ex:analyst ex:ana-lee .
 
-ex:Pink a ex:Color ;
-    ex:label "Pink" .
+ex:reading-203 a ex:Reading ;
+    ex:parameter "pH" ;
+    ex:result 6.5 ;
+    ex:reportingLimit 6.5 ;
+    ex:comparator "<=" ;
+    ex:status "verified" ;
+    ex:site city:north-pier ;
+    ex:flags "below-detection" .
 
-ex:Purple a ex:Color ;
-    ex:label "Purple" .
+ex:reading-304 a ex:Reading ;
+    ex:parameter "Turbidity" ;
+    ex:result 3.9 ;
+    ex:reportingLimit 1.0 ;
+    ex:comparator ">=" ;
+    ex:status "entered-in-error" ;
+    ex:site city:main-outfall ;
+    ex:grade 3 ;
+    ex:flags "estimated" ;
+    ex:analyst ex:ana-morgan .
 
-ex:sample1 a ex:ColorSample ;
-    ex:color ex:Pink .
+ex:ana-morgan a ex:Analyst ;
+    ex:name "Morgan Reid" .
 
-ex:sample2 a ex:ColorSample ;
-    ex:color ex:Purple .
+ex:ana-lee a ex:Analyst ;
+    ex:name "Lee Chen" .
 
-ex:rating1 a ex:Rating ;
-    ex:level "1"^^xsd:integer .
-
-ex:rating2 a ex:Rating ;
-    ex:level "2"^^xsd:integer .
-
-ex:quantity1 a ex:Quantity ;
-    ex:comparator "<" .
-
-ex:quantity2 a ex:Quantity ;
-    ex:comparator "<=" .
-
-ex:quantity3 a ex:Quantity ;
-    ex:comparator ">=" .
-
-ex:quantity4 a ex:Quantity ;
-    ex:comparator ">" .
-
-ex:acme a ex:Company ;
-    ex:name "Acme" .
-
-ex:globex a ex:Company ;
-    ex:name "Globex" .
-
-ex:alice a ex:Person ;
-    ex:name "Alice" ;
-    ex:employer ex:acme .
-
-ex:bob a ex:Person ;
-    ex:name "Bob" ;
-    ex:employer ex:globex .
+# The merged station list — two agencies, one shared local name.
+city:main-outfall rdfs:label "City main outfall" .
+state:main-outfall rdfs:label "State main outfall" .
+city:north-pier rdfs:label "North pier" .

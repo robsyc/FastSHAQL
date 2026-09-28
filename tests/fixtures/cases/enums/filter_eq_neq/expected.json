@@ -1,7 +1,0 @@
-{
-  "data": {
-    "observation": [
-      { "iri": "http://example.org/obs1", "status": "ACTIVE" }
-    ]
-  }
-}

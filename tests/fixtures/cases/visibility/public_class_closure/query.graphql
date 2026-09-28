@@ -1,3 +1,10 @@
+"""Dogs are published by class rather than by name: the schema publishes
+every daycare member, Dog belongs through rdfs:subClassOf, and the root
+field appears without the Dog shape ever being listed. The resident cat
+is in the data but unreachable by any query — her shape is unmentioned,
+and an unmentioned shape is excluded outright, not merely hidden at the
+root. In the SPARQL: the root pattern matches the Dog class closure, so a
+new member subclass would be picked up with no new declarations."""
 query PublicClassClosure {
   dog {
     name

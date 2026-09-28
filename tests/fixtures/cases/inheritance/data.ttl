@@ -1,21 +1,73 @@
-@prefix ex: <http://example.org/> .
+@prefix ex:  <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ex:hq a ex:Location ;
-    ex:locationName "Headquarters" .
+# The season's people, places, and events. Every event assembles its fields
+# through the bundles its shape builds on; the neighbourhood choir carries a
+# single tagline proposal — one short of the list its type allows.
 
-ex:alice a ex:Manager ;
-    ex:managerName "Alice" ;
-    ex:employeeId "E-001" ;
-    ex:employmentStatus "active" ;
-    ex:workLocation ex:hq .
+ex:pia a ex:Person ;
+    ex:name "Pia Lindqvist" .
 
-ex:bob a ex:Manager ;
-    ex:managerName "Bob" ;
-    ex:employeeId "E-002" ;
-    ex:employmentStatus "inactive" .
+ex:rahul a ex:Person ;
+    ex:name "Rahul Mehta" .
 
-ex:carol a ex:ManagerBadge ;
-    ex:badgeLevel 3 .
+ex:amina a ex:Person ;
+    ex:name "Amina Diallo" .
 
-ex:dave a ex:BadgeHolder ;
-    ex:badgeLevel 3 .
+ex:tobias a ex:Person ;
+    ex:name "Tobias Lange" .
+
+ex:hallen a ex:Venue ;
+    ex:name "Stora Hallen" ;
+    ex:district "Riverside" .
+
+ex:studion a ex:Venue ;
+    ex:name "Lilla Studion" ;
+    ex:district "Old Town" .
+
+# Every bundle generation in one entity: timed (day, venue), program item
+# (host, format), ticketed (capacity), and the workshop's own skill level.
+ex:stained-glass a ex:Workshop ;
+    ex:heldOn "2026-05-14"^^xsd:date ;
+    ex:venue ex:hallen ;
+    ex:host ex:pia ;
+    ex:format "in_person" ;
+    ex:capacity 18 ;
+    ex:skillLevel "beginner" .
+
+ex:night-drawing a ex:Workshop ;
+    ex:heldOn "2026-05-20"^^xsd:date ;
+    ex:venue ex:studion ;
+    ex:host ex:pia ;
+    ex:format "online" ;
+    ex:capacity 40 ;
+    ex:skillLevel "intermediate" .
+
+ex:fresco-tour a ex:GuidedTour ;
+    ex:heldOn "2026-05-16"^^xsd:date ;
+    ex:venue ex:hallen ;
+    ex:host ex:rahul ;
+    ex:format "in_person" ;
+    ex:theme "Frescoes of the riverside wing" .
+
+ex:string-quartet a ex:Concert ;
+    ex:heldOn "2026-05-15"^^xsd:date ;
+    ex:venue ex:hallen ;
+    ex:performer ex:amina ;
+    ex:tagline "Strings at dusk" .
+
+# No tagline yet — the optional field resolves to null, never drops the key.
+ex:lunch-recital a ex:Concert ;
+    ex:heldOn "2026-05-17"^^xsd:date ;
+    ex:venue ex:studion ;
+    ex:performer ex:tobias .
+
+# Exactly one proposal reaches the data — the concert's single-tagline
+# constraint still binds the instances; the community concert's list field
+# wraps it. Typed CommunityConcert only: sharing fields is not subtyping,
+# so the choir never lists under the concert root.
+ex:neighbourhood-choir a ex:CommunityConcert ;
+    ex:heldOn "2026-05-22"^^xsd:date ;
+    ex:venue ex:hallen ;
+    ex:performer ex:amina ;
+    ex:tagline "Songs from the block" .

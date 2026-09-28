@@ -1,14 +1,24 @@
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix ex: <http://example.org/> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix ex:      <http://example.org/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
+
+# One shape, one field, two rows — the whole pipeline in miniature.
+
+ex:ThingApi a graphql:Schema ;
+    rdfs:comment "Smallest end-to-end view: things are queried at the root, each carrying exactly one required label — two rows, so the answer arrives as a list, never a single thing." ;
+    graphql:publicShape ex:ThingShape .
 
 ex:ThingShape a sh:NodeShape ;
     sh:codeIdentifier "Thing" ;
+    rdfs:comment "A thing identified by a single required label." ;
+    sh:intent "REVIEW: the Thing/label naming is placeholder-flavored, but assertions across the unit, integration, and adapter tiers pin these names — a more evocative domain means a coordinated rename beyond this set." ;
     sh:targetClass ex:Thing ;
     sh:property [
         sh:path ex:label ;
-        sh:codeIdentifier "label" ;
+        sh:description "The thing's label — exactly one, always present." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
-        sh:maxCount 1 ;
+        sh:maxCount 1
     ] .

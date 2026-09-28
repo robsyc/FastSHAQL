@@ -1,6 +1,9 @@
+"""Protocol titles collect across a patient's conditions: both protocols
+recommended for the NASH condition appear in one list, and patients whose
+conditions recommend nothing get an empty list, never null."""
 query ApplicableProtocolTitles {
   patient {
-    iri
+    medicalRecordNumber
     applicableProtocolTitles
   }
 }

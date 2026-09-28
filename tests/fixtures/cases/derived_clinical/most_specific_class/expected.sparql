@@ -1,6 +1,7 @@
-SELECT ?iri ?hasCondition_iri ?hasCondition_mostSpecificClass
+SELECT ?iri ?medicalRecordNumber ?hasCondition_iri ?hasCondition_mostSpecificClass
 WHERE {
   ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/clinical/Patient> .
+  ?iri <http://example.org/clinical/medicalRecordNumber> ?medicalRecordNumber .
   OPTIONAL {
     ?iri <http://example.org/clinical/hasCondition> ?hasCondition_iri .
     ?hasCondition_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/clinical/Condition> .

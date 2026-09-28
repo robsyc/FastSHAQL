@@ -9,12 +9,12 @@
 
 # FastSHAQL
 
-`fastshaql` turns a SHACL shapes graph into a GraphQL schema and translates GraphQL queries into SPARQL; it provides an operational, frontend-friendly interface over any RDF-based and SHACL-described knowledge graph. Point it at a shapes graph and a SPARQL store, get a typed GraphQL (read-only) endpoint. The Core is framework- and transport-neutral; the FastAPI and Django adapters and the async httpx SPARQL store ship as optional extras (`fastapi`, `django`, `httpx`).
+`fastshaql` is a transpiler that turns SHACL shapes into a GraphQL schema and translates GraphQL queries into SPARQL, providing an operational interface over any RDF-based and SHACL-described knowledge graph. Point it at a shapes graph and a SPARQL store, get a typed GraphQL endpoint (read-only for now). The Core is framework- and transport-neutral; the FastAPI and Django adapters and the async httpx SPARQL store ship as optional extras (`fastapi`, `django`, `httpx`).
 
 **Key features:**
-- Single- and multi-value properties
+- Single- and multi-valued properties
 - Literal objects and relationship traversal
-- Rich filtering and pagination
+- Rich filtering and pagination (no ordering yet)
 - Derived fields w/ SHACL 1.2 node-expressions
 - Language- and named graph-selection per request
 
@@ -31,6 +31,14 @@ flowchart LR
 The full lifecycle (startup vs. runtime processes, every entry point w/ file references) is in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Quickstart
+
+**Developer tour:** clone the repo and take the guided tour — a small library-domain knowledge graph exercising nearly every feature :
+
+```
+git clone https://github.com/robsyc/fastshaql.git
+cd fastshaql && just sync && just demo
+# goto: http://localhost:8000/graphql — then follow demo/README.md
+```
 
 Install from PyPI with the extra matching your stack — `uv add "fastshaql[extra]"` or `pip install fastshaql[extra]`:
 
@@ -67,14 +75,6 @@ urlpatterns = [
 ```
 
 **Remote triple store:** `pip install fastshaql[httpx]`, then swap `InMemoryStore` for `HttpxSparqlStore` from `fastshaql.stores.http` — it wraps your own `httpx.AsyncClient` (pooling, time-outs, caching are configured on that client) and any SPARQL query endpoint. The store is framework-neutral: any adapter's context getter (`context_getter`, `get_context`) can serve it. Reference wiring: `demo/server.py`.
-
-**Developer tour:** clone the repo and take the guided tour — a small library-domain knowledge graph exercising nearly every feature (optionally replace `demo/quickstart/` with your own shapes and data):
-
-```
-git clone https://github.com/robsyc/fastshaql.git
-cd fastshaql && just sync && just demo
-# goto: http://localhost:8000/graphql — then follow demo/README.md
-```
 
 ## Documentation
 

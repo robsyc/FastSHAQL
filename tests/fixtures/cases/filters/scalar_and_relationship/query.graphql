@@ -1,5 +1,17 @@
+"""A scalar constraint and a relationship constraint AND-combine: hanging in
+the gallery (not on loan) and painted by a name carrying "van" — Van Gogh or
+Rembrandt van Rijn. The Starry Night over the Rhône is Van Gogh's but is
+away on loan; the Water Lilies artist matches neither name; the Night Study
+has no artist to match at all."""
 query ScalarAndRelationship {
-  person(where: { name: { eq: "Alice" }, employer: { name: { eq: "Acme" } } }) {
-    name
+  artwork(
+    where: { onLoan: { eq: false }, artist: { name: { contains: "van" } } }
+  ) {
+    title
+    year
+    onLoan
+    artist {
+      name
+    }
   }
 }

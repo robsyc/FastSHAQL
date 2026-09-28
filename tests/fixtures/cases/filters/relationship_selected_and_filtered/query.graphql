@@ -1,10 +1,14 @@
+"""The same relationship can be filtered and selected: the constraint picks
+Monet's work, and the response still walks the artist link to show the
+gallery behind it — filtering narrows the works, never the selection."""
 query RelationshipSelectedAndFiltered {
-  person(where: { employer: { locatedIn: { name: { eq: "Amsterdam" } } } }) {
-    name
-    employer {
+  artwork(where: { artist: { name: { contains: "Monet" } } }) {
+    title
+    artist {
       name
-      locatedIn {
+      representedBy {
         name
+        city
       }
     }
   }

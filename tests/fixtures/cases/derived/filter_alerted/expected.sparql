@@ -1,0 +1,9 @@
+SELECT ?iri ?code ?isAlerted
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/fjord/Crossing> .
+  BIND(REPLACE(STR(?iri), "^.*[/#]", "") AS ?code)
+  BIND(EXISTS {
+    ?iri <http://example.org/fjord/alert> ?_exists_isAlerted .
+  } AS ?isAlerted)
+  FILTER(?isAlerted = true)
+}

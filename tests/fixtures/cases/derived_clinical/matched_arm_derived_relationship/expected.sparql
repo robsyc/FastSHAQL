@@ -1,0 +1,20 @@
+SELECT ?iri ?medicalRecordNumber ?matchedArm_iri ?matchedArm_armCode ?matchedArm_armName
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/clinical/Patient> .
+  ?iri <http://example.org/clinical/medicalRecordNumber> ?medicalRecordNumber .
+  OPTIONAL {
+    {
+      SELECT ?iri ?matchedArm_iri
+      WHERE {
+        ?iri <http://example.org/clinical/hasCondition> ?condition .
+        ?condition a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* ?enrolledClass .
+        ?arm <http://example.org/clinical/enrollsClass> ?enrolledClass .
+        BIND(?arm AS ?matchedArm_iri)
+        FILTER(BOUND(?matchedArm_iri))
+      }
+    }
+    ?matchedArm_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/clinical/Arm> .
+    ?matchedArm_iri <http://example.org/clinical/armCode> ?matchedArm_armCode .
+    ?matchedArm_iri <http://example.org/clinical/armName> ?matchedArm_armName .
+  }
+}

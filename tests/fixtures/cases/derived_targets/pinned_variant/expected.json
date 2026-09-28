@@ -1,0 +1,11 @@
+{
+  "data": {
+    "pinnedVariant": [
+      {
+        "iri": "http://example.org/variant-101",
+        "label": "unclassified change 101",
+        "reviewScore": 0.8
+      }
+    ]
+  }
+}

@@ -1,6 +1,0 @@
-query IriFilterPrefix {
-  colorSample(where: { iri: { startsWith: "http://example.org/sample1" } }) {
-    iri
-    color
-  }
-}

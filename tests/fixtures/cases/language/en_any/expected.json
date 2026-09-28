@@ -1,79 +1,69 @@
 {
   "data": {
-    "person": [
+    "artwork": [
       {
-        "iri": "http://example.org/personA",
-        "name": "Alice",
-        "bio": "Bio en",
-        "altLabel": [
-          "Alt-A-en",
-          "Alt-A-enUS",
-          "Alt-A-nl"
+        "title": "The Night Watch",
+        "caption": "A militia company under Captain Banning Cocq",
+        "altTitle": [
+          "The Shooting Company of Frans Banning Cocq",
+          "Militia Company of District II",
+          "De Nachtwacht"
         ],
-        "note": "Note-A-en",
-        "plain": "Plain-A",
-        "summary": "Sum-A-en",
-        "employer": {
-          "iri": "http://example.org/orgA",
-          "label": "Acme"
+        "inventoryNumber": "SK-C-5",
+        "teaser": "Rembrandt's masterpiece of light and shadow",
+        "artist": {
+          "name": "Rembrandt van Rijn"
         }
       },
       {
-        "iri": "http://example.org/personB",
-        "name": "Bob",
-        "bio": "Bio-B",
-        "altLabel": [
-          "Alt-B"
+        "title": "The Sunflowers",
+        "caption": "Vase with fifteen sunflowers",
+        "altTitle": [
+          "De Zonnebloemen"
         ],
-        "note": "Note-B",
-        "plain": "Plain-B",
-        "summary": "Sum-B",
-        "employer": null
+        "inventoryNumber": "SK-A-188",
+        "teaser": "Van Gogh's sunlit yellows",
+        "artist": {
+          "name": "Vincent van Gogh"
+        }
       },
       {
-        "iri": "http://example.org/personC",
-        "name": "Cees",
-        "bio": "Bio-C",
-        "altLabel": [
-          "Alt-C"
+        "title": "Het melkmeisje",
+        "caption": "Een keukenmeid schenkt melk uit",
+        "altTitle": [],
+        "inventoryNumber": "SK-A-2344",
+        "teaser": "Vermeers stille keuken",
+        "artist": {
+          "name": "Johannes Vermeer"
+        }
+      },
+      {
+        "title": "The Great Wave off Kanagawa",
+        "caption": "On loan from a private collection",
+        "altTitle": [],
+        "inventoryNumber": "P-1831",
+        "teaser": null,
+        "artist": null
+      },
+      {
+        "title": "Delftware vase",
+        "caption": null,
+        "altTitle": [
+          "Vase de Delft"
         ],
-        "note": "Note-C",
-        "plain": "Plain-C",
-        "summary": "Sum-C",
-        "employer": null
+        "inventoryNumber": "BK-1745",
+        "teaser": null,
+        "artist": null
       },
       {
-        "iri": "http://example.org/personE",
-        "name": "Eva",
-        "bio": null,
-        "altLabel": [],
-        "note": "Note-E",
-        "plain": "Plain-E",
-        "summary": null,
-        "employer": null
-      },
-      {
-        "iri": "http://example.org/personF",
-        "name": "Finn",
-        "bio": null,
-        "altLabel": [],
-        "note": null,
-        "plain": null,
-        "summary": null,
-        "employer": null
-      },
-      {
-        "iri": "http://example.org/personG",
-        "name": "Gail",
-        "bio": "Bio-G",
-        "altLabel": [
-          "Alt-G-1",
-          "Alt-G-2"
-        ],
-        "note": "Note-G",
-        "plain": "Plain-G",
-        "summary": "Sum-G",
-        "employer": null
+        "title": "La Liberté guidant le peuple",
+        "caption": "Juillet 1830 sur les barricades",
+        "altTitle": [],
+        "inventoryNumber": "SK-A-1284",
+        "teaser": "L'étendard de la révolution",
+        "artist": {
+          "name": "Eugène Delacroix"
+        }
       }
     ]
   }

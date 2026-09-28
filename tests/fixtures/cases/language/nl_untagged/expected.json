@@ -1,0 +1,24 @@
+{
+  "data": {
+    "artwork": [
+      {
+        "title": "Het melkmeisje",
+        "caption": "Een keukenmeid schenkt melk uit",
+        "altTitle": [],
+        "inventoryNumber": "SK-A-2344",
+        "teaser": "Vermeers stille keuken",
+        "artist": {
+          "name": "Johannes Vermeer"
+        }
+      },
+      {
+        "title": "Delftware vase",
+        "caption": null,
+        "altTitle": [],
+        "inventoryNumber": "BK-1745",
+        "teaser": "Highlight of the ceramics room",
+        "artist": null
+      }
+    ]
+  }
+}

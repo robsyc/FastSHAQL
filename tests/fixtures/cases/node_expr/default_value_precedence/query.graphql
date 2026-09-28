@@ -1,3 +1,10 @@
+"""One field, three sources, one winner each time: the assay version is read
+from the gene's own triple when present, otherwise the declared default
+serves "v1"; the support score is derived from the support study and falls
+back to 0.0 the same way. The gene whose support study states no score is
+served by the default, not dropped — even though both fields are required.
+In the SPARQL: each field is an OPTIONAL walk closed by a
+BIND(COALESCE(…, default))."""
 query DefaultValuePrecedence {
   gene {
     iri

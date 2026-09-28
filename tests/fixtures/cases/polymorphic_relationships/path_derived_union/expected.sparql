@@ -1,0 +1,27 @@
+SELECT ?iri ?title ?bookends_iri ?bookends_member ?bookends_1_text ?bookends_2_url
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Article> .
+  ?iri <http://example.org/title> ?title .
+  OPTIONAL {
+    {
+      SELECT ?iri ?bookends_iri
+      WHERE {
+        ?iri <http://example.org/lead>|<http://example.org/closing> ?bookends_iri .
+        FILTER(BOUND(?bookends_iri))
+      }
+    }
+    VALUES ?bookends_member {
+      <http://example.org/Paragraph>
+      <http://example.org/Image>
+    }
+    ?bookends_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* ?bookends_member .
+    OPTIONAL {
+      ?bookends_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Paragraph> .
+      ?bookends_iri <http://example.org/text> ?bookends_1_text .
+    }
+    OPTIONAL {
+      ?bookends_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Image> .
+      ?bookends_iri <http://example.org/url> ?bookends_2_url .
+    }
+  }
+}

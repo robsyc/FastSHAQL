@@ -2,7 +2,7 @@
   "data": {
     "patient": [
       {
-        "iri": "http://example.org/clinical/patient-2",
+        "medicalRecordNumber": "MRN-1002",
         "applicableProtocolTitles": [
           "Antiviral therapy"
         ]

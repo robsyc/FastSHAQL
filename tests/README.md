@@ -1,115 +1,89 @@
 # Tests
 
-The single reference for the test suite: layout, the tier model, fixtures, the evaluation harness, and coverage. For the *design rationale* behind the tier model, see [ADR-0021](../docs/adr/0021-declarative-fixture-testing.md).
+The single reference for the test suite: layout, tiers, fixtures, evaluation, and coverage. Design rationale: [ADR-0021](../docs/adr/0021-declarative-fixture-testing.md) (fixture model), [ADR-0022](../docs/adr/0022-evaluation-harness.md) (evaluation). Terms are defined in the glossary ([CONTEXT.md](../CONTEXT.md): Case, Scenario, Fixture, Test tier, Store matrix).
 
 The suite is declarative where it can be: inputs are `.ttl` / `.graphql` / `.json` artifacts, not imperative setup.
 
 ## Run
 
 ```bash
-just test            # default suite (excludes evaluation)
-just eval            # store-matrix parity + perf (requires Docker)
-uv run pytest -m e2e # one tier only (unit | integration | e2e | adapter | evaluation)
-just test-cov        # with coverage
+just test        # default suite (excludes evaluation)
+just eval        # store matrix: parity + perf (requires Docker)
+just test -m e2e # one tier: unit | integration | e2e | adapter | evaluation
+just test-cov    # with coverage
 ```
 
-Default `pytest` excludes `-m evaluation` (`pyproject.toml` `addopts`); `just eval` overrides it. Tier markers are **auto-stamped from the test's directory** by a `pytest_collection_modifyitems` hook in `conftest.py` — no per-test `@pytest.mark.<tier>` is needed or wanted.
+Tier markers are auto-stamped from the test's directory (`conftest.py`) — no per-test `@pytest.mark` needed. Default `pytest` excludes evaluation (`pyproject.toml`); `just eval` overrides.
 
 ## Layout
 
 ```
 tests/
-├── conftest.py          # tier auto-marking + shared per-set fixtures (delegates to support.cases)
-|
-├── tiers/               # test code, grouped by tier
-│   ├── unit/            # one pipeline stage; inline/programmatic inputs
-│   │                    # (unit/stores/ covers the shipped store packages)
-│   ├── integration/     # ≥2 stages on real case inputs
-│   ├── e2e/             # full pipeline → golden files
-│   ├── adapters/        # FastAPI/Django HTTP shims (optional-dep gated)
-│   └── evaluation/      # full pipeline against the store matrix
-|
+├── conftest.py    # tier auto-marking + shared fixtures (delegates to support.cases)
+├── tiers/         # test code by tier (see Tiers)
 ├── fixtures/
-│   ├── cases/           # hand-authored: shapes.ttl + data.ttl|data.trig + e2e cases (committed)
-│   └── scenarios/       # generated: shapes.ttl + anchor cases; data.ttl gitignored
-|
-└── support/             # shared test infrastructure (imported as `support.X`)
-    │                    # (everything at this root is shared across ≥2 tiers)
-    ├── cases.py         # CaseSet + CASES registry + CaseSource Protocol + path-keyed caches
-    ├── scenarios.py     # Scenario / Scale / SCENARIOS (generated-data)
-    ├── runners.py       # run_case / run_case_on_store / translate_case / RecordingStore
-    ├── builders.py      # Shape-IR construction factories (unit + integration)
-    ├── graphql_utils.py # root_field_node / shape_for_root_field
-    ├── goldens.py       # canonicalize — order-independent JSON compare
-    ├── converter_helpers.py  # converter unit-test factories
-    ├── schema_helpers.py     # schema type-introspection asserts (integration/schema)
-    ├── translation.py        # translation_scope factory (unit/translation)
-    ├── sparql_goldens.py     # shared SPARQL golden string (filter tests)
-    ├── import_guard.py       # no-extras import check (run via `just import-guard`)
-    ├── architecture/         # module_graph.py — mermaid DAG for ARCHITECTURE.md
-    ├── mutation/             # floor.py — mutation-score floor gate
-    ├── django_conf/          # Django settings/urls for the adapter-tier tests
-    ├── badges.py             # shields endpoint badges (run via `just badges`)
-    ├── release_notes.py      # CHANGELOG section extractor (run via `just release-notes`)
-    └── eval/            # evaluation-only (consumed solely by tiers/evaluation/)
-        ├── session.py   # StoreSession Protocol + shared adapter plumbing
-        ├── stores.py    # STORES registry + EVAL_STORE selection
-        ├── oxigraph.py  # Oxigraph adapter
-        ├── fuseki.py    # Fuseki adapter
-        ├── qlever.py    # QLever adapter
-        ├── graphdb.py   # GraphDB Free adapter (license-gated)
-        ├── divergences.py  # KNOWN_DIVERGENCES registry
-        ├── parity.py    # check_parity — case outcomes into the report
-        └── report.py    # JSON sidecar + CI summary renderer
+│   ├── cases/     # hand-authored, committed
+│   └── scenarios/ # generated; data.ttl gitignored
+└── support/       # shared infrastructure, imported as `support.X`
+    └── eval/      # evaluation-only: store adapters, parity, report
 ```
 
-Most entries at the `support/` root are shared across ≥2 tiers; the exceptions are the CI/release scripts (`badges.py`, `release_notes.py`), the adapter-tier `django_conf/`, and `support/eval/`, the only evaluation-specific subgroup.
+Per-file detail lives in the module docstrings. Place a helper at the `support/` root only when two or more tiers use it.
 
 ## Tiers
 
-Defined by two axes — *pipeline-stages-composed* × *assertion medium* — auto-marked by directory.
+Two axes: pipeline stages composed × what is asserted.
 
-| Tier | Composes | Asserts |
-|---|---|---|
-| `unit` | one stage; programmatic/inline inputs | inline / programmatic |
-| `integration` | ≥2 pipeline stages on real case inputs | produced SPARQL inline, VariableMap |
-| `e2e` | full pipeline: GraphQL op → SPARQL → store → JSON | **golden files** (`expected.json` + `expected.sparql`) |
-| `evaluation` | full pipeline against the **store matrix** | golden + scale (order-independent) |
-| `adapter` | framework adapter HTTP shim (FastAPI/Django) | inline; may reuse a golden case read-only |
+| Tier          | Composes                                                                    | Asserts                                            |
+|---------------|-----------------------------------------------------------------------------|----------------------------------------------------|
+| `unit`        | one stage; programmatic inputs (`unit/stores/`: the shipped store packages) | inline / programmatic                              |
+| `integration` | ≥2 stages on real case inputs                                               | produced SPARQL, VariableMap                       |
+| `e2e`         | full pipeline: GraphQL op → SPARQL → store → JSON                           | golden files (`expected.json` + `expected.sparql`) |
+| `evaluation`  | full pipeline against the **store matrix**                                  | goldens + scale (order-independent)                |
+| `adapter`     | framework HTTP shim (FastAPI, Django; optional-dep gated)                   | inline; may reuse a golden case read-only          |
 
-## Fixtures: cases vs scenarios
+The adapter tier boots `demo.server` (the `demo/` package) end to end.
 
-- A **case** (`fixtures/cases/<set>/`) is hand-authored: committed `shapes.ttl` + `data.ttl` (or `data.trig` for named-graph sets — `Dataset.parse` infers the format from the extension) + e2e case subdirs (`query.graphql` + `expected.json` + optional `expected.sparql` / `config.json`). The correctness-e2e unit; validated against `InMemoryStore` (rdflib). Registry: `CASES`.
-- A **scenario** (`fixtures/scenarios/<name>/`) is synthetically generated: committed `shapes.ttl` + a correctness anchor (`smoke/`); its data is produced in-memory by a generator in `support.scenarios` (`Scenario.data_at(scale)`). Carries a **scale** axis (a flat `params` map, so each scenario names its own parameters) and a **sweep** — the ordered scale tuple the perf probe runs. Registry: `SCENARIOS`.
+## Fixtures
 
-Both satisfy the `CaseSource` Protocol, so the same `run_case` / `run_case_on_store` runners serve them. Each registry has its own drift guard (`test_case_registry`, `test_scenario_registry`) that fails if a directory is unregistered or a registered entry has no directory.
+- A **case** (`fixtures/cases/<set>/`) is hand-authored and committed: `shapes.ttl` + `data.ttl` (or `data.trig` — a named-graph set) plus per-case subdirectories. The correctness unit, validated against `InMemoryStore` (rdflib). Registry: `CASES`.
+- A **scenario** (`fixtures/scenarios/<name>/`) is generated: committed `shapes.ttl` plus a correctness anchor (`smoke/`); data is produced in memory at any scale (`Scenario.data_at(scale)`). Each names its own flat `params` and a `sweep` — the ordered scales the perf probe runs. Registry: `SCENARIOS`.
 
-> "pytest fixture" is never abbreviated to "fixture" in prose — that overloads the fixture-set meaning above.
+Both satisfy the `CaseSource` Protocol, so the same runners (`run_case`, `run_case_on_store`) serve both. Each registry has a drift guard (`test_case_registry`, `test_scenario_registry`): a directory with no registration, or a registration with no directory, fails.
 
-## Evaluation tier (the store matrix)
+## Metadata contract
 
-`just eval` runs the e2e golden cases and generated scenarios against a matrix of real triple stores via [testcontainers](https://testcontainers.com) — swapping `InMemoryStore` for the shipped `HttpxSparqlStore`. `EVAL_STORE` (comma-separated) selects the legs; the default is the license-free set (`oxigraph`, `fuseki`, `qlever`), with `graphdb` as the opt-in license-gated leg. Images, license tiers, and loading mechanics live with the adapters (`support/eval/*.py`) and are restated per run in the report's store table.
+Fixtures are self-describing ([ADR-0021](../docs/adr/0021-declarative-fixture-testing.md)) — the metadata doubles as GraphQL schema documentation and is the seed of the docs/playground site:
 
-Two axes:
+| Level                           | Vehicle                                | Surfaces as                                          |
+|---------------------------------|----------------------------------------|------------------------------------------------------|
+| Set — `graphql:Schema` resource | `rdfs:comment`                         | set's intro & built `GraphQLSchema` description      |
+| Node shape                      | `rdfs:comment`                         | GraphQL type + root-field descriptions               |
+| Property shape                  | `sh:description` (one line each)       | GraphQL field descriptions                           |
+| Shape bullets (optional)        | `sh:intent`                            | site callouts or bullets — inert for now             |
+| Case                            | `"""description"""` in `query.graphql` | failure output on golden mismatches; site case index |
+| Data                            | `data.ttl` `#` comments                | informal — no rules                                  |
 
-- **parity** — real-store JSON == golden, compared order-independently via `support.goldens.canonicalize` (the outer query has no `ORDER BY`, so entity lists and multi-valued fields may permute — ADR-0010, ADR-0022). Outcomes land per case in the report's parity matrix.
-- **performance** — whole-operation latency per sample (`total` = `core` + translate / store / convert, with http / decode the store split for HTTP stores; definitions in `support/eval/report.py`) and materialised row counts across each scenario's `sweep`, median + p95; report-only (no thresholds), written to `evaluation-report.json` (per-store filename via `EVAL_REPORT_PATH` — nightly writes one per matrix leg) and rendered into the CI job summary.
+Authoring rules for metadata:
+- **Visitor voice** — write for a non-maintainer: behavior first, plain terms, no fixture-ese. A case docstring may end with one optional `In the SPARQL:` sentence flagging what the golden shows.
+- **No ADR references** — name the behaviour, not the decision record; ADR citations live in source docstrings, which the site does not render.
+- **Realism wins** — when a trivial fixture and a realistic one exercise the same machinery, write the realistic one. E2E cases showcase real use; realism is what makes them intuitive.
 
-**Known divergences.** Comparison is never normalized (ADR-0022). A store legitimately deviating on a case (e.g. the no-`FROM` default-graph contract, ADR-0011) gets an entry in `support/eval/divergences.py` (`KNOWN_DIVERGENCES`), which xfails that case at collection and records it as `divergence` in the report instead of `fail`. A healed divergence surfaces as XPASS — `just eval` reports those (`-rX`).
+Every case carries all of: `query.graphql` (named operation + description), `expected.json`, `expected.sparql` (byte-asserted), and `config.json` — the request-scoped envelope (`lang_tags` / `read_graphs`, strict keys, `{}` when empty). Criticism of a fixture embeds where it applies as a greppable `REVIEW:` marker (in `sh:intent` or a case description) — `grep -rn "REVIEW:" tests/fixtures/` surfaces every flag.
 
-The harness consumes the `StoreSession` Protocol (`support/eval/session.py`); each adapter module owns its container lifecycle behind `start()` and is registered in `support/eval/stores.py` (`STORES`). To add a store: implement `StoreSession` in a sibling module, register a `StoreSpec` — runners, fixtures, and the report are store-agnostic. See [ADR-0022](../docs/adr/0022-evaluation-harness.md).
+## Evaluation tier
 
-The GraphDB Free leg additionally needs a license — GraphDB 11+ requires one even for the Free edition; request it at <https://graphdb.ontotext.com/>. GraphDB Free is the proprietary free tier ("CE" is its pre-11.0 name); its tier caps — never felt by a serial harness — are listed in the adapter notes (`support/eval/stores.py`) and the report's store table. Then:
+`just eval` swaps `InMemoryStore` for the shipped `HttpxSparqlStore` against real triple stores via [testcontainers](https://testcontainers.com) — Docker required. `EVAL_STORE` (comma-separated) selects the legs; the default is the license-free set (`oxigraph`, `fuseki`, `qlever`), with `graphdb` as the opt-in license-gated leg. Nightly CI runs one job per store, each uploading its report.
 
-- drop the **verbatim** license file at `tests/tiers/evaluation/graphdb.license` (gitignored; or set `GRAPHDB_LICENSE_FILE`) — don't strip whitespace or reformat it, GraphDB validates the formatting strictly;
-- in CI it's the `GRAPHDB_LICENSE` secret (base64 of the binary file; the workflow decodes it to the path); when absent that matrix leg skips while the OSS legs run.
+- **Parity** — real-store JSON must equal the golden, compared order-independently (`support.goldens.canonicalize`; the outer query has no `ORDER BY`, so lists may permute — ADR-0010). Results are never normalized (ADR-0022): a store legitimately deviating on a case gets a `KNOWN_DIVERGENCES` entry (`support/eval/divergences.py`), which xfails it at collection and records `divergence` in the report.
+- **Performance** — whole-operation latency per sample (`total` = `core` + translate / store / convert, with http / decode the store split for HTTP stores; definitions in `support/eval/report.py`) and row counts across each scenario's `sweep`; median + p95; report-only, no thresholds. Written to `evaluation-report.json` (`EVAL_REPORT_PATH`) and rendered into the CI summary.
 
-Nightly CI runs one job per store ([.github/workflows/nightly.yml](../.github/workflows/nightly.yml)), each uploading its own report artifact; also `workflow_dispatch`.
+To add a store: implement the `StoreSession` Protocol (`support/eval/session.py`) in a sibling module and register a `StoreSpec` in `STORES` (`support/eval/stores.py`) — runners, fixtures, and the report are store-agnostic.
+
+**GraphDB Free** needs a license (GraphDB 11+; request at <https://graphdb.ontotext.com/>). Drop the **verbatim** license file at `tests/tiers/evaluation/graphdb.license` (gitignored) or set `GRAPHDB_LICENSE_FILE` — don't strip whitespace or reformat, GraphDB validates strictly. In CI it's the base64 `GRAPHDB_LICENSE` secret; without it the leg skips while the OSS legs run.
 
 ## Coverage
 
-Branch coverage in CI; gate at 100% (`pyproject.toml`). Exclusions follow [CONTRIBUTING — Testing](../CONTRIBUTING.md) — `# pragma: no cover` only for genuinely unreachable guards, each with rationale. The coverage badge is an endpoint JSON regenerated by nightly's `badges` job and pushed to the `badges` branch.
+Branch coverage, gated at 100% (`pyproject.toml`, CI via `just test-cov`). The deliverable is 100% **accounted-for**, not 100% executed: every uncovered line is either covered by a test or annotated with a rationale — `# pragma: no cover` plus a short *why* (`unreachable — graphql-core validates …`, `defensive — direct-call contract only`); a bare pragma is not accepted.
 
-## `demo/` vs `tests/`
-
-`demo/` is an unpublished workspace member combining the quickstart playground with the reference scalable-FastAPI wiring (a playground server over the shipped `httpx`-extra store, and a local load-test). It is **load-bearing for tests**: the adapter tier boots `demo.server` end to end. `tests/` never ships.
+`just mutate` gates on the committed mutation floor (`mutmut-floor.json`); raising it is deliberate, with recorded rationale. Nightly regenerates the coverage and mutation badges and pushes them to the `badges` branch.

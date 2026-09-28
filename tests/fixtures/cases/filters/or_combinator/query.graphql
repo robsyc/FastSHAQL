@@ -1,7 +1,10 @@
+"""OR branches of different kinds combine: a work is kept when it is either
+currently on loan or older than 1700. The Starry Night (1889, not on loan)
+fails both branches and drops out; the Night Watch qualifies on age alone."""
 query OrCombinator {
-  person(
-    where: { OR: [{ name: { eq: "Alice" } }, { name: { eq: "Bob" } }] }
-  ) {
-    name
+  artwork(where: { OR: [{ onLoan: { eq: true } }, { year: { lt: 1700 } }] }) {
+    title
+    year
+    onLoan
   }
 }

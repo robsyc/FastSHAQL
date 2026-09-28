@@ -1,3 +1,8 @@
+"""Attached media spans two classes — photos and videos — but exposes one
+Asset type, so no fragments are needed. A vector photo counts as a photo
+through its superclass.
+In the SPARQL: the photo/video classes appear as a VALUES guard beside the
+single Asset typing."""
 query PolymorphicBindingUnion {
   article {
     title

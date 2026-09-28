@@ -1,20 +1,55 @@
-@prefix ex: <http://example.org/> .
+@prefix ex:  <http://example.org/> .
 
-ex:amsterdam a ex:City ; ex:name "Amsterdam" .
-ex:berlin a ex:City ; ex:name "Berlin" .
+# The directory. Acme sits in Amsterdam, Globex in Berlin. Dana directs at
+# Acme; Bob reports to Dana; Alice reports to Bob — the management chain,
+# which reports reads backwards. Carol freelances from an unlisted address —
+# no employer, no address, no department, no manager, no acquaintances — so
+# every optional link on her resolves to its empty side.
 
-ex:acme a ex:Company ; ex:name "Acme" ; ex:locatedIn ex:amsterdam .
-ex:globex a ex:Company ; ex:name "Globex" ; ex:locatedIn ex:berlin .
+ex:amsterdam a ex:City ;
+    ex:name "Amsterdam" .
 
+ex:berlin a ex:City ;
+    ex:name "Berlin" .
+
+ex:research a ex:Department .
+ex:platform a ex:Department .
+
+ex:acme a ex:Company ;
+    ex:name "Acme" ;
+    ex:locatedIn ex:amsterdam .
+
+ex:globex a ex:Company ;
+    ex:name "Globex" ;
+    ex:locatedIn ex:berlin .
+
+ex:alice-addr a ex:Address ;
+    ex:street "Canal Ring 1" .
+
+ex:bob-addr a ex:Address ;
+    ex:street "Alexanderplatz 4" .
+
+# Alice and Bob know each other — the acquaintance link cycles, and the
+# traversal case shows Alice reappearing inside her own tree.
 ex:alice a ex:Person ;
     ex:name "Alice" ;
     ex:employer ex:acme ;
+    ex:address ex:alice-addr ;
+    ex:department ex:research ;
+    ex:manager ex:bob ;
     ex:knows ex:bob, ex:carol .
 
 ex:bob a ex:Person ;
     ex:name "Bob" ;
     ex:employer ex:globex ;
+    ex:address ex:bob-addr ;
+    ex:department ex:platform ;
+    ex:manager ex:dana ;
     ex:knows ex:alice .
+
+ex:dana a ex:Person ;
+    ex:name "Dana" ;
+    ex:employer ex:acme .
 
 ex:carol a ex:Person ;
     ex:name "Carol" .

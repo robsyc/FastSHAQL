@@ -1,0 +1,21 @@
+SELECT ?iri ?title ?author_iri ?author_name
+WHERE {
+  {
+    SELECT DISTINCT ?iri
+    WHERE {
+      ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Book> .
+      ?iri <http://example.org/author> ?author_iri .
+      FILTER(EXISTS {
+        ?author_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Author> .
+        ?author_iri <http://example.org/name> ?_rf_author_name .
+        FILTER(?_rf_author_name = "Terry Pratchett")
+      })
+    }
+    ORDER BY ?iri
+    LIMIT 2
+  }
+  ?iri <http://example.org/title> ?title .
+  ?iri <http://example.org/author> ?author_iri .
+  ?author_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Author> .
+  ?author_iri <http://example.org/name> ?author_name .
+}

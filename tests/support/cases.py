@@ -26,6 +26,11 @@ from rdflib import Dataset, Graph
 from fastshaql.core.kernel.context import QueryContext
 from fastshaql.core.kernel.io import load_shapes as _load_shapes
 from fastshaql.core.parser import parse_shapes
+from support.graphql_utils import operation_description
+
+ALLOWED_CONFIG_KEYS = frozenset({"lang_tags", "read_graphs"})
+"""The config.json envelope — request-scoped parameters only (ADR-0021);
+transport headers are the adapter tier's concern (ADR-0019)."""
 
 if TYPE_CHECKING:
     from fastshaql.core.registry import ShapeRegistry
@@ -35,24 +40,37 @@ CASES_ROOT = Path(__file__).resolve().parent.parent / "fixtures" / "cases"
 # Canonical case registry — single source of truth for hand-authored sets (ADR-0021).
 CASES: dict[str, tuple[str, ...]] = {
     "minimal": ("smoke",),
-    "cardinality": ("full",),
-    "relationships": ("nested", "recursive", "full"),
+    "cardinality": ("kinds",),
+    "relationships": (
+        "deep_nesting",
+        "manager_recursion",
+        "reports_recursion",
+        "cyclic_traversal",
+    ),
     "relationship_targeting": ("auto_typed_links", "explicit_binding_typing"),
     "polymorphic_relationships": (
         "mixed_members",
         "nested_member_relationship",
         "derived_union",
+        "path_derived_union",
         "binding_union",
-        "list_form_equivalence",
+        "list_form_union",
+        "mixed_member_syntax",
         "required_union",
         "pagination_union",
     ),
-    "subclass_typing": ("root_closure", "binding_closure", "filter_shape_closure"),
+    "subclass_typing": (
+        "root_closure",
+        "binding_closure",
+        "schema_side_axiom",
+        "filter_shape_closure",
+    ),
     "filters": (
-        "scalar_eq",
-        "scalar_gt",
+        "string_ops",
+        "year_ordering",
+        "date_range",
+        "iri_filter",
         "or_combinator",
-        "or_relationship",
         "not_relationship",
         "relationship_filter",
         "relationship_selected_and_filtered",
@@ -60,44 +78,50 @@ CASES: dict[str, tuple[str, ...]] = {
         "lang_filter",
     ),
     "enums": (
-        "literal_select",
-        "iri_select",
-        "filter_eq_neq",
-        "filter_in_not_in",
-        "iri_filter_eq_neq",
-        "iri_filter_in_not_in",
-        "iri_filter_prefix",
-        "integer_literal_enum",
-        "integer_literal_filter",
-        "mangled_enum_select",
+        "status_select",
+        "status_filter_eq_neq",
+        "status_filter_membership",
+        "duplicate_name_filter",
+        "site_select",
+        "site_filter_eq_neq",
+        "grade_select",
+        "grade_filter",
+        "comparator_select",
+        "flags_select",
         "relationship_overlay",
     ),
     "paths": (
-        "inverse",
-        "sequence",
-        "alternative",
-        "composite_scalar",
-        "transitive",
+        "filmography",
+        "through_the_distributor",
+        "based_on",
+        "franchise_run",
+        "reaching_people",
     ),
     "pagination": (
         "row_vs_entity",
         "offset",
+        "page_window",
         "limit_zero",
         "offset_past_end",
-        "filter_scalar",
-        "relationship_filter",
-        "relationship_filter_selected",
-        "filter_promoted_scalar",
+        "filter_scalar_selected",
+        "filter_scalar_unselected",
+        "filter_relationship_unselected",
+        "filter_relationship_selected",
     ),
-    "visibility": ("public_select", "protected_reachable", "public_class_closure"),
+    "visibility": (
+        "public_select",
+        "protected_reachable",
+        "public_class_closure",
+        "protected_class_reachable",
+    ),
     "derived": (
-        "select_derived",
-        "optional_derived",
-        "filter_derived",
-        "filter_exists_boolean",
-        "label_concat",
-        "label_replace",
-        "filter_label",
+        "route_label",
+        "crossing_code",
+        "alert_flag",
+        "vessel_name",
+        "filter_route",
+        "filter_alerted",
+        "filter_under_an_hour",
     ),
     "derived_clinical": (
         "most_specific_class",
@@ -106,32 +130,34 @@ CASES: dict[str, tuple[str, ...]] = {
         "optional_summary_note",
         "paginated_derived_filter",
         "protocol_status",
-        "select_arm_derived_relationship",
+        "matched_arm_derived_relationship",
     ),
     "derived_relationships": (
-        "derived_relationship_nested_selection",
+        "nested_selection",
         "shnode_anchored_derived_target",
-        "derived_relationship_inside_filter_exists",
-        "pagination_derived_relationship",
-        "filter_shape_conjunction",
-        "filter_shape_class_union",
-        "filter_shape_numeric_range",
-        "filter_shape_mincount_one",
-        "path_values_focus_node",
-        "derived_chain_three_hops",
-        "constant_iri_relationship",
-        "list_expression_relationship",
+        "filter_over_derived_link",
+        "pagination",
+        "shelf_conjunction",
+        "shelf_class_union",
+        "shelf_numeric_range",
+        "shelf_mincount",
+        "shelf_pattern",
+        "chained_derived_links",
+        "constant_home_branch",
+        "curated_branch_list",
     ),
     "node_expr": (
         "path_values_scalar",
         "path_values_inverse",
         "derived_lang_tags",
+        "derived_replaces_asserted",
+        "constants_and_list_expression",
+        "exists_boolean_scalar",
         "if_exists_constant_branches",
         "if_branches_value_sets",
-        "exists_boolean_scalar",
-        "constants_and_list_expression",
+        "if_without_else",
+        "if_sparql_condition",
         "derived_scalar_null_when_path_misses",
-        "multiple_derived_fields_one_shape",
         "derived_enum_nested_if",
         "default_value_precedence",
         "default_value_filter",
@@ -145,17 +171,19 @@ CASES: dict[str, tuple[str, ...]] = {
         "inherited_relationship",
         "inherited_enum",
         "inherited_combined_filter",
+        "two_parents_shared_base",
         "override_own_beats_inherited",
     ),
     "derived_targets": (
+        "pinned_variant",
+        "curated_watchlist",
         "instances_of_subclass_closure",
         "path_values_composite_subclass",
         "union_instances_dedup",
-        "change_subclasses",
+        "high_confidence_target",
+        "select_deletions",
+        "taxonomy_terms",
         "branch_prefix_pattern",
-        "constant_node_target",
-        "filter_shape_target",
-        "select_target",
         "implicit_class_target_where",
         "instances_where_limit",
     ),
@@ -165,7 +193,7 @@ CASES: dict[str, tuple[str, ...]] = {
         "from_replaces_default",
         "no_iris",
     ),
-    "language": ("no_chain", "en", "en_nl", "en_any", "en_us"),
+    "language": ("no_chain", "en", "en_nl", "nl_untagged", "en_any", "en_us"),
 }
 
 
@@ -178,6 +206,7 @@ class E2eCase:
     expected_json: object | None
     expected_sparql: str | None
     query_context: QueryContext | None = None
+    description: str | None = None
 
 
 class CaseSource(Protocol):
@@ -218,17 +247,25 @@ def load_case_from(directory: Path, case: str) -> E2eCase:
     query_context: QueryContext | None = None
     if config_path.exists():
         config = json.loads(config_path.read_text(encoding="utf-8"))
+        unknown = set(config) - ALLOWED_CONFIG_KEYS
+        if unknown:
+            raise ValueError(
+                f"case {case}: unknown config.json keys {sorted(unknown)} — "
+                f"allowed: {sorted(ALLOWED_CONFIG_KEYS)}"
+            )
         query_context = QueryContext(
             lang_tags=tuple(config.get("lang_tags", ())),
             read_graphs=tuple(config.get("read_graphs", ())),
         )
 
+    query_text = query_path.read_text(encoding="utf-8")
     return E2eCase(
         name=case,
-        query=query_path.read_text(encoding="utf-8"),
+        query=query_text,
         expected_json=expected_json,
         expected_sparql=expected_sparql,
         query_context=query_context,
+        description=operation_description(query_text),
     )
 
 
@@ -270,7 +307,13 @@ class CaseSet:
         return ds
 
     def load_case(self, case: str) -> E2eCase:
-        return load_case_from(self.case_dir(case), case)
+        loaded = load_case_from(self.case_dir(case), case)
+        if loaded.expected_sparql is None:
+            raise ValueError(
+                f"case {self.name}/{case} is missing expected.sparql "
+                "(required by the case contract, ADR-0021)"
+            )
+        return loaded
 
 
 @cache

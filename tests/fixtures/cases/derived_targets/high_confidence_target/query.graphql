@@ -1,0 +1,13 @@
+"""Only the records the curators trust: review score 0.7 or higher. The
+candidates are all variants; an inline filter shape keeps those whose score
+passes the bound — and the record scoring exactly 0.7 stays in, the bound
+being inclusive.
+In the SPARQL: the target lowers as the variant pattern plus a FILTER over
+the score, all inside the root set."""
+query HighConfidenceRecords {
+  curatedVariant {
+    iri
+    label
+    reviewScore
+  }
+}

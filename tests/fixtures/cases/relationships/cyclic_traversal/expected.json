@@ -1,0 +1,61 @@
+{
+  "data": {
+    "person": [
+      {
+        "name": "Alice",
+        "knows": [
+          {
+            "name": "Bob",
+            "knows": [
+              {
+                "name": "Alice",
+                "knows": [
+                  {
+                    "name": "Bob"
+                  },
+                  {
+                    "name": "Carol"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Carol",
+            "knows": []
+          }
+        ]
+      },
+      {
+        "name": "Bob",
+        "knows": [
+          {
+            "name": "Alice",
+            "knows": [
+              {
+                "name": "Bob",
+                "knows": [
+                  {
+                    "name": "Alice"
+                  }
+                ]
+              },
+              {
+                "name": "Carol",
+                "knows": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Dana",
+        "knows": []
+      },
+      {
+        "name": "Carol",
+        "knows": []
+      }
+    ]
+  }
+}

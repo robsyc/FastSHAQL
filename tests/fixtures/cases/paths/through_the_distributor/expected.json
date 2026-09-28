@@ -1,0 +1,32 @@
+{
+  "data": {
+    "movie": [
+      {
+        "title": "Dune Drifter",
+        "distributorName": "Halcyon Pictures",
+        "originCountry": {
+          "name": "France"
+        }
+      },
+      {
+        "title": "Dune Drifter II",
+        "distributorName": "Kite Releasing",
+        "originCountry": {
+          "name": "Japan"
+        }
+      },
+      {
+        "title": "Dune Drifter III",
+        "distributorName": "Kite Releasing",
+        "originCountry": {
+          "name": "Japan"
+        }
+      },
+      {
+        "title": "Meridian",
+        "distributorName": null,
+        "originCountry": null
+      }
+    ]
+  }
+}

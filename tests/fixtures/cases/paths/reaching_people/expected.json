@@ -1,0 +1,47 @@
+{
+  "data": {
+    "movie": [
+      {
+        "title": "Dune Drifter",
+        "cast": [
+          {
+            "name": "Tomás Reyes",
+            "emails": [
+              "tomas@archive.example",
+              "tomas@post.example"
+            ],
+            "rightsParties": [
+              {
+                "name": "Tomás Reyes"
+              }
+            ]
+          },
+          {
+            "name": "Ade Okafor",
+            "emails": [],
+            "rightsParties": [
+              {
+                "name": "Ade Okafor"
+              },
+              {
+                "name": "Inés Carballo"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "title": "Dune Drifter II",
+        "cast": []
+      },
+      {
+        "title": "Dune Drifter III",
+        "cast": []
+      },
+      {
+        "title": "Meridian",
+        "cast": []
+      }
+    ]
+  }
+}

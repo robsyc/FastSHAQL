@@ -1,222 +1,162 @@
-@prefix sh:  <http://www.w3.org/ns/shacl#> .
-@prefix ex:  <http://example.org/> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix ex:      <http://example.org/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
 
-# --- Single parent ---
-ex:SingleBaseShape a sh:NodeShape ;
-    sh:codeIdentifier "SingleBase" ;
+# Museum programme: events assembling shared field bundles.
+
+ex:ProgrammeApi a graphql:Schema ;
+    rdfs:comment "Museum-programme domain: a season's events — concerts, community concerts, guided tours, workshops — assemble shared field bundles instead of repeating them. The timed bundle (holding day, venue, and a district shortcut through the venue) sits under two larger bundles — program item (host, delivery format) and ticketed (capacity) — and the events compose from those: a guided tour builds on program item alone; a workshop on program item and ticketed together, so the timed fields reach it by two inheritance paths and arrive once; a concert builds on timed directly, and a community concert on the concert, redeclaring the concert's tagline as a list. The bundles themselves publish no type of their own — they only donate fields — while people and venues are reachable through every event. The cases show node shape inheritance end to end: inherited scalars, relationships, and enums; filters reaching through parent bundles; two parents sharing one base; and a child's own field replacing an inherited one." ;
+    graphql:publicShape ex:ConcertShape, ex:CommunityConcertShape, ex:GuidedTourShape, ex:WorkshopShape ;
+    graphql:protectedShape ex:PersonShape, ex:VenueShape .
+
+ex:PersonShape a sh:NodeShape ;
+    sh:codeIdentifier "Person" ;
+    rdfs:comment "A person hosting programme items or performing at concerts." ;
+    sh:targetClass ex:Person ;
     sh:property [
-        sh:path ex:baseTag ;
+        sh:path ex:name ;
+        sh:description "The person's display name." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] .
 
-ex:SingleChildShape a sh:NodeShape ;
-    sh:codeIdentifier "SingleChild" ;
-    sh:node ex:SingleBaseShape ;
+ex:VenueShape a sh:NodeShape ;
+    sh:codeIdentifier "Venue" ;
+    rdfs:comment "A room or hall where programme events take place." ;
+    sh:targetClass ex:Venue ;
     sh:property [
-        sh:path ex:childTag ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-# --- Multi parent ---
-ex:ParentOneShape a sh:NodeShape ;
-    sh:codeIdentifier "ParentOne" ;
-    sh:property [
-        sh:path ex:oneTag ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:ParentTwoShape a sh:NodeShape ;
-    sh:codeIdentifier "ParentTwo" ;
-    sh:property [
-        sh:path ex:twoTag ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:MultiChildShape a sh:NodeShape ;
-    sh:codeIdentifier "MultiChild" ;
-    sh:node ex:ParentOneShape, ex:ParentTwoShape ;
-    sh:property [
-        sh:path ex:childOnly ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-# --- Transitive chain ---
-ex:TransRootShape a sh:NodeShape ;
-    sh:codeIdentifier "TransRoot" ;
-    sh:property [
-        sh:path ex:rootTag ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:TransMidShape a sh:NodeShape ;
-    sh:codeIdentifier "TransMid" ;
-    sh:node ex:TransRootShape ;
-    sh:property [
-        sh:path ex:midTag ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:TransLeafShape a sh:NodeShape ;
-    sh:codeIdentifier "TransLeaf" ;
-    sh:node ex:TransMidShape ;
-    sh:property [
-        sh:path ex:leafTag ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-# --- Shared-grandparent diamond ---
-ex:DiamondRootShape a sh:NodeShape ;
-    sh:codeIdentifier "DiamondRoot" ;
-    sh:property [
-        sh:path ex:rootTag ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:MidAShape a sh:NodeShape ;
-    sh:codeIdentifier "MidA" ;
-    sh:node ex:DiamondRootShape ;
-    sh:property [
-        sh:path ex:midATag ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:MidBShape a sh:NodeShape ;
-    sh:codeIdentifier "MidB" ;
-    sh:node ex:DiamondRootShape ;
-    sh:property [
-        sh:path ex:midBTag ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:DiamondChildShape a sh:NodeShape ;
-    sh:codeIdentifier "DiamondChild" ;
-    sh:node ex:MidAShape, ex:MidBShape ;
-    sh:property [
-        sh:path ex:diamondTag ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-# --- E2E: Manager inherits Employee ---
-ex:LocationShape a sh:NodeShape ;
-    sh:codeIdentifier "Location" ;
-    sh:targetClass ex:Location ;
-    sh:property [
-        sh:path ex:locationName ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:EmployeeShape a sh:NodeShape ;
-    sh:codeIdentifier "Employee" ;
-    sh:targetClass ex:Employee ;
-    sh:property [
-        sh:path ex:employeeId ;
+        sh:path ex:name ;
+        sh:description "The venue's name." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:workLocation ;
-        sh:class ex:Location ;
-        sh:minCount 0 ;
+        sh:path ex:district ;
+        sh:description "The district the venue sits in." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:TimedShape a sh:NodeShape ;
+    sh:codeIdentifier "Timed" ;
+    rdfs:comment "Fields every scheduled event shares: the day it runs and where." ;
+    sh:property [
+        sh:path ex:heldOn ;
+        sh:description "The day the event is held." ;
+        sh:datatype xsd:date ;
+        sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:employmentStatus ;
-        sh:datatype xsd:string ;
-        sh:in ("active" "inactive") ;
+        sh:path ex:venue ;
+        sh:description "The place the event is held." ;
+        sh:node ex:VenueShape ;
         sh:minCount 1 ;
         sh:maxCount 1
-    ] .
-
-ex:ManagerShape a sh:NodeShape ;
-    sh:codeIdentifier "Manager" ;
-    sh:targetClass ex:Manager ;
-    sh:node ex:EmployeeShape ;
+    ] ;
     sh:property [
-        sh:path ex:managerName ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-# --- Inherited enum ---
-ex:StatusBaseShape a sh:NodeShape ;
-    sh:codeIdentifier "StatusBase" ;
-    sh:property [
-        sh:path ex:status ;
-        sh:datatype xsd:string ;
-        sh:in ("active" "inactive") ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:StatusChildShape a sh:NodeShape ;
-    sh:codeIdentifier "StatusChild" ;
-    sh:node ex:StatusBaseShape .
-
-# --- Inherited composite path (sequence) ---
-ex:SeqBaseShape a sh:NodeShape ;
-    sh:codeIdentifier "SeqBase" ;
-    sh:property [
-        sh:codeIdentifier "employeeName" ;
-        sh:path ( ex:employer ex:name ) ;
+        sh:codeIdentifier "venueDistrict" ;
+        sh:path ( ex:venue ex:district ) ;
+        sh:description "The venue's district, reached straight through the venue." ;
         sh:datatype xsd:string ;
         sh:minCount 0 ;
         sh:maxCount 1
     ] .
 
-ex:SeqChildShape a sh:NodeShape ;
-    sh:codeIdentifier "SeqChild" ;
-    sh:node ex:SeqBaseShape .
-
-# --- Override: own field beats inherited (ADR-0005) ---
-# The override is a cardinality-lane change (scalar -> list): a datatype
-# override would make the data unsatisfiable under SHACL's AND-semantics for
-# sh:node (no literal is both xsd:integer and xsd:string) — datatype overrides
-# are unit-pinned (test_child_own_field_overrides_inherited).
-ex:BadgeHolderShape a sh:NodeShape ;
-    sh:codeIdentifier "BadgeHolder" ;
-    sh:targetClass ex:BadgeHolder ;
+ex:ProgramItemShape a sh:NodeShape ;
+    sh:codeIdentifier "ProgramItem" ;
+    rdfs:comment "A hosted item of the programme: everything timed, plus a host and a delivery format." ;
+    sh:node ex:TimedShape ;
     sh:property [
-        sh:path ex:badgeLevel ;
+        sh:path ex:host ;
+        sh:description "The person presenting the item." ;
+        sh:node ex:PersonShape ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:format ;
+        sh:description "How the item is delivered — on site, streamed, or both." ;
+        sh:datatype xsd:string ;
+        sh:in ( "in_person" "online" "hybrid" ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:TicketedShape a sh:NodeShape ;
+    sh:codeIdentifier "Ticketed" ;
+    rdfs:comment "Fields for anything sold by seat: everything timed, plus a capacity." ;
+    sh:node ex:TimedShape ;
+    sh:property [
+        sh:path ex:capacity ;
+        sh:description "How many attendees the event fits." ;
         sh:datatype xsd:integer ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] .
 
-ex:ManagerBadgeShape a sh:NodeShape ;
-    sh:codeIdentifier "ManagerBadge" ;
-    sh:targetClass ex:ManagerBadge ;
-    sh:node ex:BadgeHolderShape ;
+ex:GuidedTourShape a sh:NodeShape ;
+    sh:codeIdentifier "GuidedTour" ;
+    rdfs:comment "A guided tour through the museum's wings." ;
+    sh:targetClass ex:GuidedTour ;
+    sh:node ex:ProgramItemShape ;
     sh:property [
-        sh:path ex:badgeLevel ;
-        sh:datatype xsd:integer ;
+        sh:path ex:theme ;
+        sh:description "What the tour covers." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:WorkshopShape a sh:NodeShape ;
+    sh:codeIdentifier "Workshop" ;
+    rdfs:comment "A hands-on workshop: a hosted program item that is also ticketed." ;
+    sh:intent "Two parent bundles, one shared base: program item and ticketed both build on timed, so the holding day, the venue, and the district shortcut reach the workshop by two inheritance paths — the same property shapes, kept once." ;
+    sh:targetClass ex:Workshop ;
+    sh:node ex:ProgramItemShape, ex:TicketedShape ;
+    sh:property [
+        sh:path ex:skillLevel ;
+        sh:description "The level the workshop aims at." ;
+        sh:datatype xsd:string ;
+        sh:in ( "beginner" "intermediate" "advanced" ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:ConcertShape a sh:NodeShape ;
+    sh:codeIdentifier "Concert" ;
+    rdfs:comment "An evening concert with a single performer." ;
+    sh:targetClass ex:Concert ;
+    sh:node ex:TimedShape ;
+    sh:property [
+        sh:path ex:performer ;
+        sh:description "Who performs at the concert." ;
+        sh:node ex:PersonShape ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:tagline ;
+        sh:description "A short promotional line, when the marketing team has written one." ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1
+    ] .
+
+ex:CommunityConcertShape a sh:NodeShape ;
+    sh:codeIdentifier "CommunityConcert" ;
+    rdfs:comment "A concert put on with the neighbourhood, collecting tagline proposals." ;
+    sh:intent "The tagline redeclaration replaces the concert's wholesale — same field name, a list instead of a single string." ,
+        "REVIEW: the data-integrity gate enforces the parent's maxCount 1 on child instances too (validation keeps both declarations), so today's data carries exactly one proposal — the golden pins a one-element list though the field admits several." ;
+    sh:targetClass ex:CommunityConcert ;
+    sh:node ex:ConcertShape ;
+    sh:property [
+        sh:path ex:tagline ;
+        sh:description "The neighbourhood's tagline proposals." ;
+        sh:datatype xsd:string ;
         sh:minCount 1
     ] .

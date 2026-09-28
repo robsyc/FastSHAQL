@@ -1,72 +1,111 @@
-@prefix sh:  <http://www.w3.org/ns/shacl#> .
-@prefix ex:  <http://example.org/> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix ex:      <http://example.org/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
 
-ex:CityShape a sh:NodeShape ;
-    sh:codeIdentifier "City" ;
-    sh:targetClass ex:City ;
-    sh:property [
-        sh:path ex:name ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
+# People directory: employment chains, management, and acquaintances carry
+# every traversal.
 
-ex:CompanyShape a sh:NodeShape ;
-    sh:codeIdentifier "Company" ;
-    sh:targetClass ex:Company ;
-    sh:property [
-        sh:path ex:name ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] ;
-    sh:property [
-        sh:path ex:locatedIn ;
-        sh:class ex:City ;
-        sh:minCount 0 ;
-        sh:maxCount 1
-    ] .
-
-ex:AddressShape a sh:NodeShape ;
-    sh:codeIdentifier "Address" ;
-    sh:targetClass ex:Address ;
-    sh:property [
-        sh:path ex:street ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
+ex:DirectoryApi a graphql:Schema ;
+    rdfs:comment "People-directory domain: people and companies are queried at the root; cities, addresses, and departments are reached only through them. Three links between people give traversal its range — manager climbs the management chain one level at a time (a chain that ends), reports looks back down through the inverse of manager (a tree), and knows wanders among acquaintances (a cycle that never ends). The cases follow the links: a directory card nests employer, address, and department in one selection; the management chain recurses upward into null; the reports tree recurses downward into empty lists; and the acquaintance cycle is walked three levels deep without looping the query. Carol freelances — no employer, no address, no department, no manager, no acquaintances — so every optional link on her resolves to its empty side." ;
+    graphql:publicShape ex:PersonShape, ex:CompanyShape ;
+    graphql:protectedShape ex:CityShape, ex:AddressShape .
 
 ex:PersonShape a sh:NodeShape ;
     sh:codeIdentifier "Person" ;
+    rdfs:comment "A person in the directory." ;
+    sh:intent "Three links connect people to people: knows runs among acquaintances and cycles (Alice reappears inside her own acquaintance tree); manager climbs the management chain and ends in null at the top; reports is the inverse of manager — the same triples read backwards — opening a tree below each person. Depth is bounded only by how far a query nests." ,
+        "REVIEW: this shapes graph also serves as parse/translation substrate for the unit and integration tiers — field names and cardinalities here are pinned by their assertions, so renaming or retuning ripples into those tests." ;
     sh:targetClass ex:Person ;
     sh:property [
         sh:path ex:name ;
+        sh:description "The person's display name." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
         sh:path ex:employer ;
+        sh:description "The company the person works for." ;
         sh:class ex:Company ;
         sh:minCount 0 ;
         sh:maxCount 1
     ] ;
     sh:property [
+        sh:path ex:knows ;
+        sh:description "The person's acquaintances." ;
+        sh:class ex:Person ;
+        sh:minCount 0
+    ] ;
+    sh:property [
+        sh:path ex:manager ;
+        sh:description "The person this one reports to — one level up the management chain." ;
+        sh:class ex:Person ;
+        sh:minCount 0 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:codeIdentifier "reports" ;
+        sh:path [ sh:inversePath ex:manager ] ;
+        sh:description "The people reporting to this one — the manager link read backwards." ;
+        sh:class ex:Person ;
+        sh:minCount 0
+    ] ;
+    sh:property [
         sh:path ex:address ;
+        sh:description "The person's street address." ;
         sh:node ex:AddressShape ;
         sh:minCount 0 ;
         sh:maxCount 1
     ] ;
     sh:property [
         sh:path ex:department ;
+        sh:description "The person's department — a class with no shape of its own, so the link yields a bare IRI." ;
         sh:class ex:Department ;
         sh:minCount 0 ;
         sh:maxCount 1
+    ] .
+
+ex:CompanyShape a sh:NodeShape ;
+    sh:codeIdentifier "Company" ;
+    rdfs:comment "A company employing people in the directory." ;
+    sh:targetClass ex:Company ;
+    sh:property [
+        sh:path ex:name ;
+        sh:description "The company's name." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:knows ;
-        sh:class ex:Person ;
-        sh:minCount 0
+        sh:path ex:locatedIn ;
+        sh:description "The city the company is based in — exactly one." ;
+        sh:class ex:City ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:CityShape a sh:NodeShape ;
+    sh:codeIdentifier "City" ;
+    rdfs:comment "A city a company is based in." ;
+    sh:targetClass ex:City ;
+    sh:property [
+        sh:path ex:name ;
+        sh:description "The city's name." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:AddressShape a sh:NodeShape ;
+    sh:codeIdentifier "Address" ;
+    rdfs:comment "A street address." ;
+    sh:targetClass ex:Address ;
+    sh:property [
+        sh:path ex:street ;
+        sh:description "The street line of the address." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
     ] .

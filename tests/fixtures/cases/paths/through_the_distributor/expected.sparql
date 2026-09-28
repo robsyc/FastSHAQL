@@ -1,0 +1,13 @@
+SELECT ?iri ?title ?distributorName ?originCountry_iri ?originCountry_name
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Movie> .
+  ?iri <http://example.org/title> ?title .
+  OPTIONAL {
+    ?iri <http://example.org/distributor>/<http://example.org/name> ?distributorName .
+  }
+  OPTIONAL {
+    ?iri <http://example.org/distributor>/<http://example.org/country> ?originCountry_iri .
+    ?originCountry_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Country> .
+    ?originCountry_iri <http://example.org/name> ?originCountry_name .
+  }
+}

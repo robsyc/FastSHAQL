@@ -2,7 +2,10 @@
   "data": {
     "dog": [
       {
-        "name": "Fido"
+        "name": "Bingo"
+      },
+      {
+        "name": "Mochi"
       }
     ]
   }

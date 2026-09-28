@@ -1,12 +1,13 @@
 {
   "data": {
-    "person": [
+    "artwork": [
       {
-        "name": "Alice",
-        "employer": {
-          "name": "Acme",
-          "locatedIn": {
-            "name": "Amsterdam"
+        "title": "Water Lilies",
+        "artist": {
+          "name": "Claude Monet",
+          "representedBy": {
+            "name": "Galerie Montmartre",
+            "city": "Paris"
           }
         }
       }

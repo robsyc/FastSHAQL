@@ -1,20 +1,25 @@
 {
   "data": {
-    "customer": [
+    "album": [
       {
-        "name": "A",
-        "address": {
-          "street": "Dam 1"
-        },
+        "title": "Blue Portal",
+        "featured": [
+          {
+            "name": "Nina Vale"
+          },
+          {
+            "name": "Cleo Marsh"
+          }
+        ],
         "note": {
-          "text": "first"
+          "text": "Recorded live over two November nights."
         }
       },
       {
-        "name": "B",
-        "address": null,
+        "title": "Night Ferry",
+        "featured": [],
         "note": {
-          "text": "second"
+          "text": "A single take with the studio window open."
         }
       }
     ]

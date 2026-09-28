@@ -1,0 +1,19 @@
+"""Reaching the people on screen. Every mailbox a performer keeps arrives in
+one list, the work address and the personal one side by side — Tomás keeps
+both, Ade keeps none and answers an empty list. Whose sign-off a licence needs
+is the performer plus their agent and nobody further: Ade's list names Ade and
+Inés, while Inés's own agent Luca, one hop too far, stays out of it.
+In the SPARQL: the mailboxes read as ex:workEmail|ex:personalEmail; the
+licence list as ex:agent? — zero hops (the person) or one (the agent)."""
+query ReachingPeople {
+  movie {
+    title
+    cast {
+      name
+      emails
+      rightsParties {
+        name
+      }
+    }
+  }
+}

@@ -1,11 +1,15 @@
-# No preference: the unfiltered baseline. Scalar fields with multiple
-# values are order-dependent under no chain, so this stop pins the
-# deterministic fields (list lane, PLAIN control) and the no-machinery
-# SPARQL shape.
-query LanguageNoChain {
-  person {
-    iri
-    altLabel
-    plain
+"""No language preference: every value comes back exactly as stored. The
+Night Watch lists all three of its aliases — English, English, and Dutch —
+the French loan is as visible as any English work, and the plain registry
+texts arrive beside the tagged ones. Nothing resolves and nothing drops.
+In the SPARQL: no language machinery at all — no langMatches, no
+COALESCE."""
+query MuseumWithoutLanguagePreference {
+  artwork {
+    title
+    caption
+    altTitle
+    inventoryNumber
+    teaser
   }
 }

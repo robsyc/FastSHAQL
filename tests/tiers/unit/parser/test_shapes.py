@@ -63,29 +63,32 @@ def test_kind_absent_min_count() -> None:
 
 def test_parse_optional_scalar_when_min_count_absent(cardinality_shapes_graph) -> None:
     registry = parse_shapes(cardinality_shapes_graph)
-    shape = registry.by_type_name["OptionalScalarThing"]
-    note = shape.property_shapes["note"]
-    assert note.min_count is None
-    assert note.max_count == 1
-    assert note.kind == FieldKind.OPTIONAL_SCALAR
+    tea = registry.by_type_name["Tea"]
+    tagline = tea.property_shapes["tagline"]
+    assert tagline.min_count is None
+    assert tagline.max_count == 1
+    assert tagline.kind == FieldKind.OPTIONAL_SCALAR
 
 
 def test_parse_optional_list_when_min_and_max_absent(cardinality_shapes_graph) -> None:
     registry = parse_shapes(cardinality_shapes_graph)
-    shape = registry.by_type_name["OptionalListThing"]
-    tag = shape.property_shapes["tag"]
-    assert tag.min_count is None
-    assert tag.max_count is None
-    assert tag.kind == FieldKind.OPTIONAL_LIST
+    tea = registry.by_type_name["Tea"]
+    flavor = tea.property_shapes["flavor"]
+    assert flavor.min_count is None
+    assert flavor.max_count is None
+    assert flavor.kind == FieldKind.OPTIONAL_LIST
 
 
-def test_parse_cardinality_thing_shape_kinds(cardinality_shapes_graph) -> None:
+def test_parse_cardinality_tea_shape_kinds(cardinality_shapes_graph) -> None:
     registry = parse_shapes(cardinality_shapes_graph)
-    thing = registry.by_type_name["Thing"]
-    assert thing.property_shapes["label"].kind == FieldKind.REQUIRED_SCALAR
-    assert thing.property_shapes["subtitle"].kind == FieldKind.OPTIONAL_SCALAR
-    assert thing.property_shapes["tag"].kind == FieldKind.REQUIRED_LIST
-    assert thing.property_shapes["altLabel"].kind == FieldKind.OPTIONAL_LIST
+    tea = registry.by_type_name["Tea"]
+    assert tea.property_shapes["name"].kind == FieldKind.REQUIRED_SCALAR
+    assert tea.property_shapes["tagline"].kind == FieldKind.OPTIONAL_SCALAR
+    assert tea.property_shapes["ingredients"].kind == FieldKind.REQUIRED_LIST
+    assert tea.property_shapes["flavor"].kind == FieldKind.OPTIONAL_LIST
+    assert tea.property_shapes["awards"].kind == FieldKind.OPTIONAL_LIST
+    # A defaulted field is non-null at any minCount — the COALESCE always binds.
+    assert tea.property_shapes["caffeine"].kind == FieldKind.REQUIRED_SCALAR
 
 
 # --- Registry indexes ---

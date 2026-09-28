@@ -1,6 +1,15 @@
+"""A read scope replaces the store's default graph rather than adding to it:
+the maritime museum's items and their thesaurus terms answer as in a merged
+read, but the legacy backlog — held in the store's unnamed default graph —
+has vanished. An unnamed graph has no IRI to list in a FROM clause, so once
+any scope is set it is unreachable.
+In the SPARQL: two FROM clauses; the unnamed default graph cannot appear
+among them."""
 query FromReplacesDefault {
-  thing {
-    iri
-    label
+  item {
+    title
+    subject {
+      name
+    }
   }
 }

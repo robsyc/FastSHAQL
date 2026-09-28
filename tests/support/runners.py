@@ -90,11 +90,22 @@ async def run_case(case_set: CaseSource, case: str, data: Graph) -> None:
     ctx = ResolverContext(store=store, query_context=case_files.query_context)
     result = await graphql(schema, case_files.query, context_value=ctx)
 
+    # Case prose rides along on golden mismatches — the description says what
+    # the case proves (fixture metadata contract, ADR-0021).
+    note = (
+        f" [{case_set.name}/{case}: {case_files.description}]"
+        if case_files.description
+        else ""
+    )
     assert result.errors is None, result.errors
     assert case_files.expected_json is not None
-    assert canonicalize(result.formatted) == canonicalize(case_files.expected_json)
+    assert canonicalize(result.formatted) == canonicalize(case_files.expected_json), (
+        f"JSON golden mismatch{note}"
+    )
     if case_files.expected_sparql is not None:
-        assert store.queries[0] == case_files.expected_sparql
+        assert store.queries[0] == case_files.expected_sparql, (
+            f"SPARQL golden mismatch{note}"
+        )
         assert len(store.queries) == 1
 
 

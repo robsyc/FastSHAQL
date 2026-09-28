@@ -1,1 +1,13 @@
-{ unionVariant { iri label } }
+"""Two branches of the taxonomy at once: every record that is either a
+Substitution or a Deletion. The pending record — asserted under both terms
+while its reclassification finishes — appears once, not twice: a target is
+a set of entities, not a bag of matches.
+In the SPARQL: both classes arrive as a VALUES guard on one shared typing
+pattern."""
+query SubstitutionsAndDeletions {
+  unionVariant {
+    iri
+    label
+    reviewScore
+  }
+}

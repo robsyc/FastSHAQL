@@ -1,0 +1,20 @@
+SELECT ?iri ?title ?director_iri ?director_name ?director_filmography_iri ?director_filmography_title ?alsoByDirector_iri ?alsoByDirector_title
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Movie> .
+  ?iri <http://example.org/title> ?title .
+  OPTIONAL {
+    ?iri <http://example.org/director> ?director_iri .
+    ?director_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+    ?director_iri <http://example.org/name> ?director_name .
+    OPTIONAL {
+      ?director_iri ^<http://example.org/director> ?director_filmography_iri .
+      ?director_filmography_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Movie> .
+      ?director_filmography_iri <http://example.org/title> ?director_filmography_title .
+    }
+  }
+  OPTIONAL {
+    ?iri <http://example.org/director>/^<http://example.org/director> ?alsoByDirector_iri .
+    ?alsoByDirector_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Movie> .
+    ?alsoByDirector_iri <http://example.org/title> ?alsoByDirector_title .
+  }
+}

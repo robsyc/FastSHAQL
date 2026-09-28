@@ -1,0 +1,47 @@
+{
+  "data": {
+    "tea": [
+      {
+        "name": "Earl Grey Bravo",
+        "tagline": "Bergamot-forward, brisk enough for the morning rush",
+        "ingredients": [
+          "Assam black tea",
+          "Ceylon black tea",
+          "Bergamot peel"
+        ],
+        "flavor": [
+          "citrus",
+          "floral"
+        ],
+        "caffeine": "high",
+        "awards": [
+          "Great Taste 2024"
+        ]
+      },
+      {
+        "name": "Snow Sprout",
+        "tagline": null,
+        "ingredients": [
+          "Green tea buds"
+        ],
+        "flavor": [],
+        "caffeine": "low",
+        "awards": []
+      },
+      {
+        "name": "House Black",
+        "tagline": "The everyday pot behind the counter",
+        "ingredients": [
+          "Kenyan black tea",
+          "Yunnan black tea"
+        ],
+        "flavor": [],
+        "caffeine": "medium",
+        "awards": [
+          "County Fair 2023",
+          "Growers' Cup 2022"
+        ]
+      }
+    ]
+  }
+}

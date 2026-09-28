@@ -1,15 +1,17 @@
-query LanguagePreferenceChain {
-  person {
-    iri
-    name
-    bio
-    altLabel
-    note
-    plain
-    summary
-    employer {
-      iri
-      label
+"""A narrow range serves only its own subtags: en-US asks for American
+English, and the bare-English works no longer qualify — a range points
+downward (en served en-US above; en-US never serves plain en). One
+artwork survives: the American-labelled tour of the Sunflowers — and it
+shows no artist, since Vincent's Dutch name lies outside the range too."""
+query MuseumAmericanEnglishOnly {
+  artwork {
+    title
+    caption
+    altTitle
+    inventoryNumber
+    teaser
+    artist {
+      name
     }
   }
 }

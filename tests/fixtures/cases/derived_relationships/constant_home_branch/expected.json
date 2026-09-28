@@ -1,0 +1,30 @@
+{
+  "data": {
+    "member": [
+      {
+        "iri": "http://example.org/library/m1",
+        "name": "Alice",
+        "homeBranch": {
+          "iri": "http://example.org/library/central",
+          "name": "Central"
+        }
+      },
+      {
+        "iri": "http://example.org/library/m2",
+        "name": "Bob",
+        "homeBranch": {
+          "iri": "http://example.org/library/central",
+          "name": "Central"
+        }
+      },
+      {
+        "iri": "http://example.org/library/m3",
+        "name": "Cara",
+        "homeBranch": {
+          "iri": "http://example.org/library/central",
+          "name": "Central"
+        }
+      }
+    ]
+  }
+}

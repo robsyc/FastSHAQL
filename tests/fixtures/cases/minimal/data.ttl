@@ -1,5 +1,7 @@
 @prefix ex: <http://example.org/> .
 
+# Alpha and Beta — two things, one required label each.
+
 ex:thing-1 a ex:Thing ;
     ex:label "Alpha" .
 

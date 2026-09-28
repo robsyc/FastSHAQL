@@ -1,0 +1,9 @@
+"""One field can carry several operators — all must hold at once. Only The
+Starry Night both begins with "The" and mentions "Night": the Rhône scene
+starts with "Starry", the Night Watch and the Night Study with "Night".
+In the SPARQL: the two tests join with && inside one FILTER."""
+query StringOps {
+  artwork(where: { title: { startsWith: "The", contains: "Night" } }) {
+    title
+  }
+}

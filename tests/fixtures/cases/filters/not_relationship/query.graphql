@@ -1,5 +1,16 @@
+"""Negation over a relationship: keep the works whose artist is not
+represented in Amsterdam. Van Gogh's two works fail; Monet's and
+Rembrandt's pass; and Kahlo — represented by no gallery at all — satisfies
+the negation, since no Amsterdam gallery matches her. The unattributed
+Night Study is excluded outright: a filtered relationship must exist before
+the negation can run, so NOT never returns works lacking the link.
+REVIEW: NOT over a relationship drops works without the link even though
+the intuitive reading keeps them — documented behavior, but an explicit
+existence test would say it without the surprise."""
 query NotRelationship {
-  person(where: { NOT: { employer: { name: { eq: "Acme" } } } }) {
-    name
+  artwork(
+    where: { NOT: { artist: { representedBy: { city: { eq: "Amsterdam" } } } } }
+  ) {
+    title
   }
 }

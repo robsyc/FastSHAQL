@@ -1,6 +1,15 @@
+"""Listing the shared thesaurus beside the city archive's graph reunites each
+item with its subject term: the listed graphs merge into one queried default
+graph, so the link crosses from the archive's graph into the thesaurus. The
+archive keeps a local copy of the Shipwrecks term, yet the salvage ledger
+lists the term once — a merged default graph is one set of triples, not a
+pile of graphs.
+In the SPARQL: one FROM clause per listed graph, thesaurus first."""
 query MergeMultiple {
-  thing {
-    iri
-    label
+  item {
+    title
+    subject {
+      name
+    }
   }
 }

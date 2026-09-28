@@ -1,0 +1,10 @@
+SELECT ?iri ?title ?basedOn_iri ?basedOn_title
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Movie> .
+  ?iri <http://example.org/title> ?title .
+  OPTIONAL {
+    ?iri <http://example.org/adaptedFrom>|<http://example.org/inspiredBy> ?basedOn_iri .
+    ?basedOn_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Work> .
+    ?basedOn_iri <http://example.org/title> ?basedOn_title .
+  }
+}

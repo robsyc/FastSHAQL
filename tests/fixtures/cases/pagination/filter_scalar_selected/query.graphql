@@ -1,0 +1,10 @@
+"""A filter on a displayed field decides which books can be on the page at
+all: with the title held to Orlando, only that one book exists as far as the
+page is concerned, so the limit has nothing to trim. In the SPARQL: the
+title pattern and its comparison sit inside the inner selection that the
+limit truncates, and the title is fetched again outside it for display."""
+query FilterOnDisplayedField {
+  book(where: { title: { eq: "Orlando: A Biography" } }, limit: 1) {
+    title
+  }
+}

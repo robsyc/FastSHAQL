@@ -1,39 +1,46 @@
-@prefix ex: <http://example.org/> .
+@prefix ex:   <http://example.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-ex:cust-a a ex:Customer ; ex:name "A" ;
-    ex:address ex:addr-1 ;
-    ex:note ex:note-1 ;
-    ex:billing ex:bill-1 ;
-    ex:shipping ex:ship-1 ;
-    ex:registered ex:reg-1 .
+# The label's catalog. Every asserted link conforms to its shapes; the
+# house trio rides only the derived constant lane, where the binding
+# typing still reaches it.
 
-ex:cust-b a ex:Customer ; ex:name "B" ;
-    ex:address ex:addr-2 ;
-    ex:note ex:note-2 ;
-    ex:shipping ex:ship-2 .
+# Credited people. cleo-1 reaches the featured list through her
+# superclass; horn-1 is untyped — the borrowed Artist typing drops him.
+ex:nina-1 a ex:Artist ;
+    ex:name "Nina Vale" .
 
-# addr-1 carries the target class — survives auto-typing; addr-2 is
-# untyped — the typing path drops it.
-ex:addr-1 a ex:PostalAddress ; ex:street "Dam 1" .
-ex:addr-2 ex:street "Dam 2" .
+ex:cleo-1 a ex:Vocalist ;
+    ex:name "Cleo Marsh" .
 
-# Class-less target: no typing is emitted — the untyped note survives.
-ex:note-1 ex:text "first" .
-ex:note-2 ex:text "second" .
+ex:horn-1 ex:name "Guest Horn" .
 
-# Explicit classes replace the implicit PostalAddress typing: bill-1 is
-# VerifiedAddress only — surviving the link proves replace (under implicit
-# conjoining it would drop). bill-2 is PostalAddress only — linked through
-# the sh:values constant lane below (invisible to pySHACL), where the
-# VerifiedAddress typing drops it.
-ex:bill-1 a ex:VerifiedAddress ; ex:street "Invoice Way 1" .
-ex:bill-2 a ex:PostalAddress ; ex:street "Invoice Way 2" .
+# ray-1 carries songwriter credit only — no Artist type — and still
+# resolves as a composer: declared classes replace the borrowed typing.
+# ivy-1 carries both credits the producer link demands.
+ex:ray-1 a ex:Songwriter ;
+    ex:name "Ray Okuda" .
 
-# Declared class equals the target's class — one path either way; both
-# shipping values are PostalAddress-typed and survive.
-ex:ship-1 a ex:PostalAddress ; ex:street "Depot 1" .
-ex:ship-2 a ex:PostalAddress ; ex:street "Depot 2" .
+ex:ivy-1 a ex:Songwriter , ex:Producer ;
+    ex:name "Ivy Stone" .
 
-# Conjunction: both declared classes bind (one path each); reg-1 carries
-# both and survives.
-ex:reg-1 a ex:PrimeAddress , ex:VerifiedAddress ; ex:street "Registry Way 1" .
+ex:album-1 a ex:Album ;
+    ex:title "Blue Portal" ;
+    ex:featured ex:nina-1 , ex:cleo-1 ;
+    ex:composer ex:ray-1 ;
+    ex:producer ex:ivy-1 ;
+    ex:note ex:note-1 .
+
+# No composer or producer on record — both resolve to null — and the
+# only featured link points at the untyped guest, so the list is empty.
+ex:album-2 a ex:Album ;
+    ex:title "Night Ferry" ;
+    ex:featured ex:horn-1 ;
+    ex:note ex:note-2 .
+
+# Sleeve notes: never typed in the data — the class-less note link
+# takes them as they are.
+ex:note-1 ex:text "Recorded live over two November nights." .
+ex:note-2 ex:text "A single take with the studio window open." .
+
+ex:Vocalist rdfs:subClassOf ex:Artist .

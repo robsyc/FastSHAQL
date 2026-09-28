@@ -1,0 +1,11 @@
+"""The twice-listed "verified" code still received its own member name —
+VERIFIED_2 — yet both names lower to the same literal, so filtering by
+either one returns the same verified readings: two names, one value.
+In the SPARQL: the filter compares against the plain literal "verified",
+byte-identical to what a VERIFIED filter would emit."""
+query EnumDuplicateNameFilter {
+  reading(where: { status: { eq: VERIFIED_2 } }) {
+    iri
+    status
+  }
+}

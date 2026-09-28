@@ -1,0 +1,14 @@
+SELECT ?iri ?title
+WHERE {
+  {
+    SELECT DISTINCT ?iri
+    WHERE {
+      ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Book> .
+      ?iri <http://example.org/subject> ?subject .
+      FILTER(?subject = "Science fiction")
+    }
+    ORDER BY ?iri
+    LIMIT 2
+  }
+  ?iri <http://example.org/title> ?title .
+}

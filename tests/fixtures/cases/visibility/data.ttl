@@ -1,12 +1,46 @@
 @prefix ex: <http://example.org/> .
 
-ex:home a ex:Address ; ex:street "Main St" .
+# The daycare's records. Everything conforms to its shape, including the
+# internal types no query of the published view can reach.
 
-ex:audit1 a ex:AuditLog ; ex:action "login" .
+# A fully populated customer — address on file, one account event, a van on
+# her route.
+ex:maria a ex:Person ;
+    ex:name "Maria" ;
+    ex:address ex:elm-12 ;
+    ex:audit ex:visit-8412 ;
+    ex:shuttle ex:van-north .
 
-ex:fido a ex:Dog ; ex:name "Fido" .
+# A new customer — every optional link resolves to null.
+ex:jules a ex:Person ;
+    ex:name "Jules" .
 
-ex:alice a ex:Person ;
-    ex:name "Alice" ;
-    ex:address ex:home ;
-    ex:audit ex:audit1 .
+ex:elm-12 a ex:Address ;
+    ex:street "12 Elm Street" .
+
+ex:visit-8412 a ex:AuditLog ;
+    ex:action "Drop-off, group play, pick-up" .
+
+# The pack — published at the root by class, through the DaycareMember
+# hierarchy declared in the shapes graph.
+ex:bingo a ex:Dog ;
+    ex:name "Bingo" .
+
+ex:mochi a ex:Dog ;
+    ex:name "Mochi" .
+
+# The resident cat: in the data, invisible to every query this view allows.
+ex:whiskers a ex:Cat ;
+    ex:name "Whiskers" .
+
+# The fleet. Van South serves no customer yet — protected and unlinked, no
+# query can reach it at all.
+ex:van-north a ex:Car ;
+    ex:label "Van North" .
+
+ex:van-south a ex:Car ;
+    ex:label "Van South" .
+
+# The staff door code — private, no matter the early public listing.
+ex:back-door a ex:Secret ;
+    ex:code "4712" .

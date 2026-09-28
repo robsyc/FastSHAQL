@@ -1,8 +1,24 @@
 {
   "data": {
-    "person": [
-      { "name": "Carol" },
-      { "name": "Dave" }
+    "book": [
+      {
+        "title": "The Left Hand of Darkness"
+      },
+      {
+        "title": "Middlemarch"
+      },
+      {
+        "title": "Mort"
+      },
+      {
+        "title": "Northanger Abbey"
+      },
+      {
+        "title": "Orlando: A Biography"
+      },
+      {
+        "title": "The Time Machine"
+      }
     ]
   }
 }

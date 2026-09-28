@@ -1,9 +1,13 @@
 {
   "data": {
-    "thing": [
+    "item": [
       {
-        "iri": "http://example.org/thing-1",
-        "label": "Alpha"
+        "title": "Chart of the Merestone shoals",
+        "subject": null
+      },
+      {
+        "title": "Lightkeeper's logbook, 1902",
+        "subject": null
       }
     ]
   }

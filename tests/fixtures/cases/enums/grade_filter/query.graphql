@@ -1,0 +1,11 @@
+"""Filtering by a typed-literal member lowers to a typed literal: the name
+_2 recovers the integer 2 exactly as it sits in the data.
+In the SPARQL: the comparison carries the ^^xsd:integer datatype — the
+grade's type survives the round trip through the enum name."""
+query EnumGradeFilter {
+  reading(where: { grade: { eq: _2 } }) {
+    iri
+    parameter
+    grade
+  }
+}

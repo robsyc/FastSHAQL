@@ -1,11 +1,14 @@
 @prefix gx: <http://example.org/genomics/> .
 
+# A curator's stored summary sits at the summary path — the derivation never
+# reads it, serving the transcript's description instead.
 gx:g1 a gx:Gene ;
     gx:symbol "BRCA1" ;
     gx:transcribes gx:t1 ;
     gx:support gx:s1 ;
     gx:assayVersion "v2" ;
-    gx:displayName "Breast cancer 1"@en .
+    gx:displayName "Breast cancer 1"@en ;
+    gx:summary "Curated BRCA1 summary"@en .
 
 gx:g2 a gx:Gene ;
     gx:symbol "TP53" ;

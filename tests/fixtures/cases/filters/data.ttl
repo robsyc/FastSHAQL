@@ -1,36 +1,80 @@
 @prefix ex:  <http://example.org/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-ex:amsterdam a ex:City ;
-    ex:name "Amsterdam" ;
-    ex:population 900000 .
+# The partnership's galleries — Amsterdam, Paris, New York.
+ex:noorderlicht a ex:Gallery ;
+    ex:name "Noorderlicht" ;
+    ex:city "Amsterdam" .
 
-ex:berlin a ex:City ;
-    ex:name "Berlin" ;
-    ex:population 3700000 .
+ex:montmartre a ex:Gallery ;
+    ex:name "Galerie Montmartre" ;
+    ex:city "Paris" .
 
-ex:acme a ex:Company ;
-    ex:name "Acme" ;
-    ex:locatedIn ex:amsterdam .
+ex:hudson a ex:Gallery ;
+    ex:name "Hudson Gallery" ;
+    ex:city "New York" .
 
-ex:globex a ex:Company ;
-    ex:name "Globex" ;
-    ex:locatedIn ex:berlin .
+# The painters; Kahlo has no representing gallery — absent, not Paris.
+ex:van-gogh a ex:Artist ;
+    ex:name "Vincent van Gogh" ;
+    ex:representedBy ex:noorderlicht .
 
-ex:alice a ex:Person ;
-    ex:name "Alice" ;
-    ex:age 30 ;
-    ex:active true ;
-    ex:employer ex:acme ;
-    ex:bio "Hello"@en , "Bonjour"@fr .
+ex:monet a ex:Artist ;
+    ex:name "Claude Monet" ;
+    ex:representedBy ex:montmartre .
 
-ex:bob a ex:Person ;
-    ex:name "Bob" ;
-    ex:age 25 ;
-    ex:active false ;
-    ex:employer ex:globex .
+ex:rembrandt a ex:Artist ;
+    ex:name "Rembrandt van Rijn" ;
+    ex:representedBy ex:hudson .
 
-ex:carol a ex:Person ;
-    ex:name "Carol" ;
-    ex:age 35 ;
-    ex:active true .
+ex:kahlo a ex:Artist ;
+    ex:name "Frida Kahlo" .
+
+ex:starry-night a ex:Artwork ;
+    ex:title "The Starry Night" ;
+    ex:year 1889 ;
+    ex:acquired "1941-06-03"^^xsd:date ;
+    ex:onLoan false ;
+    ex:caption "A swirling night sky over a sleeping town."@en ,
+        "Painted from the asylum at Saint-Rémy."@en ,
+        "Een wervelende nachthemel boven een slapende stad."@nl ;
+    ex:artist ex:van-gogh .
+
+ex:starry-rhone a ex:Artwork ;
+    ex:title "Starry Night over the Rhône" ;
+    ex:year 1888 ;
+    ex:acquired "1948-10-15"^^xsd:date ;
+    ex:onLoan true ;
+    ex:caption "Gas lamps lighting the quay by night."@en ;
+    ex:artist ex:van-gogh .
+
+ex:water-lilies a ex:Artwork ;
+    ex:title "Water Lilies" ;
+    ex:year 1906 ;
+    ex:acquired "1952-04-01"^^xsd:date ;
+    ex:onLoan false ;
+    ex:caption "Light on the pond at Giverny."@en ;
+    ex:artist ex:monet .
+
+# Only a Dutch caption — no value resolves under an English preference chain.
+ex:night-watch a ex:Artwork ;
+    ex:title "Night Watch" ;
+    ex:year 1642 ;
+    ex:acquired "1898-11-20"^^xsd:date ;
+    ex:onLoan false ;
+    ex:caption "De schutterij op doek."@nl ;
+    ex:artist ex:rembrandt .
+
+ex:self-portrait a ex:Artwork ;
+    ex:title "Self-Portrait with Thorn Necklace" ;
+    ex:year 1940 ;
+    ex:acquired "1966-02-08"^^xsd:date ;
+    ex:onLoan true ;
+    ex:artist ex:kahlo .
+
+# Unattributed, undated, and never accessioned — the hard-filter edge case in
+# one work: it mentions night, yet no artist, year, or acquisition date exists
+# for any filter to compare.
+ex:night-study a ex:Artwork ;
+    ex:title "Night Study" ;
+    ex:onLoan false .

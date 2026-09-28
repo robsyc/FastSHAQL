@@ -1,15 +1,21 @@
-query LanguagePreferenceChain {
-  person {
-    iri
-    name
-    bio
-    altLabel
-    note
-    plain
-    summary
-    employer {
-      iri
-      label
+"""A two-step chain: Dutch fills in where English is missing. The
+milkmaid returns complete and the Delft vase arrives by its Dutch title
+(their required titles resolve at step two), the Sunflowers gains its
+Dutch alias and its artist back, and the French loan stays out — fr is in
+nobody's chain. Where a work has both, English still wins the scalars
+(the Night Watch keeps its English title); the alias list, though, unites
+every step — English and Dutch aliases together.
+In the SPARQL: two OPTIONAL steps per field; COALESCE still takes the
+first that matched."""
+query MuseumEnglishThenDutch {
+  artwork {
+    title
+    caption
+    altTitle
+    inventoryNumber
+    teaser
+    artist {
+      name
     }
   }
 }

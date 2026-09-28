@@ -1,0 +1,16 @@
+{
+  "data": {
+    "person": [
+      {
+        "name": "Maria",
+        "shuttle": {
+          "label": "Van North"
+        }
+      },
+      {
+        "name": "Jules",
+        "shuttle": null
+      }
+    ]
+  }
+}

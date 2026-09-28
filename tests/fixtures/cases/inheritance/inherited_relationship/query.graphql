@@ -1,9 +1,20 @@
+"""A guided tour reaches people and places it never declares: the host
+comes from the program-item bundle one level up, the venue from the timed
+bundle above that, and the district shortcut — a two-hop path — rides
+along from the same base. Selecting the district both ways reads the same
+triples. In the SPARQL: the shortcut is one path pattern, venue then
+district."""
 query InheritedRelationship {
-  manager {
+  guidedTour {
     iri
-    managerName
-    workLocation {
-      locationName
+    theme
+    host {
+      name
     }
+    venue {
+      name
+      district
+    }
+    venueDistrict
   }
 }

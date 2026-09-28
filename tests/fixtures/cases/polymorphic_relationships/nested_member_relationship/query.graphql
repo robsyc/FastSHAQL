@@ -1,7 +1,10 @@
+"""Relationships resolve inside fragments: the picked SubParagraph is a
+Paragraph through its superclass, and its author link resolves within the
+fragment."""
 query PolymorphicNestedMemberRelationship {
   article {
     title
-    related {
+    picks {
       __typename
       ... on Paragraph {
         text

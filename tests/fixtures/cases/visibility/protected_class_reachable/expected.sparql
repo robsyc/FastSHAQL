@@ -1,0 +1,10 @@
+SELECT ?iri ?name ?shuttle_iri ?shuttle_label
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+  ?iri <http://example.org/name> ?name .
+  OPTIONAL {
+    ?iri <http://example.org/shuttle> ?shuttle_iri .
+    ?shuttle_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Car> .
+    ?shuttle_iri <http://example.org/label> ?shuttle_label .
+  }
+}

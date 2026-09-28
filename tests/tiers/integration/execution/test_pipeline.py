@@ -100,14 +100,14 @@ async def test_execute_query_context_lang_filters_multi_language_data(
     store = InMemoryStore(filters_data_graph)
     result = await execute(
         schema,
-        "{ person { name bio } }",
+        "{ artwork { title caption } }",
         store,
         query_context=QueryContext(lang_tags=("en",)),
     )
 
     assert result.errors is None
-    alice_data = next(p for p in result.data["person"] if p["name"] == "Alice")
-    assert alice_data["bio"] == ["Hello"]
+    lilies = next(a for a in result.data["artwork"] if a["title"] == "Water Lilies")
+    assert lilies["caption"] == ["Light on the pond at Giverny."]
 
 
 async def test_execute_records_metrics_when_attached(
@@ -245,14 +245,14 @@ async def test_execute_query_context_lang_no_match_drops_field_keeps_entity(
     store = InMemoryStore(filters_data_graph)
     result = await execute(
         schema,
-        "{ person { name bio } }",
+        "{ artwork { title caption } }",
         store,
         query_context=QueryContext(lang_tags=("de",)),
     )
 
     assert result.errors is None
-    alice_data = next(p for p in result.data["person"] if p["name"] == "Alice")
-    assert alice_data["bio"] == []
+    lilies = next(a for a in result.data["artwork"] if a["title"] == "Water Lilies")
+    assert lilies["caption"] == []
 
 
 def _named_graph_dataset(default_union: bool = False) -> Dataset:

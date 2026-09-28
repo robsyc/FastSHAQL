@@ -1,0 +1,10 @@
+"""A filter on a field the page never shows still narrows the page: three
+books carry the subject Science fiction, and a two-book page holds the first
+two of those three — the limit trims after the filter, never before it.
+In the SPARQL: the subject heading is joined inside the inner selection
+purely to filter, then left out of sight."""
+query FilterOnUndisplayedField {
+  book(where: { subject: { eq: "Science fiction" } }, limit: 2) {
+    title
+  }
+}

@@ -1,3 +1,12 @@
+"""Defaults survive the hop into a relationship: walking from variants into
+their genes, every gene serves an assay version — its own or the default —
+and the relationship filter comparing "v1" matches through that served
+value. The variants pointing at default-served genes are returned; the ones
+pointing at BRCA1, which states "v2", are not; the unplaced variants are
+dropped by the join itself.
+In the SPARQL: the COALESCE lane appears twice — once for the nested
+selection, once inside the filter's EXISTS, on differently-stemmed
+variables."""
 query DefaultValueRelationshipNested {
   variant(where: {inGene: {assayVersion: {eq: "v1"}}}) {
     iri

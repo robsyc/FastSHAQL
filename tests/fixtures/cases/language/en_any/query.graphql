@@ -1,15 +1,19 @@
-query LanguagePreferenceChain {
-  person {
-    iri
-    name
-    bio
-    altLabel
-    note
-    plain
-    summary
-    employer {
-      iri
-      label
+"""English, then anything: the any-language sentinel takes the first
+tagged value left, in whatever language. The French loan returns with its
+Delacroix; the Delft vase keeps its Dutch title and gains its French
+alias. Untagged text is not "any language": the vase's plain marketing
+line still resolves to null — only the caption's own untagged fallback
+reaches plain text (the Great Wave's loan note arrives).
+In the SPARQL: the any step reads langMatches(LANG(?v), "*")."""
+query MuseumEnglishThenAny {
+  artwork {
+    title
+    caption
+    altTitle
+    inventoryNumber
+    teaser
+    artist {
+      name
     }
   }
 }

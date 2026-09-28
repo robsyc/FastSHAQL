@@ -1,0 +1,11 @@
+"""Sailing time is stored in minutes but asked about in hours: the hour value
+is derived by dividing, the filter compares the derived number, and the
+response returns the stored one.
+In the SPARQL: a BIND divides the minutes read, and the FILTER compares the
+derived decimal."""
+query FilterUnderAnHour {
+  crossing(where: { hours: { lte: 1 } }) {
+    route
+    minutes
+  }
+}

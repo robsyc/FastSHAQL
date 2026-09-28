@@ -1,6 +1,13 @@
-query VariantsWhereLimit {
-  variant(where: { score: { gte: 0.7 } }, limit: 2) {
+"""Pagination and where filters compose over a computed root set exactly as
+over an asserted one: of all variant records scoring 0.7 or higher, take
+the first two. Entities are counted, not result rows — the third
+high-scoring record is cut, and its fields are never read.
+In the SPARQL: a sub-SELECT picks the distinct matching entities, ordered
+and limited, before the outer query reads their fields."""
+query HighScoringFirstTwo {
+  variant(where: { reviewScore: { gte: 0.7 } }, limit: 2) {
     iri
     label
+    reviewScore
   }
 }

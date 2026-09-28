@@ -1,0 +1,11 @@
+"""Filters can ask about a value the response never shows: crossings whose
+computed route mentions Bergen, listed by code and minutes only. The label
+is computed once for the filter, whether or not anyone selects it.
+In the SPARQL: the route's expression is emitted for the filter alone, and
+the FILTER compares the bound variable."""
+query FilterRoute {
+  crossing(where: { route: { contains: "Bergen" } }) {
+    code
+    minutes
+  }
+}

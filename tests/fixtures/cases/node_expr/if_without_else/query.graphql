@@ -1,0 +1,14 @@
+"""A branch may name no else arm at all: the badges appear only on variants
+with reviewed evidence, and everyone else gets an empty list — never null,
+never an error. Two edge variants mark the boundary: the reviewed variant
+carrying no evidence tags gets nothing, while the variant whose review was
+retracted but whose stale tag lingers still gets its badges, the condition
+testing the tag alone.
+In the SPARQL: only the then arm is emitted, as a single conditioned
+OPTIONAL."""
+query IfWithoutElse {
+  variant {
+    iri
+    curationBadges
+  }
+}

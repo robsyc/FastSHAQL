@@ -1,9 +1,8 @@
-SELECT ?iri ?name ?bio
+SELECT ?iri ?title ?caption
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
-  ?iri <http://example.org/name> ?name .
-  OPTIONAL {
-    ?iri <http://example.org/bio> ?bio .
-    FILTER(langMatches(LANG(?bio), "en"))
-  }
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Artwork> .
+  ?iri <http://example.org/title> ?title .
+  ?iri <http://example.org/caption> ?caption .
+  FILTER(langMatches(LANG(?caption), "en") || langMatches(LANG(?caption), "nl"))
+  FILTER(STRSTARTS(STR(?caption), "De"))
 }

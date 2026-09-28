@@ -1,5 +1,0 @@
-query PromotedScalarFilter {
-  person(where: { title: { eq: "Engineer" } }, limit: 2) {
-    name
-  }
-}

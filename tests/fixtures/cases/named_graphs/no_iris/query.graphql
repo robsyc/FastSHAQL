@@ -1,6 +1,16 @@
+"""With no read scope at all, the query runs against the store's own default
+dataset — this store's contract is the union of every graph, so the legacy
+backlog, both members' items, and the thesaurus all answer, and every
+catalogued item finds its subject term. Other stores keep the unnamed graph
+alone; a portable client always names its graphs.
+In the SPARQL: no FROM clause anywhere.
+REVIEW: the case name reads as "no IRIs" but means "no read_graphs" —
+renaming it means updating the evaluation divergence registry that pins it."""
 query NoIris {
-  thing {
-    iri
-    label
+  item {
+    title
+    subject {
+      name
+    }
   }
 }

@@ -1,0 +1,62 @@
+{
+  "data": {
+    "movie": [
+      {
+        "title": "Dune Drifter",
+        "sequels": [
+          {
+            "title": "Dune Drifter II"
+          },
+          {
+            "title": "Dune Drifter III"
+          }
+        ],
+        "franchise": [
+          {
+            "title": "Dune Drifter"
+          },
+          {
+            "title": "Dune Drifter II"
+          },
+          {
+            "title": "Dune Drifter III"
+          }
+        ]
+      },
+      {
+        "title": "Dune Drifter II",
+        "sequels": [
+          {
+            "title": "Dune Drifter III"
+          }
+        ],
+        "franchise": [
+          {
+            "title": "Dune Drifter II"
+          },
+          {
+            "title": "Dune Drifter III"
+          }
+        ]
+      },
+      {
+        "title": "Dune Drifter III",
+        "sequels": [],
+        "franchise": [
+          {
+            "title": "Dune Drifter III"
+          }
+        ]
+      },
+      {
+        "title": "Meridian",
+        "sequels": [],
+        "franchise": [
+          {
+            "title": "Meridian"
+          }
+        ]
+      }
+    ]
+  }
+}

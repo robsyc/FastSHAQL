@@ -1,0 +1,32 @@
+{
+  "data": {
+    "article": [
+      {
+        "title": "Syntax highlights",
+        "spotlight": [
+          {
+            "__typename": "Image",
+            "url": "https://example.org/img-1.png"
+          },
+          {
+            "__typename": "Asset",
+            "caption": "Site photo"
+          }
+        ]
+      },
+      {
+        "title": "Dual types",
+        "spotlight": [
+          {
+            "__typename": "Asset",
+            "caption": "Vector art"
+          }
+        ]
+      },
+      {
+        "title": "Childless",
+        "spotlight": []
+      }
+    ]
+  }
+}

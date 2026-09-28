@@ -1,8 +1,0 @@
-query PathAlternative {
-  contactPerson {
-    name
-    contact {
-      name
-    }
-  }
-}
