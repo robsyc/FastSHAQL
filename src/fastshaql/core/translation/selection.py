@@ -8,6 +8,7 @@ from graphql.language.ast import (
     FieldNode,
     FragmentSpreadNode,
     InlineFragmentNode,
+    NamedTypeNode,
 )
 from rdflib import URIRef
 
@@ -65,12 +66,10 @@ def _field_selections(
             reject_directives(
                 sel, where=f"an inline fragment inside a {type_name!r} selection"
             )
-            if (
-                sel.type_condition is not None
-                and sel.type_condition.name.value != type_name
-            ):
+            type_condition = cast(NamedTypeNode | None, sel.type_condition)
+            if type_condition is not None and type_condition.name.value != type_name:
                 raise ValueError(
-                    f"Inline fragment on {sel.type_condition.name.value!r} inside "
+                    f"Inline fragment on {type_condition.name.value!r} inside "
                     f"a {type_name!r} selection — the field never returns that type"
                 )
             yield from _field_selections(sel.selection_set.selections, type_name)
