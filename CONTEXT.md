@@ -180,6 +180,18 @@ _Avoid_: field (ambiguous with Property), node (ambiguous with RDF)
 The composable input type per Shape (`{TypeName}Filter`) passed as `where` on root query fields (ADR-0009).
 _Avoid_: search criteria, filter input
 
+**Member-keyed filter**:
+The filter-input shape for a polymorphic relationship: one field per member, keyed by the member's discriminator name (the member type name; the binding class for a binding union), each holding that member's Filter, plus the Type-discrimination operator. The keys form one disjunctive predicate — a value matches when it is-a any keyed member and satisfies that member's conditions; requiring different members independently composes at the parent level (AND of separate filters). A key matches by class-guard is-a (subclass-closed), independent of member-order priority, which governs only `__typename` stamping.
+_Avoid_: branch filter (branch is the selection concept), lane filter (lowering mechanism, not the input)
+
+**Quantifier operator**:
+`some`/`every`/`none` over a to-many relationship's values: some as FILTER EXISTS, none as single negation, every as double negation — vacuously true on an empty value set, documented rather than silently redefined. To-many relationships carry them inside a wrapper input; to-one relationships stay the bare object (exists-and-match — one value quantifies nothing). The quantified member-keyed predicate is strict: it predicates over all values, not per-member subsets.
+_Avoid_: nested object filter (that is the bare to-one object), wrapper (the shape, not the operator)
+
+**Type-discrimination operator**:
+The filter operator constraining which member types a polymorphic relationship's values may have — "only Employees" is a `where` concern; fragments select fields, never members.
+_Avoid_: type filter (ambiguous with scalar filters), typename filter
+
 **Relationship-filter variable**:
 Fresh `_rf_`-prefixed SPARQL variables inside `FILTER EXISTS` blocks — avoid colliding with selection-walk variables.
 

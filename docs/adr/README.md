@@ -36,5 +36,8 @@ Architecture decision records: the **why** — decision, trade-off, alternatives
 | [0022](0022-evaluation-harness.md)               | Evaluation harness                        | Parity-first, order-independent comparison; `StoreSession`-pluggable; report-only perf      | Active               |
 | [0023](0023-package-release-and-ci.md)           | Package release and CI                    | Tag-triggered attested OIDC publish; release notes extracted from CHANGELOG.md              | Active               |
 | [0024](0024-mutations-via-shape-rules.md)        | Mutations via shape-attached rules / templates | Writes-era candidate: rule-named commands, SPARQLRule-first, translator-not-engine           | Proposed             |
+| [0025](0025-relationship-targeting-model.md)     | Relationship targeting model              | `sh:node` names the target, `sh:class` types the binding; typing closes over `rdfs:subClassOf` | Active               |
+| [0026](0026-polymorphic-relationships.md)        | Polymorphic relationships                | `sh:or` members / `sh:class` list → union types; VALUES-guarded lanes; membership semantics  | Active               |
+| [0027](0027-polymorphic-filters-and-where-shape.md) | Polymorphic filters and the where-shape | Cardinality split (bare to-one, `{some, every, none}` wrapper to-many); member-keyed predicates; strict quantifiers | Proposed |
 
 
