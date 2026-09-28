@@ -1,0 +1,8 @@
+SELECT ?iri ?parameter ?grade
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Reading> .
+  ?iri <http://example.org/parameter> ?parameter .
+  OPTIONAL {
+    ?iri <http://example.org/grade> ?grade .
+  }
+}

@@ -1,162 +1,186 @@
-@prefix sh:    <http://www.w3.org/ns/shacl#> .
-@prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
-@prefix gx:    <http://example.org/genomics/> .
-@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix shnex:   <http://www.w3.org/ns/shacl-node-expr#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix gx:      <http://example.org/genomics/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
+# Variant curation board: computed annotations over genes and variants.
+
+gx:CurationApi a graphql:Schema ;
+    rdfs:comment "Variant-curation domain: variants are annotated against genes, and nearly everything a visitor reads is computed at query time rather than asserted. A variant's own triples stay minimal — its reference allele, its review state, the gene it sits in — while the gene's symbol read through that link, an annotation status chosen by branching, a true/false placement test, and curation tags picked from one of two sources are derived fields: each is a node expression behind sh:values, evaluated against the focus node, never a triple at the field's own path. Genes carry the rest of the catalogue: values walked along multi-hop and inverse paths, a language-tagged summary resolved through the request's language preference, fixed constants and constant lists, a support score that reads null when the walk misses, and a support tier whose branch condition survives a missing score. Fields with a sh:defaultValue — an assay version, a support score, a display name — serve the default whenever the field yields nothing, whether the value would have come from an asserted triple, a derivation, the language chain, or a filter reaching through a relationship." ;
+    graphql:publicShape gx:VariantShape, gx:GeneShape .
+
+gx:prefixes a sh:ShapesGraph ;
+    sh:declare [
+        sh:prefix "gx" ;
+        sh:namespace "http://example.org/genomics/" ;
+    ] .
 
 gx:VariantShape a sh:NodeShape ;
     sh:codeIdentifier "Variant" ;
+    rdfs:comment "A genetic variant annotated by derivation — its own triples carry little beyond the reference allele." ;
+    sh:intent "A branch may name no else arm at all: the field then yields nothing when the condition fails — absence, not null and not an error." ;
     sh:targetClass gx:Variant ;
     sh:property [
         sh:path gx:refAllele ;
+        sh:description "The reference allele letter the variant is described against." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
-        sh:maxCount 1 ;
+        sh:maxCount 1
     ] ;
-    # Relationship into the defaulted-field host: the nested selection walk
-    # and the relationship-filter EXISTS lane (with their differently-stemmed
-    # variables) must both re-emit the assayVersion COALESCE (default_value_
-    # relationship case).
     sh:property [
         sh:path gx:inGene ;
+        sh:description "The gene the variant occurs in, when one is known." ;
         sh:class gx:Gene ;
-        sh:maxCount 1 ;
+        sh:maxCount 1
     ] ;
     sh:property [
         sh:path gx:geneSymbol ;
+        sh:description "The symbol of the variant's gene, read through the gene link — null when the variant is placed in no gene." ;
         sh:datatype xsd:string ;
         sh:maxCount 1 ;
-        sh:values [
-            shnex:pathValues ( gx:inGene gx:symbol ) ;
-        ] ;
+        sh:values [ shnex:pathValues ( gx:inGene gx:symbol ) ]
     ] ;
     sh:property [
         sh:path gx:annotationStatus ;
+        sh:description "One of 'annotated' or 'novel' for every variant — chosen by whether it sits in a known gene." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
         sh:values [
-            shnex:if [
-                shnex:exists [ shnex:pathValues gx:inGene ] ;
-            ] ;
+            shnex:if [ shnex:exists [ shnex:pathValues gx:inGene ] ] ;
             shnex:then "annotated" ;
             shnex:else "novel" ;
-        ] ;
+        ]
     ] ;
     sh:property [
         sh:path gx:hasGene ;
+        sh:description "Whether the variant sits in a known gene — a true/false answer, never null: an unplaced variant reads false." ;
         sh:datatype xsd:boolean ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
-        sh:values [
-            shnex:exists [ shnex:pathValues gx:inGene ] ;
-        ] ;
+        sh:values [ shnex:exists [ shnex:pathValues gx:inGene ] ]
     ] ;
     sh:property [
         sh:path gx:evidenceTags ;
+        sh:description "Curation tags — the reviewed evidence when a review exists, otherwise the provisional tags; a reviewed variant without evidence tags gets an empty list, never the provisional fallback." ;
         sh:datatype xsd:string ;
         sh:values [
-            shnex:if [
-                shnex:exists [ shnex:pathValues gx:review ] ;
-            ] ;
+            shnex:if [ shnex:exists [ shnex:pathValues gx:review ] ] ;
             shnex:then [ shnex:pathValues gx:reviewedTag ] ;
             shnex:else [ shnex:pathValues gx:provisionalTag ] ;
-        ] ;
+        ]
     ] ;
     sh:property [
-        # Derived enum (sh:values + sh:in, ADR-0004): the nested
-        # single-valued if lowers to one BIND — inside this OPTIONAL, the
-        # pre-bind form returned the wrong branch for v7 (unreviewed but
-        # carrying a stale reviewed tag) on rdflib 7.6.0.
+        sh:path gx:curationBadges ;
+        sh:description "Standing badges carried only by variants with reviewed evidence — the derivation names no else arm, so everyone else gets an empty list." ;
+        sh:datatype xsd:string ;
+        sh:values [
+            shnex:if [ shnex:exists [ shnex:pathValues gx:reviewedTag ] ] ;
+            shnex:then ( "evidence-backed" "traceable" ) ;
+        ]
+    ] ;
+    sh:property [
         sh:path gx:curationStatus ;
+        sh:description "The curation stage as a closed set of values — curated, confirmed, or unreviewed — picked by one branch nested inside another." ;
         sh:datatype xsd:string ;
         sh:maxCount 1 ;
         sh:in ( "curated" "confirmed" "unreviewed" ) ;
         sh:values [
-            shnex:if [
-                shnex:exists [ shnex:pathValues gx:review ] ;
-            ] ;
+            shnex:if [ shnex:exists [ shnex:pathValues gx:review ] ] ;
             shnex:then [
-                shnex:if [
-                    shnex:exists [ shnex:pathValues gx:reviewedTag ] ;
-                ] ;
+                shnex:if [ shnex:exists [ shnex:pathValues gx:reviewedTag ] ] ;
                 shnex:then "curated" ;
                 shnex:else "confirmed" ;
             ] ;
             shnex:else "unreviewed" ;
-        ] ;
+        ]
     ] .
 
 gx:GeneShape a sh:NodeShape ;
     sh:codeIdentifier "Gene" ;
+    rdfs:comment "A gene with its registry, support, and assay metadata — most of it computed." ;
+    sh:intent "Derived values replace any stored triple at the same path — a stored summary is never served beside the transcript's description." ,
+        "Defaulted fields serve their default whenever the field yields nothing; a required defaulted field stays non-null even where its path misses." ;
     sh:targetClass gx:Gene ;
     sh:property [
         sh:path gx:symbol ;
+        sh:description "The official gene symbol." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
-        sh:maxCount 1 ;
+        sh:maxCount 1
     ] ;
     sh:property [
         sh:path gx:summary ;
+        sh:description "The transcript's description, resolved through the request's language preference; stored summaries at this path are never read." ;
         sh:datatype rdf:langString ;
         sh:maxCount 1 ;
-        sh:values [
-            shnex:pathValues ( gx:transcribes gx:description ) ;
-        ] ;
+        sh:values [ shnex:pathValues ( gx:transcribes gx:description ) ]
     ] ;
     sh:property [
         sh:path gx:variantIris ;
+        sh:description "The variants occurring in this gene, found by walking the variant-gene link backwards." ;
         sh:datatype xsd:string ;
-        sh:values [
-            shnex:pathValues [ sh:inversePath gx:inGene ] ;
-        ] ;
+        sh:values [ shnex:pathValues [ sh:inversePath gx:inGene ] ]
     ] ;
     sh:property [
         sh:path gx:confidence ;
+        sh:description "The support study's score — null when the gene has no support or the support states no score." ;
         sh:datatype xsd:decimal ;
         sh:maxCount 1 ;
+        sh:values [ shnex:pathValues ( gx:support gx:score ) ]
+    ] ;
+    sh:property [
+        sh:path gx:supportTier ;
+        sh:description "'high' when the support score clears 0.9, 'standard' otherwise — a gene with no score to test reads standard, never an error." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
         sh:values [
-            shnex:pathValues ( gx:support gx:score ) ;
-        ] ;
+            shnex:if [
+                sh:prefixes gx:prefixes ;
+                sh:sparqlExpr "EXISTS { $this gx:support/gx:score ?s . FILTER(?s > 0.9) }" ;
+            ] ;
+            shnex:then "high" ;
+            shnex:else "standard" ;
+        ]
     ] ;
     sh:property [
         sh:path gx:registryCode ;
+        sh:description "The registry code fixed for every gene in this source." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
-        sh:values "FSQ-REG" ;
+        sh:values "FSQ-REG"
     ] ;
     sh:property [
         sh:path gx:assayPanels ;
+        sh:description "The assay panels offered for every gene — one fixed list, declared in the shapes." ;
         sh:datatype xsd:string ;
-        sh:values ( "Onco500" "RareDx" ) ;
+        sh:values ( "Onco500" "RareDx" )
     ] ;
-    # Asserted path + default (value-nodes step 3): g1 asserts "v2", the rest
-    # fall back to "v1". minCount 1 is deliberate — "the path stays
-    # optional under minCount 1" needs an end-to-end witness (the default
-    # serves entities the path misses, so they must not be dropped).
     sh:property [
         sh:path gx:assayVersion ;
+        sh:description "The assay version the gene was processed with — 'v1' for genes that state none." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
-        sh:defaultValue "v1" ;
+        sh:defaultValue "v1"
     ] ;
-    # Derived values + default (steps 2 -> 3): g1's support carries a score;
-    # g2 has no support and g3's support is scoreless — both fall back to 0.0.
     sh:property [
         sh:path gx:supportScore ;
+        sh:description "The support score as served — 0.0 for genes whose support yields no score." ;
         sh:datatype xsd:decimal ;
         sh:maxCount 1 ;
         sh:defaultValue 0.0 ;
-        sh:values [ shnex:pathValues ( gx:support gx:score ) ] ;
+        sh:values [ shnex:pathValues ( gx:support gx:score ) ]
     ] ;
-    # Language-typed asserted path + default: under lang_tags ("en",), g1's English
-    # label wins, g2's German-only label is filtered out inside the OPTIONAL
-    # (the COALESCE then falls back), and g3 has nothing at all.
     sh:property [
         sh:path gx:displayName ;
+        sh:description "The gene's display name — 'unnamed' when no name matches the requested language." ;
         sh:datatype rdf:langString ;
         sh:maxCount 1 ;
-        sh:defaultValue "unnamed" ;
+        sh:defaultValue "unnamed"
     ] .

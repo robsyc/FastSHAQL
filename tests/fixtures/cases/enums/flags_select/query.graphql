@@ -1,0 +1,12 @@
+"""A closed value set with no sh:maxCount becomes a list of enums: the
+dissolved-oxygen reading carries two flags (ESTIMATED and HELD), the
+turbidity reading one, and a reading with no flags gets an empty list —
+never null, and never a repeated flag.
+In the SPARQL: the flag triples sit inside OPTIONAL so flagless readings
+survive, and the rows group back onto one reading."""
+query EnumFlagsSelect {
+  reading {
+    iri
+    flags
+  }
+}

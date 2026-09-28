@@ -2,7 +2,7 @@
   "data": {
     "patient": [
       {
-        "iri": "http://example.org/clinical/patient-1"
+        "medicalRecordNumber": "MRN-1001"
       }
     ]
   }

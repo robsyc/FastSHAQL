@@ -1,0 +1,14 @@
+{
+  "data": {
+    "artwork": [
+      {
+        "iri": "http://example.org/starry-night",
+        "title": "The Starry Night"
+      },
+      {
+        "iri": "http://example.org/water-lilies",
+        "title": "Water Lilies"
+      }
+    ]
+  }
+}

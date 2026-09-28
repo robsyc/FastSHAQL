@@ -1,3 +1,10 @@
+"""A derivation can fill a field constrained to a closed value set: the
+curation stage is picked by one branch nested inside another — reviewed
+variants split on whether evidence tags exist, everyone else is unreviewed.
+Values serialize by their enum names (CURATED, CONFIRMED, UNREVIEWED), and
+the variant whose review was retracted but whose evidence tag lingers still
+reads unreviewed — the outer condition never consults the stale tag.
+In the SPARQL: both branches inline into a single nested BIND(IF(…))."""
 query DerivedEnumNestedIf {
   variant {
     iri

@@ -1,6 +1,0 @@
-query EnumFilterEqNeq {
-  observation(where: { status: { eq: ACTIVE, neq: INACTIVE } }) {
-    iri
-    status
-  }
-}

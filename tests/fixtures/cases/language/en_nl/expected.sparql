@@ -1,65 +1,55 @@
-SELECT ?iri ?name ?bio ?altLabel ?note ?plain ?summary ?employer_iri ?employer_label
+SELECT ?iri ?title ?caption ?altTitle ?inventoryNumber ?teaser ?artist_iri ?artist_name
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Artwork> .
   OPTIONAL {
-    ?iri <http://example.org/name> ?_l0_name .
-    FILTER(langMatches(LANG(?_l0_name), "en"))
+    ?iri <http://example.org/title> ?_l0_title .
+    FILTER(langMatches(LANG(?_l0_title), "en"))
   }
   OPTIONAL {
-    ?iri <http://example.org/name> ?_l1_name .
-    FILTER(langMatches(LANG(?_l1_name), "nl"))
+    ?iri <http://example.org/title> ?_l1_title .
+    FILTER(langMatches(LANG(?_l1_title), "nl"))
   }
-  BIND(COALESCE(?_l0_name, ?_l1_name) AS ?name)
-  FILTER(BOUND(?name))
+  BIND(COALESCE(?_l0_title, ?_l1_title) AS ?title)
+  FILTER(BOUND(?title))
   OPTIONAL {
-    ?iri <http://example.org/bio> ?_l0_bio .
-    FILTER(langMatches(LANG(?_l0_bio), "en"))
-  }
-  OPTIONAL {
-    ?iri <http://example.org/bio> ?_l1_bio .
-    FILTER(langMatches(LANG(?_l1_bio), "nl"))
-  }
-  BIND(COALESCE(?_l0_bio, ?_l1_bio) AS ?bio)
-  OPTIONAL {
-    ?iri <http://example.org/altLabel> ?altLabel .
-    FILTER(langMatches(LANG(?altLabel), "en") || langMatches(LANG(?altLabel), "nl"))
+    ?iri <http://example.org/caption> ?_l0_caption .
+    FILTER(langMatches(LANG(?_l0_caption), "en"))
   }
   OPTIONAL {
-    ?iri <http://example.org/note> ?_l0_note .
-    FILTER(langMatches(LANG(?_l0_note), "en"))
+    ?iri <http://example.org/caption> ?_l1_caption .
+    FILTER(langMatches(LANG(?_l1_caption), "nl"))
   }
   OPTIONAL {
-    ?iri <http://example.org/note> ?_l1_note .
-    FILTER(langMatches(LANG(?_l1_note), "nl"))
+    ?iri <http://example.org/caption> ?_l2_caption .
+    FILTER(LANG(?_l2_caption) = "")
+  }
+  BIND(COALESCE(?_l0_caption, ?_l1_caption, ?_l2_caption) AS ?caption)
+  OPTIONAL {
+    ?iri <http://example.org/altTitle> ?altTitle .
+    FILTER(langMatches(LANG(?altTitle), "en") || langMatches(LANG(?altTitle), "nl"))
+  }
+  ?iri <http://example.org/inventoryNumber> ?inventoryNumber .
+  OPTIONAL {
+    ?iri <http://example.org/marketingLine> ?_l0_teaser .
+    FILTER(langMatches(LANG(?_l0_teaser), "en"))
   }
   OPTIONAL {
-    ?iri <http://example.org/note> ?_l2_note .
-    FILTER(LANG(?_l2_note) = "")
+    ?iri <http://example.org/marketingLine> ?_l1_teaser .
+    FILTER(langMatches(LANG(?_l1_teaser), "nl"))
   }
-  BIND(COALESCE(?_l0_note, ?_l1_note, ?_l2_note) AS ?note)
+  BIND(COALESCE(?_l0_teaser, ?_l1_teaser) AS ?teaser)
   OPTIONAL {
-    ?iri <http://example.org/plain> ?plain .
-  }
-  OPTIONAL {
-    ?iri <http://example.org/summarySource> ?_l0_summary .
-    FILTER(langMatches(LANG(?_l0_summary), "en"))
-  }
-  OPTIONAL {
-    ?iri <http://example.org/summarySource> ?_l1_summary .
-    FILTER(langMatches(LANG(?_l1_summary), "nl"))
-  }
-  BIND(COALESCE(?_l0_summary, ?_l1_summary) AS ?summary)
-  OPTIONAL {
-    ?iri <http://example.org/employer> ?employer_iri .
-    ?employer_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Org> .
+    ?iri <http://example.org/artist> ?artist_iri .
+    ?artist_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Artist> .
     OPTIONAL {
-      ?employer_iri <http://example.org/label> ?_l0_employer_label .
-      FILTER(langMatches(LANG(?_l0_employer_label), "en"))
+      ?artist_iri <http://example.org/name> ?_l0_artist_name .
+      FILTER(langMatches(LANG(?_l0_artist_name), "en"))
     }
     OPTIONAL {
-      ?employer_iri <http://example.org/label> ?_l1_employer_label .
-      FILTER(langMatches(LANG(?_l1_employer_label), "nl"))
+      ?artist_iri <http://example.org/name> ?_l1_artist_name .
+      FILTER(langMatches(LANG(?_l1_artist_name), "nl"))
     }
-    BIND(COALESCE(?_l0_employer_label, ?_l1_employer_label) AS ?employer_label)
+    BIND(COALESCE(?_l0_artist_name, ?_l1_artist_name) AS ?artist_name)
+    FILTER(BOUND(?artist_name))
   }
 }

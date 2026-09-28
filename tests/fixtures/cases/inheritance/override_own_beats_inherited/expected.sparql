@@ -1,5 +1,5 @@
-SELECT ?iri ?badgeLevel
+SELECT ?iri ?tagline
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/ManagerBadge> .
-  ?iri <http://example.org/badgeLevel> ?badgeLevel .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/CommunityConcert> .
+  ?iri <http://example.org/tagline> ?tagline .
 }

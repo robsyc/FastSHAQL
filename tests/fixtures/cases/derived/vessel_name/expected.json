@@ -1,0 +1,22 @@
+{
+  "data": {
+    "crossing": [
+      {
+        "code": "nb-101",
+        "vesselName": "MV Skerry"
+      },
+      {
+        "code": "nb-102",
+        "vesselName": "MV Hardanger"
+      },
+      {
+        "code": "nb-103",
+        "vesselName": "MS Tau"
+      },
+      {
+        "code": "nb-104",
+        "vesselName": null
+      }
+    ]
+  }
+}

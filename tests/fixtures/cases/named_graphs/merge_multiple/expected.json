@@ -1,13 +1,11 @@
 {
   "data": {
-    "thing": [
+    "item": [
       {
-        "iri": "http://example.org/thing-1",
-        "label": "Alpha"
-      },
-      {
-        "iri": "http://example.org/thing-2",
-        "label": "Beta"
+        "title": "Salvage ledger of the Anne",
+        "subject": {
+          "name": "Shipwrecks"
+        }
       }
     ]
   }

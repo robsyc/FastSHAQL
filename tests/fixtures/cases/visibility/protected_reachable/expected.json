@@ -2,10 +2,14 @@
   "data": {
     "person": [
       {
-        "name": "Alice",
+        "name": "Maria",
         "audit": {
-          "action": "login"
+          "action": "Drop-off, group play, pick-up"
         }
+      },
+      {
+        "name": "Jules",
+        "audit": null
       }
     ]
   }

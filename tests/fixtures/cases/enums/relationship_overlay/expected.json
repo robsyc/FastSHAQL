@@ -1,15 +1,27 @@
 {
   "data": {
-    "person": [
+    "reading": [
       {
-        "iri": "http://example.org/alice",
-        "name": "Alice",
-        "employer": { "iri": "http://example.org/acme", "name": "Acme" }
+        "iri": "http://example.org/reading-101",
+        "analyst": {
+          "name": "Morgan Reid"
+        }
       },
       {
-        "iri": "http://example.org/bob",
-        "name": "Bob",
-        "employer": { "iri": "http://example.org/globex", "name": "Globex" }
+        "iri": "http://example.org/reading-202",
+        "analyst": {
+          "name": "Lee Chen"
+        }
+      },
+      {
+        "iri": "http://example.org/reading-203",
+        "analyst": null
+      },
+      {
+        "iri": "http://example.org/reading-304",
+        "analyst": {
+          "name": "Morgan Reid"
+        }
       }
     ]
   }

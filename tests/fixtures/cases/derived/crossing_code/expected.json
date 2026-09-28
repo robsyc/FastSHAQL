@@ -1,0 +1,22 @@
+{
+  "data": {
+    "crossing": [
+      {
+        "code": "nb-101",
+        "route": "Bergen – Rosendal"
+      },
+      {
+        "code": "nb-102",
+        "route": "Bergen – Stavanger"
+      },
+      {
+        "code": "nb-103",
+        "route": "Stavanger – Tau"
+      },
+      {
+        "code": "nb-104",
+        "route": "Rosendal – Sundal"
+      }
+    ]
+  }
+}

@@ -1,5 +1,8 @@
 @prefix lib: <http://example.org/library/> .
 
+# The portal's data. Two authors, six catalog books, three members, and the
+# special-collections items the members sponsor.
+
 lib:author-1 a lib:Author .
 lib:author-2 a lib:Author .
 
@@ -7,19 +10,17 @@ lib:b1 a lib:Book ;
     lib:title "SPARQL 101" ;
     lib:status "available" ;
     lib:publicationYear 2021 ;
-    lib:author lib:author-1 .
+    lib:author lib:author-1 ;
+    lib:prize "Rice Medal" .
 
+# The reference-only prize winner — prizedOnShelf drops it: both conditions
+# must hold at once.
 lib:b2 a lib:Book ;
     lib:title "Advanced RDF" ;
     lib:status "reference-only" ;
     lib:publicationYear 2018 ;
-    lib:author lib:author-1 .
-
-lib:b4 a lib:Book ;
-    lib:title "Other RDF Tales" ;
-    lib:status "available" ;
-    lib:publicationYear 2020 ;
-    lib:author lib:author-1 .
+    lib:author lib:author-1 ;
+    lib:prize "Rice Medal" .
 
 lib:b3 a lib:Book ;
     lib:title "GraphQL Basics" ;
@@ -27,6 +28,12 @@ lib:b3 a lib:Book ;
     lib:publicationYear 2023 ;
     lib:author lib:author-2 ;
     lib:review "great introduction" .
+
+lib:b4 a lib:Book ;
+    lib:title "Other RDF Tales" ;
+    lib:status "available" ;
+    lib:publicationYear 2020 ;
+    lib:author lib:author-1 .
 
 lib:b5 a lib:Book ;
     lib:title "Co-authored SPARQL" ;
@@ -46,34 +53,42 @@ lib:central a lib:Branch ;
 lib:east a lib:Branch ;
     lib:name "East" .
 
-# A service point, not a Branch: named in the friendBranches list expression but
-# untyped, so the sh:class anchor triple must drop it from the relationship.
+# A service point, not a Branch: named in the friendBranches list but typed
+# as nothing, so the class anchor drops it from the relationship.
 lib:kiosk lib:name "Airport Kiosk" .
 
+# A rare book, sponsored but not a special collection — specialCollections
+# drops it at the collection anchor while its union conjunct would keep it.
 lib:rb1 a lib:RareBook ;
     lib:title "First Edition SPARQL 101" .
 
+# A special collection that is also a rare book — m1's featured edition.
 lib:sc-rare a lib:SpecialCollection, lib:RareBook ;
     lib:title "First Edition Folio" .
 
 lib:sc-ms a lib:SpecialCollection, lib:Manuscript ;
     lib:title "Illuminated Codex" .
 
+# In both union classes — specialCollections must list it exactly once; it
+# is also m3's featured edition (special collection and rare book).
 lib:sc-both a lib:SpecialCollection, lib:RareBook, lib:Manuscript ;
     lib:title "Annotated Codex" .
 
-# In neither union class — the sh:class list conjunct drops it.
+# In neither union class — the class-list conjunct drops it.
 lib:sc-plain a lib:SpecialCollection ;
     lib:title "Plain Folder" .
 
 lib:m1 a lib:Member ;
     lib:name "Alice" ;
     lib:borrowed lib:b1 ;
-    lib:sponsors lib:rb1, lib:sc-rare, lib:sc-ms, lib:sc-both, lib:sc-plain .
+    lib:sponsors lib:rb1, lib:sc-rare, lib:sc-ms, lib:sc-plain .
 
+# Borrows nothing and sponsors nothing — recommendedBooks settles to [],
+# featuredEdition to null; the constant homeBranch still binds.
 lib:m2 a lib:Member ;
     lib:name "Bob" .
 
 lib:m3 a lib:Member ;
     lib:name "Cara" ;
-    lib:borrowed lib:b5 .
+    lib:borrowed lib:b5 ;
+    lib:sponsors lib:sc-both .

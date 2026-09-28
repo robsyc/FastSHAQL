@@ -1,0 +1,26 @@
+{
+  "data": {
+    "reading": [
+      {
+        "iri": "http://example.org/reading-101",
+        "parameter": "Dissolved oxygen",
+        "grade": "_1"
+      },
+      {
+        "iri": "http://example.org/reading-202",
+        "parameter": "Escherichia coli",
+        "grade": "_2"
+      },
+      {
+        "iri": "http://example.org/reading-203",
+        "parameter": "pH",
+        "grade": null
+      },
+      {
+        "iri": "http://example.org/reading-304",
+        "parameter": "Turbidity",
+        "grade": "_3"
+      }
+    ]
+  }
+}

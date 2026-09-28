@@ -1,0 +1,22 @@
+{
+  "data": {
+    "reading": [
+      {
+        "iri": "http://example.org/reading-101",
+        "site": "MAIN_OUTFALL"
+      },
+      {
+        "iri": "http://example.org/reading-202",
+        "site": "MAIN_OUTFALL_2"
+      },
+      {
+        "iri": "http://example.org/reading-203",
+        "site": "NORTH_PIER"
+      },
+      {
+        "iri": "http://example.org/reading-304",
+        "site": "MAIN_OUTFALL"
+      }
+    ]
+  }
+}

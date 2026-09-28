@@ -1,0 +1,25 @@
+{
+  "data": {
+    "book": [
+      {
+        "title": "Good Omens",
+        "author": [
+          {
+            "name": "Neil Gaiman"
+          },
+          {
+            "name": "Terry Pratchett"
+          }
+        ]
+      },
+      {
+        "title": "Mort",
+        "author": [
+          {
+            "name": "Terry Pratchett"
+          }
+        ]
+      }
+    ]
+  }
+}

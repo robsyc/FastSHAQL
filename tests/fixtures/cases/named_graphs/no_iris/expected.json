@@ -1,17 +1,27 @@
 {
   "data": {
-    "thing": [
+    "item": [
       {
-        "iri": "http://example.org/thing-default",
-        "label": "Default"
+        "title": "Crate of unlabelled lantern slides",
+        "subject": null
       },
       {
-        "iri": "http://example.org/thing-1",
-        "label": "Alpha"
+        "title": "Lightkeeper's logbook, 1902",
+        "subject": {
+          "name": "Lighthouses"
+        }
       },
       {
-        "iri": "http://example.org/thing-2",
-        "label": "Beta"
+        "title": "Chart of the Merestone shoals",
+        "subject": {
+          "name": "Shipwrecks"
+        }
+      },
+      {
+        "title": "Salvage ledger of the Anne",
+        "subject": {
+          "name": "Shipwrecks"
+        }
       }
     ]
   }

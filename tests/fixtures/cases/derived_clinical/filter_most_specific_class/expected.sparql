@@ -1,6 +1,7 @@
-SELECT ?iri
+SELECT ?iri ?medicalRecordNumber
 WHERE {
   ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/clinical/Patient> .
+  ?iri <http://example.org/clinical/medicalRecordNumber> ?medicalRecordNumber .
   ?iri <http://example.org/clinical/hasCondition> ?hasCondition_iri .
   FILTER(EXISTS {
     ?hasCondition_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/clinical/Condition> .

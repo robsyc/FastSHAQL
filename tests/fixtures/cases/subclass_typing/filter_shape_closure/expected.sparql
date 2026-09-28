@@ -1,17 +1,17 @@
-SELECT ?iri ?name ?heldAssets_iri ?heldAssets_label
+SELECT ?iri ?name ?heldItems_iri ?heldItems_label
 WHERE {
   ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Custodian> .
   ?iri <http://example.org/name> ?name .
   OPTIONAL {
     {
-      SELECT ?iri ?heldAssets_iri
+      SELECT ?iri ?heldItems_iri
       WHERE {
-        ?iri ^<http://example.org/heldBy> ?heldAssets_iri .
-        ?heldAssets_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Asset> .
-        FILTER(BOUND(?heldAssets_iri))
+        ?iri ^<http://example.org/heldBy> ?heldItems_iri .
+        ?heldItems_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Asset> .
+        FILTER(BOUND(?heldItems_iri))
       }
     }
-    ?heldAssets_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Asset> .
-    ?heldAssets_iri <http://example.org/label> ?heldAssets_label .
+    ?heldItems_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Asset> .
+    ?heldItems_iri <http://example.org/label> ?heldItems_label .
   }
 }

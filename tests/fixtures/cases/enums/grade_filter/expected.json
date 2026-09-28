@@ -1,0 +1,11 @@
+{
+  "data": {
+    "reading": [
+      {
+        "iri": "http://example.org/reading-202",
+        "parameter": "Escherichia coli",
+        "grade": "_2"
+      }
+    ]
+  }
+}

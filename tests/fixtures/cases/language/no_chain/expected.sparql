@@ -1,10 +1,15 @@
-SELECT ?iri ?altLabel ?plain
+SELECT ?iri ?title ?caption ?altTitle ?inventoryNumber ?teaser
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Artwork> .
+  ?iri <http://example.org/title> ?title .
   OPTIONAL {
-    ?iri <http://example.org/altLabel> ?altLabel .
+    ?iri <http://example.org/caption> ?caption .
   }
   OPTIONAL {
-    ?iri <http://example.org/plain> ?plain .
+    ?iri <http://example.org/altTitle> ?altTitle .
+  }
+  ?iri <http://example.org/inventoryNumber> ?inventoryNumber .
+  OPTIONAL {
+    ?iri <http://example.org/marketingLine> ?teaser .
   }
 }

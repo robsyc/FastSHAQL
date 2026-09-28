@@ -1,0 +1,14 @@
+{
+  "data": {
+    "crossing": [
+      {
+        "code": "nb-101",
+        "minutes": 150
+      },
+      {
+        "code": "nb-102",
+        "minutes": 270
+      }
+    ]
+  }
+}

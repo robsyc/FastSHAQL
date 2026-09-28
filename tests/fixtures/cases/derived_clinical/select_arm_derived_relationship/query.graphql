@@ -1,9 +1,0 @@
-query SelectArmDerivedRelationship {
-  patient {
-    iri
-    activeConditions {
-      iri
-      mostSpecificClass
-    }
-  }
-}

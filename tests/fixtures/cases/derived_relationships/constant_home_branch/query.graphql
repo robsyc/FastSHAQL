@@ -1,0 +1,14 @@
+"""A computed link can be a constant: every member's home branch is
+Central. The link is declared required and single-valued, and a constant
+always binds — so the join stays hard and the field never resolves empty.
+In the SPARQL: no OPTIONAL wraps this link, unlike the optional ones."""
+query HomeBranch {
+  member {
+    iri
+    name
+    homeBranch {
+      iri
+      name
+    }
+  }
+}

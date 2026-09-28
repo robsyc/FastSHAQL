@@ -1,17 +1,21 @@
+"""Declared classes replace the borrowed typing: the composer carries
+songwriter credit but no Artist type of his own and still resolves,
+while a plain Artist on the house trio no longer clears it. The
+producer link demands two credits on the same person — songwriter and
+producer — and the house credits keep only the member carrying both.
+In the SPARQL: every declared class emits its own rdf:type match, and
+a value must satisfy each one."""
 query RelationshipTargetingExplicitBindingTyping {
-  customer {
-    name
-    billing {
-      street
+  album {
+    title
+    composer {
+      name
     }
-    shipping {
-      street
+    producer {
+      name
     }
-    contacts {
-      street
-    }
-    registered {
-      street
+    houseCredits {
+      name
     }
   }
 }

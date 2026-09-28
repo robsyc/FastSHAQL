@@ -1,10 +1,15 @@
-SELECT ?iri ?managerName ?workLocation_iri ?workLocation_locationName
+SELECT ?iri ?theme ?host_iri ?host_name ?venue_iri ?venue_name ?venue_district ?venueDistrict
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Manager> .
-  ?iri <http://example.org/managerName> ?managerName .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/GuidedTour> .
+  ?iri <http://example.org/theme> ?theme .
+  ?iri <http://example.org/host> ?host_iri .
+  ?host_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+  ?host_iri <http://example.org/name> ?host_name .
+  ?iri <http://example.org/venue> ?venue_iri .
+  ?venue_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Venue> .
+  ?venue_iri <http://example.org/name> ?venue_name .
+  ?venue_iri <http://example.org/district> ?venue_district .
   OPTIONAL {
-    ?iri <http://example.org/workLocation> ?workLocation_iri .
-    ?workLocation_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Location> .
-    ?workLocation_iri <http://example.org/locationName> ?workLocation_locationName .
+    ?iri <http://example.org/venue>/<http://example.org/district> ?venueDistrict .
   }
 }

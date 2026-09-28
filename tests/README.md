@@ -57,7 +57,7 @@ Fixtures are self-describing ([ADR-0021](../docs/adr/0021-declarative-fixture-te
 
 | Level                           | Vehicle                                | Surfaces as                                          |
 |---------------------------------|----------------------------------------|------------------------------------------------------|
-| Set — `graphql:Schema` resource | `rdfs:comment`                         | the built `GraphQLSchema` description                |
+| Set — `graphql:Schema` resource | `rdfs:comment`                         | set's intro & built `GraphQLSchema` description      |
 | Node shape                      | `rdfs:comment`                         | GraphQL type + root-field descriptions               |
 | Property shape                  | `sh:description` (one line each)       | GraphQL field descriptions                           |
 | Shape bullets (optional)        | `sh:intent`                            | site callouts or bullets — inert for now             |

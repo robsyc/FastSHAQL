@@ -1,0 +1,8 @@
+"""Offset and limit together take one page from the middle of the catalog:
+skipping two books and taking two returns exactly the third and fourth —
+the window falls on books, not on the rows they expand to."""
+query OnePageOfBooks {
+  book(offset: 2, limit: 2) {
+    title
+  }
+}

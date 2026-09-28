@@ -1,0 +1,6 @@
+SELECT ?iri ?symbol ?supportTier
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/genomics/Gene> .
+  ?iri <http://example.org/genomics/symbol> ?symbol .
+  BIND(IF(COALESCE((EXISTS { ?iri <http://example.org/genomics/support>/<http://example.org/genomics/score> ?s . FILTER(?s > 0.9) }) = true, false), "high", "standard") AS ?supportTier)
+}

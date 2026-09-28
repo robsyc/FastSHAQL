@@ -1,0 +1,12 @@
+"""The registry keeps one pinned reference record: its root field always
+resolves to exactly that record, whatever else the data holds. A plain IRI
+at sh:targetNode is the simplest target expression there is.
+In the SPARQL: the record's IRI arrives as a constant BIND, not a triple
+pattern."""
+query PinnedReferenceRecord {
+  pinnedVariant {
+    iri
+    label
+    reviewScore
+  }
+}

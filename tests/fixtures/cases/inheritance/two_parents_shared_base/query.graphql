@@ -1,0 +1,22 @@
+"""The workshop builds on two bundles at once — program item and ticketed —
+and both build on the timed bundle, so the holding day, the venue, and
+the district shortcut arrive by two inheritance paths yet appear once
+each: one borrowed field set, not two. Fields of every generation sit
+side by side on the workshop type. In the SPARQL: one holding-day
+pattern, though two paths could have carried it."""
+query TwoParentsSharedBase {
+  workshop {
+    iri
+    heldOn
+    venue {
+      name
+      district
+    }
+    host {
+      name
+    }
+    format
+    capacity
+    skillLevel
+  }
+}

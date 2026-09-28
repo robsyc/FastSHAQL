@@ -1,6 +1,0 @@
-query IriEnumSelect {
-  colorSample {
-    iri
-    color
-  }
-}

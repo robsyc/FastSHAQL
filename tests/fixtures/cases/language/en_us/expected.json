@@ -1,17 +1,13 @@
 {
   "data": {
-    "person": [
+    "artwork": [
       {
-        "iri": "http://example.org/personB",
-        "name": "Bob",
-        "bio": "Bio-B",
-        "altLabel": [
-          "Alt-B"
-        ],
-        "note": "Note-B",
-        "plain": "Plain-B",
-        "summary": "Sum-B",
-        "employer": null
+        "title": "The Sunflowers",
+        "caption": "Vase with fifteen sunflowers",
+        "altTitle": [],
+        "inventoryNumber": "SK-A-188",
+        "teaser": "Van Gogh's sunlit yellows",
+        "artist": null
       }
     ]
   }

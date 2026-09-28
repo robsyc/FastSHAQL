@@ -1,10 +1,9 @@
-SELECT ?iri ?name ?employer_iri ?employer_name
+SELECT ?iri ?analyst_iri ?analyst_name
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
-  ?iri <http://example.org/name> ?name .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Reading> .
   OPTIONAL {
-    ?iri <http://example.org/employer> ?employer_iri .
-    ?employer_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Company> .
-    ?employer_iri <http://example.org/name> ?employer_name .
+    ?iri <http://example.org/analyst> ?analyst_iri .
+    ?analyst_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Analyst> .
+    ?analyst_iri <http://example.org/name> ?analyst_name .
   }
 }

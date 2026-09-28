@@ -1,3 +1,9 @@
+"""Filters see the default too: querying for assay version "v1" — the
+default — returns exactly the genes that state no version of their own. The
+comparison runs against the field's served value, so a default-filled gene
+matches as if it carried the triple.
+In the SPARQL: the FILTER compares the COALESCE-bound variable after the
+default has filled it."""
 query DefaultValueFilterMatchesDefaultFilled {
   gene(where: {assayVersion: {eq: "v1"}}) {
     iri

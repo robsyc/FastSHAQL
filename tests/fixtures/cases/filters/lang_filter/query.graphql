@@ -1,6 +1,13 @@
+"""The language preference chain decides which captions the filter can see:
+with English tried first and Dutch second, the Night Watch's Dutch caption
+is in scope and matches where an English-only chain would leave the work
+with no caption at all — and so out of the result.
+In the SPARQL: the chain admits captions in any of its languages through
+one disjunctive langMatches filter, and the pattern test compares the
+string form of the bound caption."""
 query LangFilter {
-  person {
-    name
-    bio
+  artwork(where: { caption: { startsWith: "De" } }) {
+    title
+    caption
   }
 }

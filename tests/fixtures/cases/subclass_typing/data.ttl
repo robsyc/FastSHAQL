@@ -1,19 +1,32 @@
 @prefix ex:  <http://example.org/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-# Subclass axioms live in the data graph — closure reads the queried
-# graphs only (Core §6.3; the ADR-0016 deviation).
+# The collection. Superclass links live here, in the queried data: every
+# type check the queries emit walks these graphs and never the shapes file.
 
 ex:Painting rdfs:subClassOf ex:Asset .
+ex:Fresco rdfs:subClassOf ex:Painting .
 ex:Sculpture rdfs:subClassOf ex:Asset .
+ex:Drawing rdfs:subClassOf ex:Asset .
+
 ex:Gallery rdfs:subClassOf ex:Custodian .
+ex:BranchGallery rdfs:subClassOf ex:Gallery .
 
-ex:bank a ex:Custodian ; ex:name "Bank" .
-ex:museum a ex:Gallery ; ex:name "Museum" .
+# Custodians at three depths of their own hierarchy.
+ex:bank a ex:Custodian ; ex:name "City Bank" .
+ex:museum a ex:Gallery ; ex:name "National Museum" .
+ex:annex a ex:BranchGallery ; ex:name "Museum Annex" .
 
-# mona/david are Assets only through their subclass typing; ledger directly.
-ex:mona a ex:Painting ; ex:label "Mona Lisa" ; ex:heldBy ex:bank .
+# Items reach the asset view through zero, one, or two superclass hops;
+# the ledger is held by nobody.
+ex:ledger a ex:Asset ; ex:label "Donation ledger" .
 ex:david a ex:Sculpture ; ex:label "David" ; ex:heldBy ex:museum .
-ex:ledger a ex:Asset ; ex:label "Ledger" ; ex:heldBy ex:bank .
-# A non-Asset under the same link — every typing emission must drop it.
-ex:gadget a ex:Gadget ; ex:label "Gadget" ; ex:heldBy ex:museum .
+ex:mona a ex:Fresco ; ex:label "Mona Lisa" ; ex:heldBy ex:bank .
+
+# In the annex's care, but never an asset at query time: the sketch's
+# superclass link (Sketch -> Drawing) is asserted only in the shapes file.
+ex:study a ex:Sketch ; ex:label "Landscape study" ; ex:heldBy ex:annex .
+
+# Outside the hierarchy entirely — the custodians' derived holdings must
+# drop it.
+ex:gadget a ex:Gadget ; ex:label "Tour headset" ; ex:heldBy ex:museum .

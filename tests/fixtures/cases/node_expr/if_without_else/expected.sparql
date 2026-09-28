@@ -1,0 +1,13 @@
+SELECT ?iri ?curationBadges
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/genomics/Variant> .
+  OPTIONAL {
+    VALUES ?curationBadges {
+      "evidence-backed"
+      "traceable"
+    }
+    FILTER(EXISTS {
+      ?iri <http://example.org/genomics/reviewedTag> ?_exists_curationBadges .
+    })
+  }
+}

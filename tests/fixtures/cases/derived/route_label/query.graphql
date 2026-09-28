@@ -1,0 +1,12 @@
+"""A crossing's route label is assembled at query time from its two ports —
+nothing is stored. A printed-timetable value sitting at the same path changes
+nothing: derivation replaces the stored value, never merges with it.
+In the SPARQL: the label is a BIND over the two port reads; no pattern reads
+the stored route."""
+query RouteLabel {
+  crossing {
+    route
+    origin
+    destination
+  }
+}

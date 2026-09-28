@@ -1,0 +1,13 @@
+"""A shelf can demand two conditions at once: only books that both won the
+Rice Medal and sit on the shelf qualify. Advanced RDF won the medal too but
+is reference-only — one failed conjunct drops it, and only SPARQL 101
+remains."""
+query PrizedOnShelf {
+  member {
+    iri
+    prizedOnShelf {
+      iri
+      title
+    }
+  }
+}

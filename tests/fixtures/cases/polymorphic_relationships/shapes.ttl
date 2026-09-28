@@ -8,7 +8,7 @@
 # Publishing kiosk: one article link traversing several content types.
 
 ex:ArticleApi a graphql:Schema ;
-    rdfs:comment "Publishing kiosk view: articles are queried at the root; paragraphs, images, assets, and people are reachable only through article relationships." ;
+    rdfs:comment "Publishing-kiosk domain: an article is composed of content blocks — paragraphs and images — with media assets attached (photos and videos) and people credited as paragraph authors. Articles are the entry point; every other type is reached through an article. Three articles cover the telling situations — fully populated, a dual-typed block, and childless — with subclasses (SubParagraph, VectorPhoto) widening the class hierarchy. The cases show polymorphic relationships end to end: one link traversing several object types — declared with sh:or members, the sh:class list form, or a mix of shapes and classes; required or optional; asserted, derived from curated picks, or computed from the article's own links — and the asset link spanning photo and video classes behind the single Asset type." ;
     graphql:publicShape ex:ArticleShape ;
     graphql:protectedShape ex:ParagraphShape, ex:ImageShape, ex:AssetShape, ex:PersonShape .
 

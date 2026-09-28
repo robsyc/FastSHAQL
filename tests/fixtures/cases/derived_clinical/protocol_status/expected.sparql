@@ -1,5 +1,15 @@
-SELECT ?iri ?protocolStatus
+SELECT ?iri ?medicalRecordNumber ?protocolStatus
 WHERE {
   ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/clinical/Patient> .
-  BIND(IF(EXISTS { ?iri <http://example.org/clinical/appliesProtocol> ?p }, "assigned", "unassigned") AS ?protocolStatus)
+  ?iri <http://example.org/clinical/medicalRecordNumber> ?medicalRecordNumber .
+  BIND(
+                IF(
+                    EXISTS {
+                        ?iri <http://example.org/clinical/hasCondition> ?condition .
+                        ?condition <http://example.org/clinical/recommendedProtocol> ?protocol .
+                    },
+                    "on-protocol",
+                    "off-protocol"
+                )
+             AS ?protocolStatus)
 }

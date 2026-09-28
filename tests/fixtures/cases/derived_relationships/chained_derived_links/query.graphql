@@ -1,0 +1,14 @@
+"""Computed links chain: each recommended book carries its own computed
+sameAuthorEditions — every book sharing an author, the book itself
+included, since nothing subtracts the starting point."""
+query ChainedComputedLinks {
+  member {
+    iri
+    recommendedBooks {
+      iri
+      sameAuthorEditions {
+        iri
+      }
+    }
+  }
+}

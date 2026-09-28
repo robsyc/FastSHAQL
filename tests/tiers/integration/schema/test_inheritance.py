@@ -20,42 +20,42 @@ if TYPE_CHECKING:
     from fastshaql.core.registry import ShapeRegistry
 
 
-def test_manager_filter_includes_inherited_scalar_and_relationship(
+def test_workshop_filter_includes_inherited_scalar_and_relationship(
     inheritance_registry: ShapeRegistry,
 ) -> None:
     schema = build_schema(inheritance_registry)
-    manager_filter = input_type(schema, "ManagerFilter")
+    workshop_filter = input_type(schema, "WorkshopFilter")
 
-    assert "employeeId" in manager_filter.fields
-    assert input_field_base(manager_filter.fields["employeeId"].type) == "StringFilter"
-    assert "workLocation" in manager_filter.fields
+    assert "heldOn" in workshop_filter.fields
+    assert input_field_base(workshop_filter.fields["heldOn"].type) == "DateTimeFilter"
+    assert "host" in workshop_filter.fields
 
 
-def test_manager_object_type_has_inherited_fields(
+def test_workshop_object_type_has_inherited_fields(
     inheritance_registry: ShapeRegistry,
 ) -> None:
     schema = build_schema(inheritance_registry)
-    manager = object_type(schema, "Manager")
+    workshop = object_type(schema, "Workshop")
 
-    assert "employeeId" in manager.fields
-    assert field_shape(manager.fields["employeeId"].type) == (True, False, "String")
-    assert "workLocation" in manager.fields
-    _, _, rel_base = field_shape(manager.fields["workLocation"].type)
-    assert rel_base == "Location"
+    assert "heldOn" in workshop.fields
+    assert field_shape(workshop.fields["heldOn"].type) == (True, False, "String")
+    assert "host" in workshop.fields
+    _, _, rel_base = field_shape(workshop.fields["host"].type)
+    assert rel_base == "Person"
 
 
 def test_inherited_enum_field_and_filter(inheritance_registry: ShapeRegistry) -> None:
     schema = build_schema(inheritance_registry)
-    child = inheritance_registry.by_type_name["StatusChild"]
-    status = child.property_shapes["status"]
-    assert status.value_type is ValueType.ENUM
+    child = inheritance_registry.by_type_name["Workshop"]
+    fmt = child.property_shapes["format"]
+    assert fmt.value_type is ValueType.ENUM
 
-    status_child = object_type(schema, "StatusChild")
-    assert "status" in status_child.fields
+    workshop = object_type(schema, "Workshop")
+    assert "format" in workshop.fields
 
-    status_filter = input_type(schema, "StatusChildFilter")
-    assert "status" in status_filter.fields
+    workshop_filter = input_type(schema, "WorkshopFilter")
+    assert "format" in workshop_filter.fields
     assert (
-        input_field_base(status_filter.fields["status"].type)
-        == "StatusChildStatusFilter"
+        input_field_base(workshop_filter.fields["format"].type)
+        == "WorkshopFormatFilter"
     )

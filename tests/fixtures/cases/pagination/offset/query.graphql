@@ -1,5 +1,8 @@
-query OffsetOnly {
-  person(offset: 2) {
-    name
+"""Browsing continues where the first page ended: the offset skips the first
+two books and, with no limit in play, every remaining book comes back — the
+window runs to the end of the catalog."""
+query SkipAhead {
+  book(offset: 2) {
+    title
   }
 }

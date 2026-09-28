@@ -1,0 +1,10 @@
+"""Filtering on a linked author narrows the page the same way a scalar
+filter does: both Terry Pratchett books fill the two-book page, even though
+no author is displayed. In the SPARQL: an EXISTS block inside the inner
+selection tests the author link, under variables of its own that the page
+never sees."""
+query FilterByUnshownAuthor {
+  book(where: { author: { name: { eq: "Terry Pratchett" } } }, limit: 2) {
+    title
+  }
+}

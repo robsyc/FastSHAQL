@@ -1,11 +1,16 @@
-query RowVsEntity {
-  person(limit: 2) {
-    name
-    employer {
+"""Two books come back whole no matter how many rows they occupy: selecting
+an author and the subject headings multiplies the SPARQL rows a book spans —
+Frankenstein's four subjects put it on four rows, Good Omens' two authors by
+two subjects on four more — yet a two-book page cuts between books, never
+through one; a limit over raw rows would have returned half of Frankenstein.
+In the SPARQL: the limit truncates an inner distinct selection of book IRIs,
+and authors and subjects are joined outside it, after the page is chosen."""
+query BooksNotRows {
+  book(limit: 2) {
+    title
+    author {
       name
     }
-    knows {
-      name
-    }
+    subject
   }
 }

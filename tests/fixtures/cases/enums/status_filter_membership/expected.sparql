@@ -1,0 +1,6 @@
+SELECT ?iri ?status
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Reading> .
+  ?iri <http://example.org/status> ?status .
+  FILTER(?status IN ("in-lab", "verified") && !(?status IN ("entered-in-error")))
+}

@@ -1,6 +1,11 @@
-SELECT ?iri ?label
-FROM <urn:ex:g1>
+SELECT ?iri ?title ?subject_iri ?subject_name
+FROM <urn:ex:maritime-museum>
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Thing> .
-  ?iri <http://example.org/label> ?label .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Item> .
+  ?iri <http://example.org/title> ?title .
+  OPTIONAL {
+    ?iri <http://example.org/subject> ?subject_iri .
+    ?subject_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Subject> .
+    ?subject_iri <http://example.org/name> ?subject_name .
+  }
 }

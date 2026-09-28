@@ -1,38 +1,49 @@
-@prefix sh:  <http://www.w3.org/ns/shacl#> .
-@prefix ex:  <http://example.org/> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix ex:      <http://example.org/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
 
-ex:CompanyShape a sh:NodeShape ;
-    sh:codeIdentifier "Company" ;
-    sh:targetClass ex:Company ;
-    sh:property [
-        sh:path ex:name ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
+# Bookshop catalog: pages of books, never pages of the rows books expand to.
 
-ex:PersonShape a sh:NodeShape ;
-    sh:codeIdentifier "Person" ;
-    sh:targetClass ex:Person ;
-    sh:property [
-        sh:path ex:name ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] ;
-    sh:property [
-        sh:path ex:employer ;
-        sh:class ex:Company ;
-        sh:minCount 0
-    ] ;
-    sh:property [
-        sh:path ex:knows ;
-        sh:class ex:Person ;
-        sh:minCount 0
-    ] ;
+ex:CatalogApi a graphql:Schema ;
+    rdfs:comment "Bookshop-catalog domain: the shop is browsed one page at a time, and a page is a window of books — the root entities — never a window of the SPARQL result rows a book expands to. Eight books cover the telling situations: Frankenstein spans four subject headings, Good Omens carries two authors and two subjects (four rows from one book), three books share the subject Science fiction, and Terry Pratchett appears on a solo novel beside his collaboration. Books are the entry point; authors are reached through a book. The cases show limit and offset end to end: whole books per page however many rows they span, an offset that runs to the catalog's end, a mid-catalog offset-plus-limit window, a zero limit and an over-large offset both yielding an empty page, and filters that decide page membership — on a displayed title, on a subject heading the page never shows, and on a linked author whether or not the authors are displayed." ;
+    graphql:publicShape ex:BookShape ;
+    graphql:protectedShape ex:AuthorShape .
+
+ex:BookShape a sh:NodeShape ;
+    sh:codeIdentifier "Book" ;
+    rdfs:comment "A book in the catalog, fetched a page at a time." ;
+    sh:intent "A book's authors by its subjects multiply the rows it spans — Good Omens sits on four rows — and a page still counts books." ,
+        "Page membership follows book-IRI order: the window is cut over a sorted, distinct selection of book IRIs, so pages are deterministic." ;
+    sh:targetClass ex:Book ;
     sh:property [
         sh:path ex:title ;
+        sh:description "The book's title." ;
         sh:datatype xsd:string ;
-        sh:minCount 0
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:author ;
+        sh:description "The book's authors — collaborations carry more than one." ;
+        sh:node ex:AuthorShape ;
+        sh:minCount 1
+    ] ;
+    sh:property [
+        sh:path ex:subject ;
+        sh:description "Catalog subject headings — zero or more per book." ;
+        sh:datatype xsd:string
+    ] .
+
+ex:AuthorShape a sh:NodeShape ;
+    sh:codeIdentifier "Author" ;
+    rdfs:comment "A person credited on a book." ;
+    sh:targetClass ex:Author ;
+    sh:property [
+        sh:path ex:name ;
+        sh:description "The author's name as credited." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
     ] .

@@ -1,6 +1,10 @@
+"""A derived status always has a value: patients whose conditions recommend
+any protocol read "on-protocol", everyone else "off-protocol" — including
+the patient with no conditions at all. In the SPARQL: one BIND of an
+IF(EXISTS …) expression, never null."""
 query ProtocolStatus {
   patient {
-    iri
+    medicalRecordNumber
     protocolStatus
   }
 }

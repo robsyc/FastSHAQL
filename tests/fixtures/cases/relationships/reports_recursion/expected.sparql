@@ -1,0 +1,15 @@
+SELECT ?iri ?name ?reports_iri ?reports_name ?reports_reports_iri ?reports_reports_name
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+  ?iri <http://example.org/name> ?name .
+  OPTIONAL {
+    ?iri ^<http://example.org/manager> ?reports_iri .
+    ?reports_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+    ?reports_iri <http://example.org/name> ?reports_name .
+    OPTIONAL {
+      ?reports_iri ^<http://example.org/manager> ?reports_reports_iri .
+      ?reports_reports_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+      ?reports_reports_iri <http://example.org/name> ?reports_reports_name .
+    }
+  }
+}

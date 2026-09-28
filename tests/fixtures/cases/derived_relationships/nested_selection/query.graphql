@@ -1,0 +1,21 @@
+"""A computed link behaves like a recorded one: recommendedBooks — the
+on-shelf books by the authors of whatever the member has out — nests and
+lists exactly like borrowed. A co-authored book is reached through two
+routes and appears once; a member with nothing out gets an empty list,
+never a missing key.
+In the SPARQL: borrowed is a plain triple, recommendedBooks computes inside
+a sub-SELECT."""
+query MemberNestedSelection {
+  member {
+    iri
+    name
+    borrowed {
+      iri
+      title
+    }
+    recommendedBooks {
+      iri
+      title
+    }
+  }
+}

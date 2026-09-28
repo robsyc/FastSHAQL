@@ -1,0 +1,26 @@
+{
+  "data": {
+    "reading": [
+      {
+        "iri": "http://example.org/reading-101",
+        "parameter": "Dissolved oxygen",
+        "status": "COLLECTED"
+      },
+      {
+        "iri": "http://example.org/reading-202",
+        "parameter": "Escherichia coli",
+        "status": "IN_LAB"
+      },
+      {
+        "iri": "http://example.org/reading-203",
+        "parameter": "pH",
+        "status": "VERIFIED"
+      },
+      {
+        "iri": "http://example.org/reading-304",
+        "parameter": "Turbidity",
+        "status": "ENTERED_IN_ERROR"
+      }
+    ]
+  }
+}

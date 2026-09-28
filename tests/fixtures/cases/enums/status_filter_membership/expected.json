@@ -1,0 +1,14 @@
+{
+  "data": {
+    "reading": [
+      {
+        "iri": "http://example.org/reading-202",
+        "status": "IN_LAB"
+      },
+      {
+        "iri": "http://example.org/reading-203",
+        "status": "VERIFIED"
+      }
+    ]
+  }
+}

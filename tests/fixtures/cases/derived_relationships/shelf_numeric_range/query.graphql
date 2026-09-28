@@ -1,0 +1,12 @@
+"""A shelf can bound a number: the new arrivals are catalog books published
+in 2020 or later, so the 2018 reference work drops. The shelf starts from
+the catalog, not the member — every member's page shows the same list."""
+query NewArrivals {
+  member {
+    iri
+    newArrivals {
+      iri
+      title
+    }
+  }
+}

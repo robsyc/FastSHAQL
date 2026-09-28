@@ -1,0 +1,12 @@
+"""A derived field never reads the triples at its own path. BRCA1 carries a
+curator's stored summary in English — yet the field serves the transcript's
+description, because the derivation replaces the stored triples instead of
+merging with them.
+In the SPARQL: the only summary pattern walks the transcript link; the
+stored triple appears nowhere in the query."""
+query DerivedReplacesAsserted {
+  gene {
+    iri
+    summary
+  }
+}

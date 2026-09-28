@@ -1,74 +1,82 @@
-@prefix sh:  <http://www.w3.org/ns/shacl#> .
-@prefix ex:  <http://example.org/> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix ex:      <http://example.org/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
 
-# ADR-0025 targeting: sh:node names the target, sh:class types the
-# binding; explicit classes replace the auto-typed implicit.
+# Record-label catalog: every credit link lands on one Artist type,
+# each link typing its own binding.
 
-ex:PostalAddressShape a sh:NodeShape ;
-    sh:codeIdentifier "PostalAddress" ;
-    sh:targetClass ex:PostalAddress ;
-    sh:property [
-        sh:path ex:street ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
+ex:CatalogApi a graphql:Schema ;
+    rdfs:comment "Record-label catalog view: albums are queried at the root; the artists behind them and their sleeve notes are reachable only through album credits." ;
+    graphql:publicShape ex:AlbumShape ;
+    graphql:protectedShape ex:ArtistShape, ex:LinerNoteShape .
 
-ex:NoteShape a sh:NodeShape ;
-    sh:codeIdentifier "Note" ;
-    sh:property [
-        sh:path ex:text ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:CustomerShape a sh:NodeShape ;
-    sh:codeIdentifier "Customer" ;
-    sh:targetClass ex:Customer ;
+ex:ArtistShape a sh:NodeShape ;
+    sh:codeIdentifier "Artist" ;
+    rdfs:comment "A person credited on the label's albums." ;
+    sh:targetClass ex:Artist ;
     sh:property [
         sh:path ex:name ;
+        sh:description "The artist's performing name." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:LinerNoteShape a sh:NodeShape ;
+    sh:codeIdentifier "LinerNote" ;
+    rdfs:comment "A block of sleeve-note prose, carried over from old liner copy without types." ;
+    sh:property [
+        sh:path ex:text ;
+        sh:description "The note's text." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:AlbumShape a sh:NodeShape ;
+    sh:codeIdentifier "Album" ;
+    rdfs:comment "A studio album in the label's catalog." ;
+    sh:intent "Every credit link lands on the same Artist type — each link types its own binding, and the sleeve-note link asks for no class at all." ,
+        "REVIEW: binding-drop evidence lives only on the sh:values constant lane — asserted non-conforming links would fail the data-conformance gate, and a pyshacl that learns to validate sh:values leaves these drops unprovable — decide where asserted drop evidence may live." ;
+    sh:targetClass ex:Album ;
+    sh:property [
+        sh:path ex:title ;
+        sh:description "The album's title." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:address ;
-        sh:node ex:PostalAddressShape ;
-        sh:minCount 0 ;
+        sh:path ex:featured ;
+        sh:description "Artists featured on the album." ;
+        sh:node ex:ArtistShape
+    ] ;
+    sh:property [
+        sh:path ex:composer ;
+        sh:description "The album's composer — must carry songwriter credit." ;
+        sh:node ex:ArtistShape ;
+        sh:class ex:Songwriter ;
         sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:producer ;
+        sh:description "The album's producer — carrying both songwriter and producer credit." ;
+        sh:node ex:ArtistShape ;
+        sh:class ex:Songwriter , ex:Producer ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:houseCredits ;
+        sh:description "The label's house trio, credited on every album whatever the session." ;
+        sh:node ex:ArtistShape ;
+        sh:class ex:Songwriter , ex:Producer ;
+        sh:values ( ex:nina-1 ex:ray-1 ex:ivy-1 )
     ] ;
     sh:property [
         sh:path ex:note ;
-        sh:node ex:NoteShape ;
-        sh:minCount 0 ;
-        sh:maxCount 1
-    ] ;
-    sh:property [
-        sh:path ex:billing ;
-        sh:node ex:PostalAddressShape ;
-        sh:class ex:VerifiedAddress ;
-        sh:minCount 0 ;
-        sh:maxCount 1
-    ] ;
-    sh:property [
-        sh:path ex:shipping ;
-        sh:node ex:PostalAddressShape ;
-        sh:class ex:PostalAddress ;
-        sh:minCount 0 ;
-        sh:maxCount 1
-    ] ;
-    sh:property [
-        sh:path ex:contacts ;
-        sh:node ex:PostalAddressShape ;
-        sh:class ex:VerifiedAddress ;
-        sh:values ( ex:bill-1 ex:bill-2 )
-    ] ;
-    sh:property [
-        sh:path ex:registered ;
-        sh:node ex:PostalAddressShape ;
-        sh:class ex:VerifiedAddress , ex:PrimeAddress ;
-        sh:minCount 0 ;
+        sh:description "The album's sleeve note." ;
+        sh:node ex:LinerNoteShape ;
         sh:maxCount 1
     ] .

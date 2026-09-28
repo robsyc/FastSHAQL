@@ -1,6 +1,12 @@
-query ImplicitTargetWhere {
-  change(where: { score: { gte: 0.7 } }) {
+"""Change is both a class and its own shape — one IRI wearing two hats. The
+root field lists every change record whatever its kind, and the ordinary
+where filter composes on top as with any root: here, only records scoring
+0.7 or higher.
+In the SPARQL: the shape's own IRI is the class in the typing pattern."""
+query ChangesScoringHigh {
+  change(where: { reviewScore: { gte: 0.7 } }) {
     iri
     label
+    reviewScore
   }
 }

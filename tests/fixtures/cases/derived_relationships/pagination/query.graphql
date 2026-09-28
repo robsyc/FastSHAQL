@@ -1,0 +1,13 @@
+"""Root pagination composes with computed links: limit and offset page
+members — never the derived books, which ride along whole.
+In the SPARQL: the paging sub-SELECT projects only the member variable."""
+query PaginatedMembers {
+  member(limit: 1, offset: 1) {
+    iri
+    name
+    recommendedBooks {
+      iri
+      title
+    }
+  }
+}

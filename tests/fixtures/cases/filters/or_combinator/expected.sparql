@@ -1,6 +1,8 @@
-SELECT ?iri ?name
+SELECT ?iri ?title ?year ?onLoan
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
-  ?iri <http://example.org/name> ?name .
-  FILTER(?name = "Alice" || ?name = "Bob")
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Artwork> .
+  ?iri <http://example.org/title> ?title .
+  ?iri <http://example.org/year> ?year .
+  ?iri <http://example.org/onLoan> ?onLoan .
+  FILTER(?onLoan = true || ?year < "1700"^^<http://www.w3.org/2001/XMLSchema#integer>)
 }

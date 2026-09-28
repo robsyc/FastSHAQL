@@ -1,0 +1,20 @@
+SELECT ?iri ?name ?knows_iri ?knows_name ?knows_knows_iri ?knows_knows_name ?knows_knows_knows_iri ?knows_knows_knows_name
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+  ?iri <http://example.org/name> ?name .
+  OPTIONAL {
+    ?iri <http://example.org/knows> ?knows_iri .
+    ?knows_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+    ?knows_iri <http://example.org/name> ?knows_name .
+    OPTIONAL {
+      ?knows_iri <http://example.org/knows> ?knows_knows_iri .
+      ?knows_knows_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+      ?knows_knows_iri <http://example.org/name> ?knows_knows_name .
+      OPTIONAL {
+        ?knows_knows_iri <http://example.org/knows> ?knows_knows_knows_iri .
+        ?knows_knows_knows_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+        ?knows_knows_knows_iri <http://example.org/name> ?knows_knows_knows_name .
+      }
+    }
+  }
+}

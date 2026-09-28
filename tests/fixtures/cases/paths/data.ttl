@@ -1,29 +1,86 @@
 @prefix ex: <http://example.org/> .
 
-ex:alice a ex:Person ; ex:name "Alice" ; ex:hasPet ex:fido .
-ex:bob a ex:Person ; ex:name "Bob" ; ex:hasPet ex:whiskers .
-ex:carol a ex:Person ; ex:name "Carol" .
+# The archive. Three Dune Drifter films chained backwards (each points at its
+# predecessor) and one self-distributed standalone; the people, works,
+# countries, and distributors around them.
 
-ex:fido a ex:Pet ; ex:name "Fido" .
-ex:whiskers a ex:Pet ; ex:name "Whiskers" .
-ex:stray a ex:Pet ; ex:name "Stray" .
+ex:drifter-1 a ex:Movie ;
+    ex:title "Dune Drifter" ;
+    ex:director ex:jin ;
+    ex:cast ex:tomas, ex:ade ;
+    ex:distributor ex:halcyon ;
+    ex:adaptedFrom ex:novel-1 .
 
-ex:amsterdam a ex:City ; ex:name "Amsterdam" .
-ex:berlin a ex:City ; ex:name "Berlin" .
+ex:drifter-2 a ex:Movie ;
+    ex:title "Dune Drifter II" ;
+    ex:director ex:marisol ;
+    ex:distributor ex:kite ;
+    ex:inspiredBy ex:poem-1 ;
+    ex:predecessor ex:drifter-1 .
 
-ex:acme a ex:Company ; ex:name "Acme" ; ex:locatedIn ex:amsterdam .
-ex:globex a ex:Company ; ex:name "Globex" ; ex:locatedIn ex:berlin .
+# The same novel both ways — a faithful adaptation and a loose inspiration.
+ex:drifter-3 a ex:Movie ;
+    ex:title "Dune Drifter III" ;
+    ex:director ex:marisol ;
+    ex:distributor ex:kite ;
+    ex:adaptedFrom ex:novel-2 ;
+    ex:inspiredBy ex:novel-2 ;
+    ex:predecessor ex:drifter-2 .
 
-ex:aliceEmployer a ex:EmployerCityPerson ; ex:name "Alice" ; ex:employer ex:acme .
-ex:bobEmployer a ex:EmployerCityPerson ; ex:name "Bob" ; ex:employer ex:globex .
+# Self-distributed: no distributor, no cast, no source material — every
+# optional walk off it answers null or an empty list.
+ex:meridian a ex:Movie ;
+    ex:title "Meridian" ;
+    ex:director ex:jin .
 
-ex:dana a ex:ContactPerson ; ex:name "Dana" ; ex:spouse ex:carolContact .
-ex:carolContact a ex:ContactPerson ; ex:name "Carol" ; ex:partner ex:bobContact .
-ex:bobContact a ex:ContactPerson ; ex:name "Bob" .
+# Jin direct(ed) two films; Marisol took over the sequels. Tomás keeps both
+# mailboxes; Ade keeps none and routes licences through Inés, who is herself
+# represented by Luca — a second hop that stays invisible from Ade.
+ex:jin a ex:Person ;
+    ex:name "Jin Okabe" ;
+    ex:workEmail "jin@archive.example" .
 
-ex:acmeNamed a ex:CompanyEmployerName ; ex:name "Acme" ; ex:employer ex:aliceEmployer .
+ex:marisol a ex:Person ;
+    ex:name "Marisol Vega" ;
+    ex:personalEmail "marisol@post.example" .
 
-# Family chain for path-modifier (transitive-closure) cases: kid -> dad -> grandpa
-ex:grandpa a ex:FamilyPerson ; ex:name "Grandpa" .
-ex:dad    a ex:FamilyPerson ; ex:name "Dad" ; ex:parent ex:grandpa .
-ex:kid    a ex:FamilyPerson ; ex:name "Kid" ; ex:parent ex:dad .
+ex:tomas a ex:Person ;
+    ex:name "Tomás Reyes" ;
+    ex:workEmail "tomas@archive.example" ;
+    ex:personalEmail "tomas@post.example" .
+
+ex:ade a ex:Person ;
+    ex:name "Ade Okafor" ;
+    ex:agent ex:ines .
+
+ex:ines a ex:Person ;
+    ex:name "Inés Carballo" ;
+    ex:agent ex:luca .
+
+ex:luca a ex:Person ;
+    ex:name "Luca Ferrara" .
+
+# Distributors: middle nodes with no rdf:type and no shape of their own —
+# only ever walked through, never queried directly.
+ex:halcyon
+    ex:name "Halcyon Pictures" ;
+    ex:country ex:france .
+
+ex:kite
+    ex:name "Kite Releasing" ;
+    ex:country ex:japan .
+
+ex:novel-1 a ex:Work ;
+    ex:title "The Drifter's Almanac" .
+
+ex:poem-1 a ex:Work ;
+    ex:title "Salt and Glass" .
+
+ex:novel-2 a ex:Work ;
+    ex:title "Waystation Blues" .
+
+ex:france a ex:Country ;
+    ex:name "France" .
+
+ex:japan a ex:Country ;
+    ex:name "Japan" .

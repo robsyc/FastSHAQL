@@ -1,0 +1,12 @@
+"""Enum filters take the derived names and compare whole codes: a reading is
+kept when its status equals COLLECTED and does not equal ENTERED_IN_ERROR.
+No ordering or string operators exist on an enum — a code is a code, not a
+string.
+In the SPARQL: the names lower back to their exact literals in one
+conjoined FILTER."""
+query EnumStatusFilterEqNeq {
+  reading(where: { status: { eq: COLLECTED, neq: ENTERED_IN_ERROR } }) {
+    iri
+    status
+  }
+}

@@ -1,3 +1,9 @@
+"""A derived field walks a path of its own choosing: the variant reads its
+gene's symbol through the gene link, though no variant triple mentions a
+symbol. An unplaced variant reads null — the field is single-valued, and the
+walk simply found nothing.
+In the SPARQL: the derivation is a triple pattern over the two-hop path,
+spliced in where an asserted field's triple would sit."""
 query PathValuesScalar {
   variant {
     iri

@@ -1,29 +1,56 @@
 @prefix ex: <http://example.org/> .
 
-ex:acme a ex:Company ; ex:name "Acme" .
-ex:globex a ex:Company ; ex:name "Globex" .
-ex:initech a ex:Company ; ex:name "Initech" .
+# Catalog order follows the book IRIs alphabetically — frankenstein, good_omens,
+# left_hand, middlemarch, mort, northanger, orlando, time_machine — and every
+# page walks that order.
 
-# Row multiplication: 2 employers × 2 knows → 4 SPARQL rows per entity.
-ex:alice a ex:Person ;
-    ex:name "Alice" ;
-    ex:employer ex:acme, ex:globex ;
-    ex:knows ex:bob, ex:carol ;
-    ex:title "Engineer" .
+# 1 author x 4 subjects: Frankenstein alone spans four SPARQL rows.
+ex:frankenstein a ex:Book ;
+    ex:title "Frankenstein" ;
+    ex:author ex:shelley ;
+    ex:subject "Gothic", "Horror", "Monsters", "Science fiction" .
 
-ex:bob a ex:Person ;
-    ex:name "Bob" ;
-    ex:employer ex:acme, ex:globex ;
-    ex:knows ex:alice ;
-    ex:title "Engineer" .
+# 2 authors x 2 subjects: Good Omens spans four rows of its own.
+ex:good_omens a ex:Book ;
+    ex:title "Good Omens" ;
+    ex:author ex:pratchett, ex:gaiman ;
+    ex:subject "Fantasy", "Humor" .
 
-ex:carol a ex:Person ;
-    ex:name "Carol" ;
-    ex:employer ex:acme ;
-    ex:knows ex:alice, ex:bob ;
-    ex:title "Manager" .
+ex:left_hand a ex:Book ;
+    ex:title "The Left Hand of Darkness" ;
+    ex:author ex:leguin ;
+    ex:subject "Science fiction", "Gender" .
 
-ex:dave a ex:Person ;
-    ex:name "Dave" ;
-    ex:employer ex:initech ;
-    ex:knows ex:carol .
+ex:middlemarch a ex:Book ;
+    ex:title "Middlemarch" ;
+    ex:author ex:eliot ;
+    ex:subject "Victorian", "Domestic fiction" .
+
+ex:mort a ex:Book ;
+    ex:title "Mort" ;
+    ex:author ex:pratchett ;
+    ex:subject "Fantasy", "Humor" .
+
+ex:northanger a ex:Book ;
+    ex:title "Northanger Abbey" ;
+    ex:author ex:austen ;
+    ex:subject "Gothic", "Parody" .
+
+ex:orlando a ex:Book ;
+    ex:title "Orlando: A Biography" ;
+    ex:author ex:woolf ;
+    ex:subject "Modernism" .
+
+ex:time_machine a ex:Book ;
+    ex:title "The Time Machine" ;
+    ex:author ex:wells ;
+    ex:subject "Science fiction", "Utopia" .
+
+ex:shelley a ex:Author ; ex:name "Mary Shelley" .
+ex:pratchett a ex:Author ; ex:name "Terry Pratchett" .
+ex:gaiman a ex:Author ; ex:name "Neil Gaiman" .
+ex:leguin a ex:Author ; ex:name "Ursula K. Le Guin" .
+ex:eliot a ex:Author ; ex:name "George Eliot" .
+ex:austen a ex:Author ; ex:name "Jane Austen" .
+ex:woolf a ex:Author ; ex:name "Virginia Woolf" .
+ex:wells a ex:Author ; ex:name "H. G. Wells" .

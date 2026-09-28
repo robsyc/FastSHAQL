@@ -1,0 +1,11 @@
+"""The suffixed name MAIN_OUTFALL_2 resolves to its own full IRI: the
+collision renamed a member, it did not merge the two outfall stations —
+filtering on it returns the state agency's reading and none other.
+In the SPARQL: eq lowers to the state agency's exact IRI beside a neq on
+the north-pier IRI."""
+query EnumSiteFilterEqNeq {
+  reading(where: { site: { eq: MAIN_OUTFALL_2, neq: NORTH_PIER } }) {
+    iri
+    site
+  }
+}

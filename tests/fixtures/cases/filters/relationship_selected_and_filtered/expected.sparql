@@ -1,22 +1,19 @@
-SELECT ?iri ?name ?employer_iri ?employer_name ?employer_locatedIn_iri ?employer_locatedIn_name
+SELECT ?iri ?title ?artist_iri ?artist_name ?artist_representedBy_iri ?artist_representedBy_name ?artist_representedBy_city
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
-  ?iri <http://example.org/name> ?name .
-  ?iri <http://example.org/employer> ?employer_iri .
-  ?employer_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Company> .
-  ?employer_iri <http://example.org/name> ?employer_name .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Artwork> .
+  ?iri <http://example.org/title> ?title .
+  ?iri <http://example.org/artist> ?artist_iri .
+  ?artist_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Artist> .
+  ?artist_iri <http://example.org/name> ?artist_name .
   OPTIONAL {
-    ?employer_iri <http://example.org/locatedIn> ?employer_locatedIn_iri .
-    ?employer_locatedIn_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/City> .
-    ?employer_locatedIn_iri <http://example.org/name> ?employer_locatedIn_name .
+    ?artist_iri <http://example.org/representedBy> ?artist_representedBy_iri .
+    ?artist_representedBy_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Gallery> .
+    ?artist_representedBy_iri <http://example.org/name> ?artist_representedBy_name .
+    ?artist_representedBy_iri <http://example.org/city> ?artist_representedBy_city .
   }
   FILTER(EXISTS {
-    ?employer_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Company> .
-    ?employer_iri <http://example.org/locatedIn> ?employer_locatedIn_iri .
-    FILTER(EXISTS {
-      ?employer_locatedIn_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/City> .
-      ?employer_locatedIn_iri <http://example.org/name> ?_rf_employer_locatedIn_name .
-      FILTER(?_rf_employer_locatedIn_name = "Amsterdam")
-    })
+    ?artist_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Artist> .
+    ?artist_iri <http://example.org/name> ?_rf_artist_name .
+    FILTER(CONTAINS(?_rf_artist_name, "Monet"))
   })
 }

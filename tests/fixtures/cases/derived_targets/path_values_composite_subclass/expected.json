@@ -2,20 +2,20 @@
   "data": {
     "compositeVariant": [
       {
-        "iri": "http://example.org/snv",
-        "label": "reference snv"
+        "iri": "http://example.org/variant-101",
+        "label": "unclassified change 101"
       },
       {
-        "iri": "http://example.org/subA",
-        "label": " substitution A "
+        "iri": "http://example.org/variant-102",
+        "label": "KRAS G12D"
       },
       {
-        "iri": "http://example.org/subB",
-        "label": "substitution B"
+        "iri": "http://example.org/variant-103",
+        "label": "PIK3CA E545K"
       },
       {
-        "iri": "http://example.org/delA",
-        "label": "deletion A"
+        "iri": "http://example.org/variant-104",
+        "label": "BRCA1 exon-13 rearrangement"
       }
     ]
   }

@@ -1,0 +1,19 @@
+"""A franchise read along its sequel chain. The chain is stored backwards —
+each film points at its predecessor — so a film's follow-ups are that link
+inverted and repeated. The sequels field demands at least one hop, so Dune
+Drifter opens a list of two and Meridian, a standalone, has none. The
+franchise field allows the zeroth hop as well, which is why every film belongs
+to its own franchise: Meridian still lists Meridian, first among no sequels.
+In the SPARQL: the two fields differ only in the marker — (^ex:predecessor)+
+versus (^ex:predecessor)*."""
+query FranchiseRun {
+  movie {
+    title
+    sequels {
+      title
+    }
+    franchise {
+      title
+    }
+  }
+}

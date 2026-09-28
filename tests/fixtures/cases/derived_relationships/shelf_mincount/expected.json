@@ -1,0 +1,33 @@
+{
+  "data": {
+    "member": [
+      {
+        "iri": "http://example.org/library/m1",
+        "reviewedTitles": [
+          {
+            "iri": "http://example.org/library/b3",
+            "title": "GraphQL Basics"
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/library/m2",
+        "reviewedTitles": [
+          {
+            "iri": "http://example.org/library/b3",
+            "title": "GraphQL Basics"
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/library/m3",
+        "reviewedTitles": [
+          {
+            "iri": "http://example.org/library/b3",
+            "title": "GraphQL Basics"
+          }
+        ]
+      }
+    ]
+  }
+}

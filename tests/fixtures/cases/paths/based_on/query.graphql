@@ -1,0 +1,16 @@
+"""Source material under either of two names. A film points at the work it
+draws on as an adaptation or as a looser inspiration, and one field reads both
+links: the first Dune Drifter adapts a novel, the sequel is merely inspired by
+a poem, and the third declares the very same novel both ways — and still
+answers it once, both routes landing on one work. Meridian declares neither
+and answers an empty list, never null.
+In the SPARQL: both answers come from the single path
+ex:adaptedFrom|ex:inspiredBy."""
+query BasedOn {
+  movie {
+    title
+    basedOn {
+      title
+    }
+  }
+}

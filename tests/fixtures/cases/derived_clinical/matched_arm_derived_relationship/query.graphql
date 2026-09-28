@@ -1,0 +1,14 @@
+"""The matching arm is computed, not asserted: a patient lands on the arm
+that enrolls their condition's disease class, and the match walks the
+hierarchy upwards — the NASH patient joins the fatty-liver arm without
+being coded as one. The result behaves as a full relationship with nested
+fields, and patients with no matching class get an empty list."""
+query MatchedArmDerivedRelationship {
+  patient {
+    medicalRecordNumber
+    matchedArm {
+      armCode
+      armName
+    }
+  }
+}

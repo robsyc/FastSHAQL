@@ -1,7 +1,14 @@
+"""A custodian's items are derived by walking the holdings backwards and
+keeping only values that are assets through the hierarchy: the museum's
+list keeps the sculpture and silently drops the tour headset beside it,
+while the annex — whose only holding is the off-schema study — shows an
+empty list, never null.
+In the SPARQL: the instance path appears twice — once as the filter keeping
+the candidates, once as the selected items' typing."""
 query SubclassTypingFilterShapeClosure {
   custodian {
     name
-    heldAssets {
+    heldItems {
       label
     }
   }

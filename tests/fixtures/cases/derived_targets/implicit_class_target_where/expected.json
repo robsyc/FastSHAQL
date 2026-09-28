@@ -2,12 +2,19 @@
   "data": {
     "change": [
       {
-        "iri": "http://example.org/subA",
-        "label": " substitution A "
+        "iri": "http://example.org/variant-101",
+        "label": "unclassified change 101",
+        "reviewScore": 0.8
       },
       {
-        "iri": "http://example.org/delA",
-        "label": "deletion A"
+        "iri": "http://example.org/variant-102",
+        "label": "KRAS G12D",
+        "reviewScore": 0.9
+      },
+      {
+        "iri": "http://example.org/variant-104",
+        "label": "BRCA1 exon-13 rearrangement",
+        "reviewScore": 0.7
       }
     ]
   }

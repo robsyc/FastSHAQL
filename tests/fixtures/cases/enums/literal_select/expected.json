@@ -1,9 +1,0 @@
-{
-  "data": {
-    "observation": [
-      { "iri": "http://example.org/obs1", "status": "ACTIVE" },
-      { "iri": "http://example.org/obs2", "status": "INACTIVE" },
-      { "iri": "http://example.org/obs3", "status": "ENTERED_IN_ERROR" }
-    ]
-  }
-}

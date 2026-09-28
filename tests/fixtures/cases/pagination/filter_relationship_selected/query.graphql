@@ -1,0 +1,13 @@
+"""The same author filter with the authors on display: the page still holds
+the two Pratchett books, and Good Omens keeps both of its authors — matching
+on one author never removes a co-author from a matching book. In the SPARQL:
+the author link is joined twice, once inside the inner selection for the
+filter and once outside it for display."""
+query FilterByShownAuthor {
+  book(where: { author: { name: { eq: "Terry Pratchett" } } }, limit: 2) {
+    title
+    author {
+      name
+    }
+  }
+}

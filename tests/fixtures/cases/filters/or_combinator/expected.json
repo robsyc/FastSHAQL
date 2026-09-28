@@ -1,8 +1,21 @@
 {
   "data": {
-    "person": [
-      { "name": "Alice" },
-      { "name": "Bob" }
+    "artwork": [
+      {
+        "title": "Starry Night over the Rhône",
+        "year": 1888,
+        "onLoan": true
+      },
+      {
+        "title": "Night Watch",
+        "year": 1642,
+        "onLoan": false
+      },
+      {
+        "title": "Self-Portrait with Thorn Necklace",
+        "year": 1940,
+        "onLoan": true
+      }
     ]
   }
 }

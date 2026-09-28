@@ -1,0 +1,53 @@
+{
+  "data": {
+    "person": [
+      {
+        "name": "Alice",
+        "employer": {
+          "name": "Acme",
+          "locatedIn": {
+            "name": "Amsterdam"
+          }
+        },
+        "address": {
+          "street": "Canal Ring 1"
+        },
+        "department": {
+          "iri": "http://example.org/research"
+        }
+      },
+      {
+        "name": "Bob",
+        "employer": {
+          "name": "Globex",
+          "locatedIn": {
+            "name": "Berlin"
+          }
+        },
+        "address": {
+          "street": "Alexanderplatz 4"
+        },
+        "department": {
+          "iri": "http://example.org/platform"
+        }
+      },
+      {
+        "name": "Dana",
+        "employer": {
+          "name": "Acme",
+          "locatedIn": {
+            "name": "Amsterdam"
+          }
+        },
+        "address": null,
+        "department": null
+      },
+      {
+        "name": "Carol",
+        "employer": null,
+        "address": null,
+        "department": null
+      }
+    ]
+  }
+}

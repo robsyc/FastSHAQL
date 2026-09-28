@@ -92,8 +92,8 @@ def filters_registry() -> ShapeRegistry:
 
 
 @pytest.fixture
-def filter_person_shape(filters_registry: ShapeRegistry):
-    return filters_registry.by_type_name["Person"]
+def filter_artwork_shape(filters_registry: ShapeRegistry):
+    return filters_registry.by_type_name["Artwork"]
 
 
 @pytest.fixture
@@ -107,8 +107,8 @@ def person_shape(relationship_registry: ShapeRegistry):
 
 
 @pytest.fixture
-def cardinality_thing_shape(cardinality_registry: ShapeRegistry):
-    return cardinality_registry.by_type_name["Thing"]
+def cardinality_tea_shape(cardinality_registry: ShapeRegistry):
+    return cardinality_registry.by_type_name["Tea"]
 
 
 @pytest.fixture

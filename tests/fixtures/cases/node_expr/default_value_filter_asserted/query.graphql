@@ -1,3 +1,9 @@
+"""The default never shadows a stated value: filtering for "v2" returns the
+one gene that asserts it, while the default-served genes stay out. The field
+is not selected, yet the filter still resolves each gene's served value
+before comparing.
+In the SPARQL: the COALESCE lane is emitted for the filter alone, with no
+projection of the field itself."""
 query DefaultValueFilterMatchesAsserted {
   gene(where: {assayVersion: {eq: "v2"}}) {
     iri

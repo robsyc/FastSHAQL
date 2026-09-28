@@ -1,0 +1,29 @@
+{
+  "data": {
+    "reading": [
+      {
+        "iri": "http://example.org/reading-101",
+        "flags": [
+          "ESTIMATED",
+          "HELD"
+        ]
+      },
+      {
+        "iri": "http://example.org/reading-202",
+        "flags": []
+      },
+      {
+        "iri": "http://example.org/reading-203",
+        "flags": [
+          "BELOW_DETECTION"
+        ]
+      },
+      {
+        "iri": "http://example.org/reading-304",
+        "flags": [
+          "ESTIMATED"
+        ]
+      }
+    ]
+  }
+}

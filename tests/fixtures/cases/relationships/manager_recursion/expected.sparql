@@ -1,0 +1,20 @@
+SELECT ?iri ?name ?manager_iri ?manager_name ?manager_manager_iri ?manager_manager_name ?manager_manager_manager_iri ?manager_manager_manager_name
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+  ?iri <http://example.org/name> ?name .
+  OPTIONAL {
+    ?iri <http://example.org/manager> ?manager_iri .
+    ?manager_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+    ?manager_iri <http://example.org/name> ?manager_name .
+    OPTIONAL {
+      ?manager_iri <http://example.org/manager> ?manager_manager_iri .
+      ?manager_manager_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+      ?manager_manager_iri <http://example.org/name> ?manager_manager_name .
+      OPTIONAL {
+        ?manager_manager_iri <http://example.org/manager> ?manager_manager_manager_iri .
+        ?manager_manager_manager_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Person> .
+        ?manager_manager_manager_iri <http://example.org/name> ?manager_manager_manager_name .
+      }
+    }
+  }
+}

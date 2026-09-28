@@ -1,12 +1,11 @@
 {
   "data": {
-    "manager": [
+    "workshop": [
       {
-        "managerName": "Alice",
-        "employeeId": "E-001",
-        "employmentStatus": "ACTIVE",
-        "workLocation": {
-          "locationName": "Headquarters"
+        "iri": "http://example.org/stained-glass",
+        "skillLevel": "BEGINNER",
+        "venue": {
+          "name": "Stora Hallen"
         }
       }
     ]

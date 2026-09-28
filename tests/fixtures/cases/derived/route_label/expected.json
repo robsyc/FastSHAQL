@@ -1,0 +1,26 @@
+{
+  "data": {
+    "crossing": [
+      {
+        "route": "Bergen – Rosendal",
+        "origin": "Bergen",
+        "destination": "Rosendal"
+      },
+      {
+        "route": "Bergen – Stavanger",
+        "origin": "Bergen",
+        "destination": "Stavanger"
+      },
+      {
+        "route": "Stavanger – Tau",
+        "origin": "Stavanger",
+        "destination": "Tau"
+      },
+      {
+        "route": "Rosendal – Sundal",
+        "origin": "Rosendal",
+        "destination": "Sundal"
+      }
+    ]
+  }
+}

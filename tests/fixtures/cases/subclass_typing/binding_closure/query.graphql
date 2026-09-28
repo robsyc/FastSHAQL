@@ -1,3 +1,9 @@
+"""Holders qualify through the hierarchy too: the fresco's holder is a plain
+custodian, the sculpture's is a gallery — a kind of custodian — and both
+bind to the same holder view. An item nobody holds reports null, never an
+empty object.
+In the SPARQL: the holder carries the same subclass-closing type walk as
+the root, now inside the OPTIONAL."""
 query SubclassTypingBindingClosure {
   asset {
     label

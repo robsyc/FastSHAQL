@@ -1,0 +1,11 @@
+"""Range comparators are the hardest value set to name: every symbol
+mangles to a bare underscore, so members suffix in list order — "<" keeps
+_, "<=" becomes _2, ">=" _3 and ">" _4. Reordering the list would reassign
+which symbol keeps the bare name — the price of names derived from values."""
+query EnumComparatorSelect {
+  reading {
+    iri
+    parameter
+    comparator
+  }
+}

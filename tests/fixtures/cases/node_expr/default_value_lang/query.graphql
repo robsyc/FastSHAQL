@@ -1,3 +1,9 @@
+"""A default fills language gaps: the display name serves the gene's English
+name when one matches the request's language, and "unnamed" otherwise. The
+German-only gene and the nameless gene both read by default — the default is
+what the language chain falls through to, not a null.
+In the SPARQL: the default is the final argument of the language chain's
+COALESCE."""
 query DefaultValueLanguageFallback {
   gene {
     iri

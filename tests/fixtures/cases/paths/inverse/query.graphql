@@ -1,8 +1,0 @@
-query PathInverse {
-  pet {
-    name
-    owner {
-      name
-    }
-  }
-}

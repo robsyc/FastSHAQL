@@ -1,14 +1,43 @@
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix ex: <http://example.org/> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix ex:      <http://example.org/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
 
-ex:ThingShape a sh:NodeShape ;
-    sh:codeIdentifier "Thing" ;
-    sh:targetClass ex:Thing ;
+# Archival consortium: member collections partitioned into named graphs.
+
+ex:ArchiveApi a graphql:Schema ;
+    rdfs:comment "Consortium archive domain: member institutions catalogue their holdings — a maritime museum and a city archive — each in its own named graph, while the shared thesaurus of subject terms lives in one centrally maintained graph and a legacy backlog sits uncatalogued in the store's unnamed default graph. Items are the entry point; a subject term is reached only through an item. The cases show dataset scoping end to end: a read scope of one graph isolates that member's items and severs their subject links; adding the thesaurus to the scope reunites them, with a locally copied term merging away; an explicit scope replaces the store's default graph, hiding the unnamed backlog; and with no scope at all the store's own default dataset — here the union of everything — answers." ;
+    graphql:publicShape ex:ItemShape ;
+    graphql:protectedShape ex:SubjectShape .
+
+ex:ItemShape a sh:NodeShape ;
+    sh:codeIdentifier "Item" ;
+    rdfs:comment "A catalogued item held by one member institution." ;
+    sh:intent "An item's triples live in its member's graph while its subject term lives in the shared thesaurus — a read scope usually lists both, which is why scopes list several graphs." ;
+    sh:targetClass ex:Item ;
     sh:property [
-        sh:path ex:label ;
-        sh:codeIdentifier "label" ;
+        sh:path ex:title ;
+        sh:description "The item's catalogue title." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
-        sh:maxCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:subject ;
+        sh:description "The thesaurus term for what the item documents." ;
+        sh:node ex:SubjectShape ;
+        sh:maxCount 1
+    ] .
+
+ex:SubjectShape a sh:NodeShape ;
+    sh:codeIdentifier "Subject" ;
+    rdfs:comment "A thesaurus term from the shared reference graph." ;
+    sh:targetClass ex:Subject ;
+    sh:property [
+        sh:path ex:name ;
+        sh:description "The term's preferred name." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
     ] .

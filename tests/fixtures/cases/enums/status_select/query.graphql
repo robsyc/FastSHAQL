@@ -1,0 +1,14 @@
+"""A reading's workflow status comes from a fixed list of literal codes, and
+the enum's member names derive from the codes themselves: lower-case letters
+upper-case and hyphens become underscores ("in-lab" is IN_LAB). The status
+list names "verified" twice — the two agencies' wordings were merged — and
+only the first of the two names ever appears in output.
+In the SPARQL: a plain string literal binds ?status — the names exist only
+at the GraphQL layer."""
+query EnumStatusSelect {
+  reading {
+    iri
+    parameter
+    status
+  }
+}

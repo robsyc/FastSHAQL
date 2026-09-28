@@ -1,0 +1,12 @@
+"""Site members are IRIs, not literals: each member name derives from its
+IRI's local name, so http://example.org/city/main-outfall is
+MAIN_OUTFALL. The city and the state each run a "main-outfall" station —
+one local name over two full IRIs — and the later-listed state member
+suffixes to MAIN_OUTFALL_2. Output carries the derived name, never the
+full IRI."""
+query EnumSiteSelect {
+  reading {
+    iri
+    site
+  }
+}

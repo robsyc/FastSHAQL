@@ -1,0 +1,12 @@
+"""When no declaration spells the root set, a hand-written SPARQL select
+stands in: this one finds every record typed as a Deletion. The select is
+ordinary SPARQL with prefixes declared beside it, and its single projected
+variable becomes the entity set.
+In the SPARQL: the select's WHERE body is spliced in whole, its projection
+renamed onto the root variable."""
+query DeletionsBySelect {
+  deletionVariant {
+    iri
+    label
+  }
+}

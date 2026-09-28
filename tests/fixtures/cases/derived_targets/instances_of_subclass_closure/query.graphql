@@ -1,1 +1,12 @@
-{ variant { iri label } }
+"""Every variant record in the registry, wherever it sits under the Variant
+branch of the taxonomy: records typed as a Substitution or a Deletion count
+through their superclass, and a record typed directly as a Variant sits
+beside them.
+In the SPARQL: the root set is one pattern — rdf:type/rdfs:subClassOf* into
+the Variant class — the same shape a plain class target produces."""
+query AllVariantRecords {
+  variant {
+    iri
+    label
+  }
+}

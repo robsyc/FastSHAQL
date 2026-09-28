@@ -2,6 +2,14 @@
 @prefix clinical: <http://example.org/clinical/> .
 @prefix xsd:      <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graphql:  <http://datashapes.org/graphql#> .
+
+# Clinical registry: every answer a query computes — coding, protocols, matching — is derived.
+
+clinical:RegistryApi a graphql:Schema ;
+    rdfs:comment "Clinical-registry domain: patients carry conditions coded in a disease-class hierarchy (Condition above LiverDisorder, which splits into HepatitisB and FattyLiverDisease above NASH), conditions recommend treatment protocols, and trial arms enroll whole disease classes. The registry's answers are computed, not asserted: each condition's most-specific class (its coding leaf, or the generic Condition while it awaits classification), a condition's optional summary note, the protocol titles that apply to a patient through their conditions, an on-protocol / off-protocol status, and the trial arm matching those conditions — an arm enrolling a disease class collects patients coded anywhere beneath it. Four patients cover the telling situations: deep coding with two recommended protocols, shallow coding with none, a condition still awaiting classification, and a patient with no conditions at all." ;
+    graphql:publicShape clinical:PatientShape ;
+    graphql:protectedShape clinical:ConditionShape, clinical:ArmShape .
 
 clinical:prefixes a sh:ShapesGraph ;
     sh:declare [
@@ -13,11 +21,83 @@ clinical:prefixes a sh:ShapesGraph ;
         sh:namespace "http://www.w3.org/2000/01/rdf-schema#" ;
     ] .
 
+clinical:PatientShape a sh:NodeShape ;
+    sh:codeIdentifier "Patient" ;
+    rdfs:comment "A person in the registry, identified by medical record number." ;
+    sh:intent "Nothing protocol-shaped is asserted on the patient: titles, status, and matching arm are all computed at query time from the conditions." ;
+    sh:targetClass clinical:Patient ;
+    sh:property [
+        sh:path clinical:medicalRecordNumber ;
+        sh:description "The patient's medical record number." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path clinical:hasCondition ;
+        sh:description "The conditions recorded for the patient." ;
+        sh:class clinical:Condition
+    ] ;
+    sh:property [
+        sh:path clinical:applicableProtocolTitles ;
+        sh:description "Titles of every protocol recommended by the patient's conditions, collected across all of them." ;
+        sh:datatype xsd:string ;
+        sh:values [
+            sh:prefixes clinical:prefixes ;
+            sh:select """
+                SELECT ?title
+                WHERE {
+                    $this clinical:hasCondition ?condition .
+                    ?condition clinical:recommendedProtocol ?protocol .
+                    ?protocol clinical:title ?title .
+                }
+            """ ;
+        ]
+    ] ;
+    sh:property [
+        sh:path clinical:protocolStatus ;
+        sh:description "Whether any of the patient's conditions recommends a protocol — \"on-protocol\" or \"off-protocol\"." ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:values [
+            sh:prefixes clinical:prefixes ;
+            sh:sparqlExpr """
+                IF(
+                    EXISTS {
+                        $this clinical:hasCondition ?condition .
+                        ?condition clinical:recommendedProtocol ?protocol .
+                    },
+                    "on-protocol",
+                    "off-protocol"
+                )
+            """ ;
+        ]
+    ] ;
+    sh:property [
+        sh:path clinical:matchedArm ;
+        sh:description "The trial arm that enrolls the patient's condition class — computed by matching, never asserted." ;
+        sh:class clinical:Arm ;
+        sh:values [
+            sh:prefixes clinical:prefixes ;
+            sh:select """
+                SELECT ?arm
+                WHERE {
+                    $this clinical:hasCondition ?condition .
+                    ?condition a/rdfs:subClassOf* ?enrolledClass .
+                    ?arm clinical:enrollsClass ?enrolledClass .
+                }
+            """ ;
+        ]
+    ] .
+
 clinical:ConditionShape a sh:NodeShape ;
     sh:codeIdentifier "Condition" ;
+    rdfs:comment "A coded clinical condition; both of its fields are derived from how it is typed." ;
+    sh:intent "REVIEW: a condition coded at two incomparable leaf classes derives two most-specific classes against a single-valued field — the serializer silently keeps one row's value instead of erroring; the data here keeps one leaf per condition, but that silent pick deserves a decision." ;
     sh:targetClass clinical:Condition ;
     sh:property [
         sh:path clinical:mostSpecificClass ;
+        sh:description "The most specific disease class the condition is coded as, as a full IRI string." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1 ;
@@ -35,6 +115,7 @@ clinical:ConditionShape a sh:NodeShape ;
     ] ;
     sh:property [
         sh:path clinical:summaryNote ;
+        sh:description "The free-text note summarizing the condition, when one exists." ;
         sh:datatype xsd:string ;
         sh:maxCount 1 ;
         sh:values [
@@ -43,50 +124,24 @@ clinical:ConditionShape a sh:NodeShape ;
                 SELECT ?note
                 WHERE { $this clinical:note ?note }
             """ ;
-        ] ;
+        ]
     ] .
 
-clinical:PatientShape a sh:NodeShape ;
-    sh:codeIdentifier "Patient" ;
-    sh:targetClass clinical:Patient ;
+clinical:ArmShape a sh:NodeShape ;
+    sh:codeIdentifier "Arm" ;
+    rdfs:comment "A trial arm that enrolls every patient whose condition sits beneath its enrolled disease class." ;
+    sh:targetClass clinical:Arm ;
     sh:property [
-        sh:path clinical:hasCondition ;
-        sh:class clinical:Condition ;
-        sh:minCount 0 ;
-    ] ;
-    sh:property [
-        sh:path clinical:activeConditions ;
-        sh:class clinical:Condition ;
-        sh:values [
-            sh:prefixes clinical:prefixes ;
-            sh:select """
-                SELECT ?condition
-                WHERE {
-                    $this clinical:hasCondition ?condition .
-                }
-            """ ;
-        ] ;
-    ] ;
-    sh:property [
-        sh:path clinical:applicableProtocolTitles ;
+        sh:path clinical:armCode ;
+        sh:description "The arm's short code, e.g. \"A\"." ;
         sh:datatype xsd:string ;
-        sh:values [
-            sh:prefixes clinical:prefixes ;
-            sh:select """
-                SELECT ?title
-                WHERE {
-                    $this clinical:appliesProtocol ?protocol .
-                    ?protocol clinical:title ?title .
-                }
-            """ ;
-        ] ;
+        sh:minCount 1 ;
+        sh:maxCount 1
     ] ;
     sh:property [
-        sh:path clinical:protocolStatus ;
+        sh:path clinical:armName ;
+        sh:description "The arm's human-readable name." ;
         sh:datatype xsd:string ;
-        sh:maxCount 1 ;
-        sh:values [
-            sh:prefixes clinical:prefixes ;
-            sh:sparqlExpr "IF(EXISTS { $this clinical:appliesProtocol ?p }, \"assigned\", \"unassigned\")" ;
-        ] ;
+        sh:minCount 1 ;
+        sh:maxCount 1
     ] .

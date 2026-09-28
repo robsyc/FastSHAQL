@@ -1,35 +1,32 @@
-SELECT ?iri ?name ?billing_iri ?billing_street ?shipping_iri ?shipping_street ?contacts_iri ?contacts_street ?registered_iri ?registered_street
+SELECT ?iri ?title ?composer_iri ?composer_name ?producer_iri ?producer_name ?houseCredits_iri ?houseCredits_name
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Customer> .
-  ?iri <http://example.org/name> ?name .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Album> .
+  ?iri <http://example.org/title> ?title .
   OPTIONAL {
-    ?iri <http://example.org/billing> ?billing_iri .
-    ?billing_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/VerifiedAddress> .
-    ?billing_iri <http://example.org/street> ?billing_street .
+    ?iri <http://example.org/composer> ?composer_iri .
+    ?composer_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Songwriter> .
+    ?composer_iri <http://example.org/name> ?composer_name .
   }
   OPTIONAL {
-    ?iri <http://example.org/shipping> ?shipping_iri .
-    ?shipping_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/PostalAddress> .
-    ?shipping_iri <http://example.org/street> ?shipping_street .
+    ?iri <http://example.org/producer> ?producer_iri .
+    ?producer_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Producer> .
+    ?producer_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Songwriter> .
+    ?producer_iri <http://example.org/name> ?producer_name .
   }
   OPTIONAL {
     {
-      SELECT ?iri ?contacts_iri
+      SELECT ?iri ?houseCredits_iri
       WHERE {
-        VALUES ?contacts_iri {
-          <http://example.org/bill-1>
-          <http://example.org/bill-2>
+        VALUES ?houseCredits_iri {
+          <http://example.org/nina-1>
+          <http://example.org/ray-1>
+          <http://example.org/ivy-1>
         }
-        FILTER(BOUND(?contacts_iri))
+        FILTER(BOUND(?houseCredits_iri))
       }
     }
-    ?contacts_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/VerifiedAddress> .
-    ?contacts_iri <http://example.org/street> ?contacts_street .
-  }
-  OPTIONAL {
-    ?iri <http://example.org/registered> ?registered_iri .
-    ?registered_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/PrimeAddress> .
-    ?registered_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/VerifiedAddress> .
-    ?registered_iri <http://example.org/street> ?registered_street .
+    ?houseCredits_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Producer> .
+    ?houseCredits_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Songwriter> .
+    ?houseCredits_iri <http://example.org/name> ?houseCredits_name .
   }
 }

@@ -1,54 +1,138 @@
-@prefix sh:  <http://www.w3.org/ns/shacl#> .
-@prefix ex:  <http://example.org/> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix shnex:   <http://www.w3.org/ns/shacl-node-expr#> .
+@prefix ex:      <http://example.org/fjord/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
+
+# Fjord-ferry network: small-port crossings whose display values are
+# computed at query time rather than stored.
+
+ex:FerryApi a graphql:Schema ;
+    rdfs:comment "Fjord-ferry network: scheduled crossings between small west-coast ports, each sailed by a vessel and flagged when a disruption notice applies. Crossings are the entry point; vessels are reached through them. The cases show derived fields end to end — values computed at query time instead of read from triples: assembled from parts (a route label joined from the two ports), cut from the resource's own identifier (the booking code), converted between units (sailing hours from stored minutes), tested for existence (the alert flag), and walked through a link (the vessel's name). The stale printed-timetable route text shows derivation replacing stored values, and the filters ask about derived values the response may never show." ;
+    graphql:publicShape ex:CrossingShape ;
+    graphql:protectedShape ex:VesselShape .
 
 ex:prefixes a sh:ShapesGraph ;
     sh:declare [
         sh:prefix "ex" ;
-        sh:namespace "http://example.org/" ;
+        sh:namespace "http://example.org/fjord/" ;
     ] .
 
-ex:ItemShape a sh:NodeShape ;
-    sh:codeIdentifier "Item" ;
-    sh:targetClass ex:Item ;
+ex:CrossingShape a sh:NodeShape ;
+    sh:codeIdentifier "Crossing" ;
+    rdfs:comment "A scheduled ferry crossing between two ports." ;
+    sh:intent "Every derived field replaces whatever is stored at its path — the printed-timetable route text on the Stavanger–Tau crossing never reaches the API." ,
+        "A derived value is computed once per crossing and filters compare that computed value — even a value the selection never asks for." ,
+        "REVIEW: a derived field's merged body re-reads triples the selection also binds (route_label shows the two port reads twice) — correct but redundant; decide whether a shared-read optimization is worth the golden churn." ;
+    sh:targetClass ex:Crossing ;
     sh:property [
-        sh:path ex:source ;
+        sh:path ex:origin ;
+        sh:description "The port the crossing departs from." ;
         sh:datatype xsd:string ;
-        sh:values "Fastshaql" ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:iriLength ;
+        sh:path ex:destination ;
+        sh:description "The port the crossing arrives at." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:minutes ;
+        sh:description "Scheduled sailing time, stored in minutes." ;
         sh:datatype xsd:integer ;
-        sh:values [ sh:sparqlExpr "STRLEN(STR($this))" ] ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:isFlagged ;
-        sh:datatype xsd:boolean ;
-        sh:values [
-            sh:prefixes ex:prefixes ;
-            sh:sparqlExpr "EXISTS { $this ex:hasFlag ?f }" ;
-        ] ;
-        sh:minCount 0 ;
+        sh:path ex:alert ;
+        sh:description "A disruption notice attached to the crossing." ;
+        sh:datatype xsd:string ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:label ;
+        sh:path ex:vessel ;
+        sh:description "The vessel scheduled to sail the crossing." ;
+        sh:node ex:VesselShape ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:route ;
+        sh:description "The crossing's display label, joined from its two ports." ;
         sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
         sh:values [
             sh:prefixes ex:prefixes ;
             sh:select """
-                SELECT ?label
+                SELECT ?route
                 WHERE {
-                    $this ex:givenName ?given .
-                    $this ex:familyName ?family .
-                    BIND(CONCAT(?given, " ", ?family) AS ?label)
+                    $this ex:origin ?origin .
+                    $this ex:destination ?destination .
+                    BIND(CONCAT(?origin, " – ", ?destination) AS ?route)
                 }
-            """ ;
-        ] ;
+            """
+        ]
+    ] ;
+    sh:property [
+        sh:path ex:code ;
+        sh:description "The booking code, cut from the crossing's own identifier." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:values [ sh:sparqlExpr "REPLACE(STR($this), \"^.*[/#]\", \"\")" ]
+    ] ;
+    sh:property [
+        sh:path ex:hours ;
+        sh:description "Scheduled sailing time in hours, derived from the minutes." ;
+        sh:datatype xsd:decimal ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:values [
+            sh:prefixes ex:prefixes ;
+            sh:select """
+                SELECT ?hours
+                WHERE {
+                    $this ex:minutes ?minutes .
+                    BIND(?minutes / 60 AS ?hours)
+                }
+            """
+        ]
+    ] ;
+    sh:property [
+        sh:path ex:isAlerted ;
+        sh:description "Whether a disruption notice is currently attached." ;
+        sh:datatype xsd:boolean ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:values [ shnex:exists [ shnex:pathValues ex:alert ] ]
+    ] ;
+    sh:property [
+        sh:path ex:vesselName ;
+        sh:description "The sailing vessel's display name, reached through the vessel link." ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:values [ shnex:pathValues ( ex:vessel ex:name ) ]
+    ] .
+
+ex:VesselShape a sh:NodeShape ;
+    sh:codeIdentifier "Vessel" ;
+    rdfs:comment "The ship that sails a crossing." ;
+    sh:targetClass ex:Vessel ;
+    sh:property [
+        sh:path ex:name ;
+        sh:description "The vessel's display name." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:passengers ;
+        sh:description "The vessel's passenger capacity." ;
+        sh:datatype xsd:integer ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] .

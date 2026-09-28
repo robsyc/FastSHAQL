@@ -1,3 +1,10 @@
+"""A derived field's default is filterable like any other: asking for support
+score 0.0 returns the genes whose support study yielded no score. The
+derivation ran, found nothing, and the default filled the field before the
+comparison — the gene with no support study at all matches on the same
+served value.
+In the SPARQL: the derived walk sits inside the OPTIONAL that the COALESCE
+closes, and the FILTER compares the result."""
 query DefaultValueFilterDerivedMatchesDefaultFilled {
   gene(where: {supportScore: {eq: 0.0}}) {
     iri

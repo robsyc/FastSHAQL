@@ -1,9 +1,13 @@
+"""Patients can be filtered on a derived field inside their conditions:
+matching the computed most-specific class finds exactly the patient coded
+as NASH — the classification exists only at query time, so the filter
+re-derives it under the hood."""
 query FilterMostSpecificClass {
   patient(where: {
     hasCondition: {
       mostSpecificClass: { eq: "http://example.org/clinical/NonAlcoholicSteatohepatitis" }
     }
   }) {
-    iri
+    medicalRecordNumber
   }
 }

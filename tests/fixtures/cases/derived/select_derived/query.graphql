@@ -1,7 +1,0 @@
-query SelectDerived {
-  item {
-    iri
-    source
-    iriLength
-  }
-}

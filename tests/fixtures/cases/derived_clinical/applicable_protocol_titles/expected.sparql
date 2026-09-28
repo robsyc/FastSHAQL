@@ -1,8 +1,10 @@
-SELECT ?iri ?applicableProtocolTitles
+SELECT ?iri ?medicalRecordNumber ?applicableProtocolTitles
 WHERE {
   ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/clinical/Patient> .
+  ?iri <http://example.org/clinical/medicalRecordNumber> ?medicalRecordNumber .
   OPTIONAL {
-    ?iri <http://example.org/clinical/appliesProtocol> ?protocol .
+    ?iri <http://example.org/clinical/hasCondition> ?condition .
+    ?condition <http://example.org/clinical/recommendedProtocol> ?protocol .
     ?protocol <http://example.org/clinical/title> ?title .
     BIND(?title AS ?applicableProtocolTitles)
   }

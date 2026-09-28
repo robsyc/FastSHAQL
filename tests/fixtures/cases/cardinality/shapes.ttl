@@ -1,21 +1,56 @@
-@prefix sh:  <http://www.w3.org/ns/shacl#> .
-@prefix ex:  <http://example.org/> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix ex:      <http://example.org/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
 
-ex:ThingShape a sh:NodeShape ;
-    sh:codeIdentifier "Thing" ;
-    sh:targetClass ex:Thing ;
-    sh:property [ sh:path ex:label ;    sh:codeIdentifier "label" ;    sh:datatype xsd:string ; sh:minCount 1 ; sh:maxCount 1 ] ;
-    sh:property [ sh:path ex:subtitle ; sh:codeIdentifier "subtitle" ; sh:datatype xsd:string ; sh:minCount 0 ; sh:maxCount 1 ] ;
-    sh:property [ sh:path ex:tag ;      sh:codeIdentifier "tag" ;      sh:datatype xsd:string ; sh:minCount 1 ] ;
-    sh:property [ sh:path ex:altLabel ; sh:codeIdentifier "altLabel" ; sh:datatype xsd:string ; sh:minCount 0 ] .
+# Tea house menu: one blend carrying every count shape a field can take.
 
-ex:OptionalScalarShape a sh:NodeShape ;
-    sh:codeIdentifier "OptionalScalarThing" ;
-    sh:targetClass ex:OptionalScalarThing ;
-    sh:property [ sh:path ex:note ; sh:codeIdentifier "note" ; sh:datatype xsd:string ; sh:maxCount 1 ] .
+ex:TeaMenu a graphql:Schema ;
+    rdfs:comment "Tea house domain: a menu card of tea blends, each field taking the count shape a vendor can vouch for — exactly one name, at most one tagline, one or more ingredient lines, any number of tasting notes, at most three awards, and a caffeine level served as \"medium\" wherever the vendor stays silent. Teas are the entry point; three blends cover the telling situations — fully described, lean (no tagline, no notes, a single ingredient), and silent on caffeine so the default answers. The case shows the count shapes side by side: required or optional, single value or list, null or empty list — and a defaulted field that never answers null." ;
+    graphql:publicShape ex:TeaShape .
 
-ex:OptionalListShape a sh:NodeShape ;
-    sh:codeIdentifier "OptionalListThing" ;
-    sh:targetClass ex:OptionalListThing ;
-    sh:property [ sh:path ex:tag ; sh:codeIdentifier "tag" ; sh:datatype xsd:string ] .
+ex:TeaShape a sh:NodeShape ;
+    sh:codeIdentifier "Tea" ;
+    rdfs:comment "A tea blend as the menu card lists it." ;
+    sh:intent "Every count shape rides one blend: the name is exactly one, the tagline at most one, the ingredients one or more, the tasting notes and awards any number." ,
+        "Awards cap at three, but GraphQL lists are never bounded — the cap lives in the shapes alone." ,
+        "Vendors rarely state caffeine; sh:defaultValue serves \"medium\" wherever they stay silent — the field answers non-null even though no minimum is declared." ;
+    sh:targetClass ex:Tea ;
+    sh:property [
+        sh:path ex:name ;
+        sh:description "The blend's display name." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:tagline ;
+        sh:description "A one-line slogan under the name." ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:ingredients ;
+        sh:description "The blend's ingredient lines." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1
+    ] ;
+    sh:property [
+        sh:path ex:flavor ;
+        sh:description "Tasting notes for the counter card." ;
+        sh:datatype xsd:string
+    ] ;
+    sh:property [
+        sh:path ex:caffeine ;
+        sh:description "Caffeine level, served as \"medium\" when the vendor states none." ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1 ;
+        sh:defaultValue "medium"
+    ] ;
+    sh:property [
+        sh:path ex:awards ;
+        sh:description "Awards the blend has won — at most three are recorded." ;
+        sh:datatype xsd:string ;
+        sh:maxCount 3
+    ] .

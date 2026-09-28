@@ -1,1 +1,11 @@
-{ variantBranch { iri label } }
+"""Only the imported half of the taxonomy: the partner ontology's terms are
+recognizable by their IRI prefix, and the target keeps exactly those. The
+locally minted terms stay out, and no query-side filter is involved — the
+pattern lives in the shape.
+In the SPARQL: a REGEX over the string form of each term's IRI."""
+query ImportedBranchTerms {
+  importedTerm {
+    iri
+    label
+  }
+}

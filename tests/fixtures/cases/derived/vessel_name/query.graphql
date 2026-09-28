@@ -1,0 +1,12 @@
+"""The vessel's name is reached through the vessel link and exposed directly
+on the crossing — a derived field that walks a path instead of reading one.
+The chartered seasonal crossing has no fixed vessel and gets null, not an
+error.
+In the SPARQL: the two hops land as one property-path triple inside an
+OPTIONAL."""
+query VesselName {
+  crossing {
+    code
+    vesselName
+  }
+}

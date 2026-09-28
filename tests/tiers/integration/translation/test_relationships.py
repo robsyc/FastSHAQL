@@ -58,17 +58,17 @@ def test_translate_raises_on_unknown_field(
 
 
 def test_translate_all_optional_scalars_use_optional_blocks(
-    cardinality_thing_shape,
+    cardinality_tea_shape,
     cardinality_registry: ShapeRegistry,
 ) -> None:
-    field_node = _root_field("{ things { iri subtitle } }")
-    result = translate_query(cardinality_thing_shape, field_node, cardinality_registry)
+    field_node = _root_field("{ tea { iri tagline } }")
+    result = translate_query(cardinality_tea_shape, field_node, cardinality_registry)
     assert result.query.render() == (
-        """SELECT ?iri ?subtitle
+        """SELECT ?iri ?tagline
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Thing> .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Tea> .
   OPTIONAL {
-    ?iri <http://example.org/subtitle> ?subtitle .
+    ?iri <http://example.org/tagline> ?tagline .
   }
 }"""
     )

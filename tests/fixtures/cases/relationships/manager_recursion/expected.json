@@ -1,0 +1,31 @@
+{
+  "data": {
+    "person": [
+      {
+        "name": "Alice",
+        "manager": {
+          "name": "Bob",
+          "manager": {
+            "name": "Dana",
+            "manager": null
+          }
+        }
+      },
+      {
+        "name": "Bob",
+        "manager": {
+          "name": "Dana",
+          "manager": null
+        }
+      },
+      {
+        "name": "Dana",
+        "manager": null
+      },
+      {
+        "name": "Carol",
+        "manager": null
+      }
+    ]
+  }
+}

@@ -4,52 +4,28 @@
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix graphql: <http://datashapes.org/graphql#> .
 
-ex:ApiSchema a graphql:Schema ;
+# Dog daycare: one shapes graph, one published customer view.
+
+ex:DaycareApi a graphql:Schema ;
+    rdfs:comment "Dog-daycare domain: customers drop their dogs off for the day, shuttle vans cover the pickup routes, and account events land in an audit log. The graphql:Schema resource below is the published view. People and addresses are public — root fields on the query — and so is every daycare member by class: Dog is published through the DaycareMember hierarchy without its shape ever being named. The audit log and the vans are protected — no root field of their own, reachable only through the customer they belong to. Two types stay internal for two different reasons: the resident cat is never mentioned, and an unmentioned shape is excluded outright; the door-code type is declared public and private at once, and the private declaration wins. Visibility belongs to this schema, never to a shape — the same shapes graph would serve a staff view that publishes more." ;
     graphql:publicShape ex:PersonShape, ex:AddressShape, ex:SecretShape ;
     graphql:protectedShape ex:AuditShape ;
-    graphql:publicClass ex:Animal ;
+    graphql:publicClass ex:DaycareMember ;
     graphql:protectedClass ex:Vehicle ;
     graphql:privateShape ex:SecretShape .
 
-ex:Dog rdfs:subClassOf ex:Animal .
-
+# Class hierarchy the visibility declarations resolve through — subclass
+# closures are read from this shapes graph, not from the data.
+ex:Dog rdfs:subClassOf ex:DaycareMember .
 ex:Car rdfs:subClassOf ex:Vehicle .
 
-ex:DogShape a sh:NodeShape ;
-    sh:codeIdentifier "Dog" ;
-    sh:targetClass ex:Dog ;
+ex:AddressShape a sh:NodeShape ;
+    sh:codeIdentifier "Address" ;
+    rdfs:comment "A pickup address on a shuttle route." ;
+    sh:targetClass ex:Address ;
     sh:property [
-        sh:path ex:name ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:CarShape a sh:NodeShape ;
-    sh:codeIdentifier "Car" ;
-    sh:targetClass ex:Car ;
-    sh:property [
-        sh:path ex:name ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:CatShape a sh:NodeShape ;
-    sh:codeIdentifier "Cat" ;
-    sh:targetClass ex:Cat ;
-    sh:property [
-        sh:path ex:name ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:SecretShape a sh:NodeShape ;
-    sh:codeIdentifier "Secret" ;
-    sh:targetClass ex:Secret ;
-    sh:property [
-        sh:path ex:label ;
+        sh:path ex:street ;
+        sh:description "The street line of the address." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
@@ -57,19 +33,64 @@ ex:SecretShape a sh:NodeShape ;
 
 ex:AuditShape a sh:NodeShape ;
     sh:codeIdentifier "AuditLog" ;
+    rdfs:comment "One event recorded on a customer's account." ;
+    sh:intent "Protected: registered as a type and reachable through a customer, but never a root field — there is no way to ask for every account event." ;
     sh:targetClass ex:AuditLog ;
     sh:property [
         sh:path ex:action ;
+        sh:description "What the entry records — drop-off, group play, pick-up." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] .
 
-ex:AddressShape a sh:NodeShape ;
-    sh:codeIdentifier "Address" ;
-    sh:targetClass ex:Address ;
+ex:CarShape a sh:NodeShape ;
+    sh:codeIdentifier "Car" ;
+    rdfs:comment "A shuttle van covering pickup routes." ;
+    sh:intent "Protected by class (protectedClass Vehicle): the type exists for traversal, never as a root field." ;
+    sh:targetClass ex:Car ;
     sh:property [
-        sh:path ex:street ;
+        sh:path ex:label ;
+        sh:description "The van's fleet label." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:DogShape a sh:NodeShape ;
+    sh:codeIdentifier "Dog" ;
+    rdfs:comment "A dog enrolled for daycare." ;
+    sh:intent "Published by class, not by name — publicClass DaycareMember covers every subclass, so a new member kind publishes itself." ;
+    sh:targetClass ex:Dog ;
+    sh:property [
+        sh:path ex:name ;
+        sh:description "The dog's call name." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:CatShape a sh:NodeShape ;
+    sh:codeIdentifier "Cat" ;
+    rdfs:comment "The shop's resident cat — staff-view data, not a daycare member." ;
+    sh:intent "Unmentioned by the schema — the closed world excludes it outright: no type, no root field, no path. A staff view of this same shapes graph would publish her." ;
+    sh:targetClass ex:Cat ;
+    sh:property [
+        sh:path ex:name ;
+        sh:description "The resident cat's name." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+
+ex:SecretShape a sh:NodeShape ;
+    sh:codeIdentifier "Secret" ;
+    rdfs:comment "A staff entry code for the facility." ;
+    sh:intent "Declared publicShape and privateShape at once — the private declaration wins, and nothing of this type reaches the API." ;
+    sh:targetClass ex:Secret ;
+    sh:property [
+        sh:path ex:code ;
+        sh:description "The door code itself." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
@@ -77,22 +98,30 @@ ex:AddressShape a sh:NodeShape ;
 
 ex:PersonShape a sh:NodeShape ;
     sh:codeIdentifier "Person" ;
+    rdfs:comment "A daycare customer." ;
     sh:targetClass ex:Person ;
     sh:property [
         sh:path ex:name ;
+        sh:description "The customer's name." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
         sh:path ex:address ;
+        sh:description "The pickup address for the customer's dog." ;
         sh:node ex:AddressShape ;
-        sh:minCount 0 ;
         sh:maxCount 1
     ] ;
     sh:property [
         sh:path ex:audit ;
+        sh:description "The event entry recorded on the customer's account." ;
         sh:node ex:AuditShape ;
-        sh:minCount 0 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:shuttle ;
+        sh:description "The van serving the customer's pickup route." ;
+        sh:node ex:CarShape ;
         sh:maxCount 1
     ] .

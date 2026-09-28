@@ -1,3 +1,8 @@
+"""Assets surface from every level of the class hierarchy: the ledger is
+typed as an asset outright, the sculpture through one superclass link, and
+the fresco through two. To the query they are all simply assets.
+In the SPARQL: one path binds every root — rdf:type/rdfs:subClassOf* — and
+its star walks zero or more superclass hops."""
 query SubclassTypingRootClosure {
   asset {
     label

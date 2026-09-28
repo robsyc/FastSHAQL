@@ -1,10 +1,10 @@
 {
   "data": {
-    "managerBadge": [
+    "communityConcert": [
       {
-        "iri": "http://example.org/carol",
-        "badgeLevel": [
-          3
+        "iri": "http://example.org/neighbourhood-choir",
+        "tagline": [
+          "Songs from the block"
         ]
       }
     ]

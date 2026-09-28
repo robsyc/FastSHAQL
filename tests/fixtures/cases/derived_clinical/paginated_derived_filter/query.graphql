@@ -1,8 +1,13 @@
+"""Pagination composes with a filter over a derived list: among patients
+with any multi-word protocol title, the page window (offset 1, limit 1)
+returns the second patient only — the window counts patients, never titles.
+In the SPARQL: the filter and the page lower into one sub-SELECT, and the
+titles are derived a second time for the selected fields."""
 query PaginatedDerivedFilter {
   patient(limit: 1, offset: 1, where: {
     applicableProtocolTitles: { contains: " " }
   }) {
-    iri
+    medicalRecordNumber
     applicableProtocolTitles
   }
 }

@@ -1,5 +1,0 @@
-query RelationshipFilterPlacement {
-  person(where: { employer: { name: { eq: "Acme" } } }, limit: 2) {
-    name
-  }
-}

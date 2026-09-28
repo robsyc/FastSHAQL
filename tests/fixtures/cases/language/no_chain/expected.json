@@ -1,46 +1,55 @@
 {
   "data": {
-    "person": [
+    "artwork": [
       {
-        "iri": "http://example.org/personA",
-        "altLabel": [
-          "Alt-A-en",
-          "Alt-A-enUS",
-          "Alt-A-nl"
+        "title": "The Night Watch",
+        "caption": "A militia company under Captain Banning Cocq",
+        "altTitle": [
+          "The Shooting Company of Frans Banning Cocq",
+          "Militia Company of District II",
+          "De Nachtwacht"
         ],
-        "plain": "Plain-A"
+        "inventoryNumber": "SK-C-5",
+        "teaser": "Rembrandt's masterpiece of light and shadow"
       },
       {
-        "iri": "http://example.org/personB",
-        "altLabel": [
-          "Alt-B"
+        "title": "The Sunflowers",
+        "caption": "Vase with fifteen sunflowers",
+        "altTitle": [
+          "De Zonnebloemen"
         ],
-        "plain": "Plain-B"
+        "inventoryNumber": "SK-A-188",
+        "teaser": "Van Gogh's sunlit yellows"
       },
       {
-        "iri": "http://example.org/personC",
-        "altLabel": [
-          "Alt-C"
+        "title": "Het melkmeisje",
+        "caption": "Een keukenmeid schenkt melk uit",
+        "altTitle": [],
+        "inventoryNumber": "SK-A-2344",
+        "teaser": "Vermeers stille keuken"
+      },
+      {
+        "title": "The Great Wave off Kanagawa",
+        "caption": "On loan from a private collection",
+        "altTitle": [],
+        "inventoryNumber": "P-1831",
+        "teaser": null
+      },
+      {
+        "title": "Delftware vase",
+        "caption": null,
+        "altTitle": [
+          "Vase de Delft"
         ],
-        "plain": "Plain-C"
+        "inventoryNumber": "BK-1745",
+        "teaser": "Highlight of the ceramics room"
       },
       {
-        "iri": "http://example.org/personE",
-        "altLabel": [],
-        "plain": "Plain-E"
-      },
-      {
-        "iri": "http://example.org/personF",
-        "altLabel": [],
-        "plain": null
-      },
-      {
-        "iri": "http://example.org/personG",
-        "altLabel": [
-          "Alt-G-1",
-          "Alt-G-2"
-        ],
-        "plain": "Plain-G"
+        "title": "La Liberté guidant le peuple",
+        "caption": "Juillet 1830 sur les barricades",
+        "altTitle": [],
+        "inventoryNumber": "SK-A-1284",
+        "teaser": "L'étendard de la révolution"
       }
     ]
   }

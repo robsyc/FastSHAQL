@@ -1,69 +1,96 @@
-@prefix sh:  <http://www.w3.org/ns/shacl#> .
-@prefix ex:  <http://example.org/> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix ex:      <http://example.org/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
 
-ex:CityShape a sh:NodeShape ;
-    sh:codeIdentifier "City" ;
-    sh:targetClass ex:City ;
+# Gallery inventory: works searched with where filters, their artists, and
+# the galleries representing them.
+
+ex:InventoryApi a graphql:Schema ;
+    rdfs:comment "Gallery inventory view: artworks are searched at the root with where filters; artists and galleries are reachable only through artwork relationships." ;
+    graphql:publicShape ex:ArtworkShape ;
+    graphql:protectedShape ex:ArtistShape, ex:GalleryShape .
+
+ex:ArtworkShape a sh:NodeShape ;
+    sh:codeIdentifier "Artwork" ;
+    rdfs:comment "A work held in the inventory, with or without a credited artist." ;
+    sh:intent "Filters compose at the root: several operators on one field AND-combine, sibling fields AND-combine, and AND/OR/NOT groups nest arbitrarily." ,
+        "Every filtered field must have a value on the entity — a missing year, caption, or artist excludes the work from the result." ;
+    sh:targetClass ex:Artwork ;
     sh:property [
-        sh:path ex:name ;
+        sh:path ex:title ;
+        sh:description "The work's title as printed on the wall label." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:population ;
+        sh:path ex:year ;
+        sh:description "The year the work was completed; absent when unknown." ;
         sh:datatype xsd:integer ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:CompanyShape a sh:NodeShape ;
-    sh:codeIdentifier "Company" ;
-    sh:targetClass ex:Company ;
-    sh:property [
-        sh:path ex:name ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:locatedIn ;
-        sh:class ex:City ;
-        sh:minCount 0 ;
-        sh:maxCount 1
-    ] .
-
-ex:PersonShape a sh:NodeShape ;
-    sh:codeIdentifier "Person" ;
-    sh:targetClass ex:Person ;
-    sh:property [
-        sh:path ex:name ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
+        sh:path ex:acquired ;
+        sh:description "The date the partnership acquired the work; absent for pieces never accessioned." ;
+        sh:datatype xsd:date ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:age ;
-        sh:datatype xsd:integer ;
-        sh:minCount 0 ;
-        sh:maxCount 1
-    ] ;
-    sh:property [
-        sh:path ex:active ;
+        sh:path ex:onLoan ;
+        sh:description "Whether the work is currently on loan to another institution." ;
         sh:datatype xsd:boolean ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:bio ;
-        sh:datatype rdf:langString ;
-        sh:minCount 0
+        sh:path ex:caption ;
+        sh:description "A short wall caption, written in several languages." ;
+        sh:datatype rdf:langString
     ] ;
     sh:property [
-        sh:path ex:employer ;
-        sh:class ex:Company ;
-        sh:minCount 0 ;
+        sh:path ex:artist ;
+        sh:description "The painter credited with the work; absent for unattributed studies." ;
+        sh:node ex:ArtistShape ;
+        sh:maxCount 1
+    ] .
+
+ex:ArtistShape a sh:NodeShape ;
+    sh:codeIdentifier "Artist" ;
+    rdfs:comment "A painter whose works the inventory carries." ;
+    sh:intent "The representation link is optional: an artist with no gallery still exists, which a NOT filter can reveal." ;
+    sh:targetClass ex:Artist ;
+    sh:property [
+        sh:path ex:name ;
+        sh:description "The painter's full name." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:representedBy ;
+        sh:description "The gallery representing the painter; absent when unattached." ;
+        sh:node ex:GalleryShape ;
+        sh:maxCount 1
+    ] .
+
+ex:GalleryShape a sh:NodeShape ;
+    sh:codeIdentifier "Gallery" ;
+    rdfs:comment "A gallery in the partnership lending works to exhibitions." ;
+    sh:targetClass ex:Gallery ;
+    sh:property [
+        sh:path ex:name ;
+        sh:description "The gallery's trading name." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:city ;
+        sh:description "The city where the gallery is based." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
         sh:maxCount 1
     ] .

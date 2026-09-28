@@ -1,0 +1,32 @@
+{
+  "data": {
+    "patient": [
+      {
+        "medicalRecordNumber": "MRN-1001",
+        "matchedArm": [
+          {
+            "armCode": "A",
+            "armName": "Lifestyle intervention"
+          }
+        ]
+      },
+      {
+        "medicalRecordNumber": "MRN-1002",
+        "matchedArm": [
+          {
+            "armCode": "B",
+            "armName": "Antiviral regimen"
+          }
+        ]
+      },
+      {
+        "medicalRecordNumber": "MRN-1003",
+        "matchedArm": []
+      },
+      {
+        "medicalRecordNumber": "MRN-1004",
+        "matchedArm": []
+      }
+    ]
+  }
+}

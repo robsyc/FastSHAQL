@@ -90,4 +90,4 @@ def test_build_schema_description_from_graphql_schema_resource() -> None:
     """The ``graphql:Schema`` resource's ``rdfs:comment`` becomes the ``GraphQLSchema`` description."""
     schema = build_schema(registry_for("polymorphic_relationships"))
     assert schema.description is not None
-    assert schema.description.startswith("Publishing kiosk view:")
+    assert schema.description.startswith("Publishing-kiosk domain:")

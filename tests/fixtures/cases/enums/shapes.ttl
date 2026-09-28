@@ -1,72 +1,97 @@
-@prefix sh:  <http://www.w3.org/ns/shacl#> .
-@prefix ex:  <http://example.org/> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix ex:      <http://example.org/> .
+@prefix city:    <http://example.org/city/> .
+@prefix state:   <http://example.org/state/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
 
-ex:ObservationShape a sh:NodeShape ;
-    sh:codeIdentifier "Observation" ;
-    sh:targetClass ex:Observation ;
-    sh:property [
-        sh:path ex:status ;
-        sh:datatype xsd:string ;
-        sh:in ("active" "inactive" "entered-in-error") ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
+# River monitoring: lab readings whose coded fields are closed value sets.
 
-ex:ColorSampleShape a sh:NodeShape ;
-    sh:codeIdentifier "ColorSample" ;
-    sh:targetClass ex:ColorSample ;
-    sh:property [
-        sh:path ex:color ;
-        sh:in ( ex:Pink ex:Purple ) ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
+ex:RiverwatchApi a graphql:Schema ;
+    rdfs:comment "River-monitoring domain: a reading is one lab measurement — a parameter measured at a monitoring site, a numeric result standing relative to its reporting limit, and the paperwork around it: workflow status, QA grade, result flags, and the analyst credited. Every coded field is a closed value set declared with sh:in, and the schema derives one GraphQL enum per such property. The cases show the derivations end to end: literal lists name their members by lexical form and IRI lists by local name; members that mangle to one GraphQL name take numeric suffixes in list order (the range comparators, and two agencies' outfall stations that share a local name); typed literals keep their datatype through filters; a value set without maxCount becomes a list of enums; and an sh:in beside a relationship anchor narrows nothing at read time." ;
+    graphql:publicShape ex:ReadingShape ;
+    graphql:protectedShape ex:AnalystShape .
 
-ex:RatingShape a sh:NodeShape ;
-    sh:codeIdentifier "Rating" ;
-    sh:targetClass ex:Rating ;
+ex:ReadingShape a sh:NodeShape ;
+    sh:codeIdentifier "Reading" ;
+    rdfs:comment "One lab measurement taken at a monitoring site." ;
+    sh:intent "Each coded field (comparator, status, site, grade, flags) derives its own enum, named {Reading}{Field} — one type per property, never shared across fields." ,
+        "Members that mangle to one GraphQL name suffix in list order: '<' keeps _, '<=' becomes _2, '>=' _3, '>' _4. Reordering the list would reassign which symbol keeps the bare name." ,
+        "REVIEW: the status list names \"verified\" twice (the merged agencies' wordings) — SHACL-legal, but the enum gains two member names for one value, only the first ever serializes, and a filter by either name matches the same rows — decide whether the parser should dedupe sh:in members instead of warning." ;
+    sh:targetClass ex:Reading ;
     sh:property [
-        sh:path ex:level ;
-        sh:datatype xsd:integer ;
-        sh:in (1 2) ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:QuantityShape a sh:NodeShape ;
-    sh:codeIdentifier "Quantity" ;
-    sh:targetClass ex:Quantity ;
-    sh:property [
-        sh:path ex:comparator ;
-        sh:in ( "<" "<=" ">=" ">" ) ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:CompanyShape a sh:NodeShape ;
-    sh:codeIdentifier "Company" ;
-    sh:targetClass ex:Company ;
-    sh:property [
-        sh:path ex:name ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:PersonShape a sh:NodeShape ;
-    sh:codeIdentifier "Person" ;
-    sh:targetClass ex:Person ;
-    sh:property [
-        sh:path ex:name ;
+        sh:path ex:parameter ;
+        sh:description "What was measured, in the lab's own wording." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:employer ;
-        sh:class ex:Company ;
-        sh:in ( ex:acme ex:globex ) ;
-        sh:minCount 0 ;
+        sh:path ex:result ;
+        sh:description "The measured value." ;
+        sh:datatype xsd:decimal ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:reportingLimit ;
+        sh:description "The smallest value the method reports reliably; the comparator reads the result against it." ;
+        sh:datatype xsd:decimal ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:comparator ;
+        sh:description "How the result stands relative to the reporting limit." ;
+        sh:datatype xsd:string ;
+        sh:in ( "<" "<=" ">=" ">" ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:status ;
+        sh:description "Where the reading sits in the lab workflow." ;
+        sh:datatype xsd:string ;
+        sh:in ( "collected" "in-lab" "verified" "verified" "entered-in-error" ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:site ;
+        sh:description "The monitoring station the sample came from — the city's and the state agency's codes merged into one list." ;
+        sh:in ( city:main-outfall state:main-outfall city:north-pier ) ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:grade ;
+        sh:description "The QA grade the lab assigned, 1 (best) to 3." ;
+        sh:datatype xsd:integer ;
+        sh:in ( 1 2 3 ) ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:flags ;
+        sh:description "Qualifiers attached to the result — a reading may carry several." ;
+        sh:datatype xsd:string ;
+        sh:in ( "estimated" "below-detection" "held" )
+    ] ;
+    sh:property [
+        sh:path ex:analyst ;
+        sh:description "The analyst credited with the reading — held to the roster, but traversed regardless of it." ;
+        sh:node ex:AnalystShape ;
+        sh:in ( ex:ana-morgan ex:ana-lee ) ;
+        sh:maxCount 1
+    ] .
+
+ex:AnalystShape a sh:NodeShape ;
+    sh:codeIdentifier "Analyst" ;
+    rdfs:comment "A lab analyst credited with readings." ;
+    sh:targetClass ex:Analyst ;
+    sh:property [
+        sh:path ex:name ;
+        sh:description "The analyst's full name." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
         sh:maxCount 1
     ] .

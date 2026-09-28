@@ -1,0 +1,20 @@
+"""Acquaintances loop: Alice knows Bob and Bob knows Alice, so Alice
+reappears inside her own acquaintance tree — her entry opens into Bob,
+Bob's back into Alice, and Alice's again into Bob and Carol. Walking the
+cycle costs nothing special: each nesting level is a fresh join with fresh
+variables, and it is the query's depth, not the data, that ends the loop.
+Carol, known but knowing no one, ends every branch she appears in."""
+query AcquaintanceCycle {
+  person {
+    name
+    knows {
+      name
+      knows {
+        name
+        knows {
+          name
+        }
+      }
+    }
+  }
+}

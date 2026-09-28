@@ -1,8 +1,0 @@
-query FilterShapeNumericRange {
-  member {
-    iri
-    recentBooks {
-      iri
-    }
-  }
-}

@@ -1,45 +1,59 @@
-@prefix sh:    <http://www.w3.org/ns/shacl#> .
-@prefix shnex: <http://www.w3.org/ns/shacl-node-expr#> .
-@prefix ex:    <http://example.org/> .
-@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix shnex:   <http://www.w3.org/ns/shacl-node-expr#> .
+@prefix ex:      <http://example.org/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
 
-# Typing emissions close over rdfs:subClassOf (SHACL-instance semantics,
-# ADR-0025): sh:targetClass roots, sh:class bindings, and sh:class inside
-# shnex:filterShape all match values typed through a subclass chain.
+# Museum registrar: collection items and custodians typed through
+# class hierarchies the data itself carries.
+
+ex:CollectionApi a graphql:Schema ;
+    rdfs:comment "Registrar's view of a museum collection: assets and custodians are queried at the root, and every type check the API emits — root entity, relationship binding, filter shape — walks the class hierarchy of the queried data, so a subclass counts wherever its class does. The collection covers the telling situations: items typed as assets outright, through one superclass hop, or through two; custodians likewise from plain to doubly nested; an item held by nobody; a tour headset outside the hierarchy entirely; and a sketch whose superclass link lives only in this shapes file and therefore never counts — the closure reads the queried data alone." ;
+    graphql:publicShape ex:AssetShape, ex:CustodianShape .
 
 ex:AssetShape a sh:NodeShape ;
     sh:codeIdentifier "Asset" ;
+    rdfs:comment "An item held in the collection." ;
+    sh:intent "Superclass links belong to the data: every query-time type check reads the queried graphs only, so a superclass link asserted solely in this shapes file never counts." ;
     sh:targetClass ex:Asset ;
     sh:property [
         sh:path ex:label ;
+        sh:description "The item's catalogue label." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
         sh:path ex:heldBy ;
+        sh:description "The custodian currently holding the item." ;
         sh:class ex:Custodian ;
-        sh:minCount 0 ;
         sh:maxCount 1
     ] .
 
 ex:CustodianShape a sh:NodeShape ;
     sh:codeIdentifier "Custodian" ;
+    rdfs:comment "A party responsible for holding collection items." ;
     sh:targetClass ex:Custodian ;
     sh:property [
         sh:path ex:name ;
+        sh:description "The custodian's display name." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:heldAssets ;
+        sh:path ex:heldItems ;
+        sh:description "The collection items in this custodian's care." ;
         sh:class ex:Asset ;
         sh:values [
             shnex:nodes [
                 shnex:pathValues [ sh:inversePath ex:heldBy ]
             ] ;
             shnex:filterShape [ sh:class ex:Asset ]
-        ] ;
-        sh:minCount 0
+        ]
     ] .
+
+# One superclass link lives here instead of in the data: no query-time
+# type check ever reads it.
+ex:Sketch rdfs:subClassOf ex:Drawing .

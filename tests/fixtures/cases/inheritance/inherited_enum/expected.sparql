@@ -1,5 +1,6 @@
-SELECT ?iri ?employmentStatus
+SELECT ?iri ?format ?skillLevel
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Manager> .
-  ?iri <http://example.org/employmentStatus> ?employmentStatus .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Workshop> .
+  ?iri <http://example.org/format> ?format .
+  ?iri <http://example.org/skillLevel> ?skillLevel .
 }

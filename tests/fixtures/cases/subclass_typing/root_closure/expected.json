@@ -2,13 +2,13 @@
   "data": {
     "asset": [
       {
+        "label": "Donation ledger"
+      },
+      {
         "label": "Mona Lisa"
       },
       {
         "label": "David"
-      },
-      {
-        "label": "Ledger"
       }
     ]
   }

@@ -1,135 +1,130 @@
-@prefix sh:  <http://www.w3.org/ns/shacl#> .
-@prefix ex:  <http://example.org/> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix ex:      <http://example.org/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix graphql: <http://datashapes.org/graphql#> .
+
+# Repertory cinema: one film archive, its links read in every direction.
+
+ex:CinemaApi a graphql:Schema ;
+    rdfs:comment "Repertory-cinema domain: a small film archive where the interesting structure sits in the links between things, not in the things themselves. Films are the entry point; people, source works, and countries are reached only through a film. Four films cover the telling situations — a trilogy chained backwards (each film points at its predecessor), a self-distributed standalone with no distributor, no cast, and no source material, a director with two films to their name, and a sequel that adapts and loosely draws from the very same novel. The cases read the links every way a path allows: backwards (a director's filmography, a film's follow-ups), through a middle node that never becomes a type (the distributor's name and country), under either of two names (adaptation or inspiration; work or personal mailbox), repeated along a chain (the sequels, then the whole franchise including the film itself), and stopped after exactly one hop (a performer and their agent — never the agent's own agent)." ;
+    graphql:publicShape ex:MovieShape ;
+    graphql:protectedShape ex:PersonShape, ex:WorkShape, ex:CountryShape .
+
+ex:MovieShape a sh:NodeShape ;
+    sh:codeIdentifier "Movie" ;
+    rdfs:comment "A film in the archive." ;
+    sh:intent "Sequels invert the stored link: films point backwards at their predecessor, so the follow-ups read as the inverse of predecessor — one hop or more for the sequels, zero or more for the franchise, which is why every film belongs to its own franchise." ,
+        "One field walks out and back: director, then the inverse of director — the director's whole body of work flattened onto the film, the film itself included." ;
+    sh:targetClass ex:Movie ;
+    sh:property [
+        sh:path ex:title ;
+        sh:description "The film's title as billed." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:director ;
+        sh:description "The film's director." ;
+        sh:class ex:Person ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:path ex:cast ;
+        sh:description "The performers appearing in the film." ;
+        sh:class ex:Person
+    ] ;
+    sh:property [
+        sh:codeIdentifier "distributorName" ;
+        sh:path ( ex:distributor ex:name ) ;
+        sh:description "The distributor's name — a two-step walk the API flattens into one field." ;
+        sh:datatype xsd:string ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:codeIdentifier "originCountry" ;
+        sh:path ( ex:distributor ex:country ) ;
+        sh:description "The country the film's distributor releases from — the distributor walked through, then out to its country." ;
+        sh:class ex:Country ;
+        sh:maxCount 1
+    ] ;
+    sh:property [
+        sh:codeIdentifier "basedOn" ;
+        sh:path [ sh:alternativePath ( ex:adaptedFrom ex:inspiredBy ) ] ;
+        sh:description "The work the film draws on — an adaptation or a looser inspiration, whichever link exists." ;
+        sh:class ex:Work
+    ] ;
+    sh:property [
+        sh:codeIdentifier "sequels" ;
+        sh:path [ sh:oneOrMorePath [ sh:inversePath ex:predecessor ] ] ;
+        sh:description "The films that follow this one along the chain, nearest and furthest alike." ;
+        sh:class ex:Movie
+    ] ;
+    sh:property [
+        sh:codeIdentifier "franchise" ;
+        sh:path [ sh:zeroOrMorePath [ sh:inversePath ex:predecessor ] ] ;
+        sh:description "The whole run this film belongs to — itself and every film that follows it." ;
+        sh:class ex:Movie
+    ] ;
+    sh:property [
+        sh:codeIdentifier "alsoByDirector" ;
+        sh:path ( ex:director [ sh:inversePath ex:director ] ) ;
+        sh:description "Every film by the same director, this one included." ;
+        sh:class ex:Movie
+    ] .
 
 ex:PersonShape a sh:NodeShape ;
     sh:codeIdentifier "Person" ;
+    rdfs:comment "A filmmaker — director or performer — in the archive." ;
+    sh:intent "The licence list stops after one hop on purpose: the person and their agent, never the agent's own agent — zero-or-one is reflexive and shallow, not a chain walk." ;
     sh:targetClass ex:Person ;
     sh:property [
         sh:path ex:name ;
+        sh:description "The person's display name." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
     ] ;
     sh:property [
-        sh:path ex:hasPet ;
-        sh:class ex:Pet ;
-        sh:minCount 0
-    ] .
-
-ex:PetShape a sh:NodeShape ;
-    sh:codeIdentifier "Pet" ;
-    sh:targetClass ex:Pet ;
-    sh:property [
-        sh:path ex:name ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
+        sh:codeIdentifier "filmography" ;
+        sh:path [ sh:inversePath ex:director ] ;
+        sh:description "The films this person directed — the director link read from the other end." ;
+        sh:class ex:Movie
     ] ;
     sh:property [
-        sh:codeIdentifier "owner" ;
-        sh:path [ sh:inversePath ex:hasPet ] ;
-        sh:class ex:Person ;
-        sh:minCount 0 ;
-        sh:maxCount 1
-    ] .
-
-ex:CityShape a sh:NodeShape ;
-    sh:codeIdentifier "City" ;
-    sh:targetClass ex:City ;
-    sh:property [
-        sh:path ex:name ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] .
-
-ex:CompanyShape a sh:NodeShape ;
-    sh:codeIdentifier "Company" ;
-    sh:targetClass ex:Company ;
-    sh:property [
-        sh:path ex:name ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
+        sh:codeIdentifier "emails" ;
+        sh:path [ sh:alternativePath ( ex:workEmail ex:personalEmail ) ] ;
+        sh:description "Every mailbox the person keeps — work or personal, whichever exists." ;
+        sh:datatype xsd:string
     ] ;
     sh:property [
-        sh:codeIdentifier "locatedIn" ;
-        sh:path ex:locatedIn ;
-        sh:class ex:City ;
-        sh:minCount 0 ;
+        sh:codeIdentifier "rightsParties" ;
+        sh:path [ sh:zeroOrOnePath ex:agent ] ;
+        sh:description "Whose sign-off a licence on this person's work needs — the person, and their agent when one stands between." ;
+        sh:class ex:Person
+    ] .
+
+ex:WorkShape a sh:NodeShape ;
+    sh:codeIdentifier "Work" ;
+    rdfs:comment "A written work a film can draw on." ;
+    sh:targetClass ex:Work ;
+    sh:property [
+        sh:path ex:title ;
+        sh:description "The work's title." ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
         sh:maxCount 1
     ] .
 
-ex:EmployerCityPersonShape a sh:NodeShape ;
-    sh:codeIdentifier "EmployerCityPerson" ;
-    sh:targetClass ex:EmployerCityPerson ;
+ex:CountryShape a sh:NodeShape ;
+    sh:codeIdentifier "Country" ;
+    rdfs:comment "A country a distributor releases from." ;
+    sh:targetClass ex:Country ;
     sh:property [
         sh:path ex:name ;
+        sh:description "The country's name." ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
         sh:maxCount 1
-    ] ;
-    sh:property [
-        sh:codeIdentifier "employerCity" ;
-        sh:path ( ex:employer ex:locatedIn ) ;
-        sh:class ex:City ;
-        sh:minCount 0 ;
-        sh:maxCount 1
-    ] .
-
-ex:ContactPersonShape a sh:NodeShape ;
-    sh:codeIdentifier "ContactPerson" ;
-    sh:targetClass ex:ContactPerson ;
-    sh:property [
-        sh:path ex:name ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] ;
-    sh:property [
-        sh:codeIdentifier "contact" ;
-        sh:path [ sh:alternativePath ( ex:spouse ex:partner ) ] ;
-        sh:class ex:ContactPerson ;
-        sh:minCount 0 ;
-        sh:maxCount 1
-    ] .
-
-ex:CompanyEmployerNameShape a sh:NodeShape ;
-    sh:codeIdentifier "CompanyEmployerName" ;
-    sh:targetClass ex:CompanyEmployerName ;
-    sh:property [
-        sh:path ex:name ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] ;
-    sh:property [
-        sh:codeIdentifier "employeeName" ;
-        sh:path ( ex:employer ex:name ) ;
-        sh:datatype xsd:string ;
-        sh:minCount 0 ;
-        sh:maxCount 1
-    ] .
-
-ex:FamilyPersonShape a sh:NodeShape ;
-    sh:codeIdentifier "FamilyPerson" ;
-    sh:targetClass ex:FamilyPerson ;
-    sh:property [
-        sh:path ex:name ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1
-    ] ;
-    sh:property [
-        sh:codeIdentifier "ancestors" ;
-        sh:path [ sh:oneOrMorePath ex:parent ] ;
-        sh:class ex:FamilyPerson ;
-        sh:minCount 0
-    ] ;
-    sh:property [
-        sh:codeIdentifier "selfAndAncestors" ;
-        sh:path [ sh:zeroOrMorePath ex:parent ] ;
-        sh:class ex:FamilyPerson ;
-        sh:minCount 0
     ] .

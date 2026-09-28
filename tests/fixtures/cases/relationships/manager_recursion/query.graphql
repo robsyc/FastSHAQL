@@ -1,0 +1,20 @@
+"""The management chain climbs one manager at a time: Alice answers to Bob,
+Bob to Dana, and Dana to no one — a singular link that resolves to null at
+the top of the chain and ends there. Nesting manager inside manager walks
+the chain as deep as the query asks; each level names its own SPARQL
+variables, so the same shape re-enters itself without collision. Carol,
+outside the hierarchy, is null from the first step."""
+query ManagerChain {
+  person {
+    name
+    manager {
+      name
+      manager {
+        name
+        manager {
+          name
+        }
+      }
+    }
+  }
+}

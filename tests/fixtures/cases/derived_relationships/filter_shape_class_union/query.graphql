@@ -1,9 +1,0 @@
-query SpecialCollections {
-  member {
-    iri
-    specialCollections {
-      iri
-      title
-    }
-  }
-}

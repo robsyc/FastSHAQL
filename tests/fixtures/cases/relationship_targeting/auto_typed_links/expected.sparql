@@ -1,11 +1,11 @@
-SELECT ?iri ?name ?address_iri ?address_street ?note_iri ?note_text
+SELECT ?iri ?title ?featured_iri ?featured_name ?note_iri ?note_text
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Customer> .
-  ?iri <http://example.org/name> ?name .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Album> .
+  ?iri <http://example.org/title> ?title .
   OPTIONAL {
-    ?iri <http://example.org/address> ?address_iri .
-    ?address_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/PostalAddress> .
-    ?address_iri <http://example.org/street> ?address_street .
+    ?iri <http://example.org/featured> ?featured_iri .
+    ?featured_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Artist> .
+    ?featured_iri <http://example.org/name> ?featured_name .
   }
   OPTIONAL {
     ?iri <http://example.org/note> ?note_iri .

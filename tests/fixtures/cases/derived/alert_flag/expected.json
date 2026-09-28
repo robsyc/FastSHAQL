@@ -1,0 +1,22 @@
+{
+  "data": {
+    "crossing": [
+      {
+        "code": "nb-101",
+        "isAlerted": false
+      },
+      {
+        "code": "nb-102",
+        "isAlerted": true
+      },
+      {
+        "code": "nb-103",
+        "isAlerted": false
+      },
+      {
+        "code": "nb-104",
+        "isAlerted": false
+      }
+    ]
+  }
+}

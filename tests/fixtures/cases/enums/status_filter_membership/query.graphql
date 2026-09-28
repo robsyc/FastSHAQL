@@ -1,0 +1,12 @@
+"""Membership filters take lists of names: readings whose status is IN_LAB
+or VERIFIED, and — AND-combined in the same where — not ENTERED_IN_ERROR.
+In the SPARQL: the names lower to literals inside one IN list and one
+negated IN list."""
+query EnumStatusFilterMembership {
+  reading(
+    where: { status: { in: [IN_LAB, VERIFIED], notIn: [ENTERED_IN_ERROR] } }
+  ) {
+    iri
+    status
+  }
+}

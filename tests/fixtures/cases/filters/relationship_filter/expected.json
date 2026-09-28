@@ -1,7 +1,12 @@
 {
   "data": {
-    "person": [
-      { "name": "Alice" }
+    "artwork": [
+      {
+        "title": "The Starry Night"
+      },
+      {
+        "title": "Starry Night over the Rhône"
+      }
     ]
   }
 }

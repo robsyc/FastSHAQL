@@ -1,0 +1,11 @@
+"""The taxonomy itself is queryable: the root field lists every change kind
+at or below Change — including Change, the zero-step case of the walk. Root
+entities need not be instances of anything; here they are the classes.
+In the SPARQL: one pattern walks any number of subclass steps upward from
+the constant Change term."""
+query ChangeTaxonomy {
+  changeType {
+    iri
+    label
+  }
+}

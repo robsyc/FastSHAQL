@@ -1,25 +1,33 @@
 {
   "data": {
-    "person": [
+    "book": [
       {
-        "name": "Alice",
-        "employer": [
-          { "name": "Acme" },
-          { "name": "Globex" }
+        "title": "Frankenstein",
+        "author": [
+          {
+            "name": "Mary Shelley"
+          }
         ],
-        "knows": [
-          { "name": "Bob" },
-          { "name": "Carol" }
+        "subject": [
+          "Gothic",
+          "Horror",
+          "Monsters",
+          "Science fiction"
         ]
       },
       {
-        "name": "Bob",
-        "employer": [
-          { "name": "Acme" },
-          { "name": "Globex" }
+        "title": "Good Omens",
+        "author": [
+          {
+            "name": "Neil Gaiman"
+          },
+          {
+            "name": "Terry Pratchett"
+          }
         ],
-        "knows": [
-          { "name": "Alice" }
+        "subject": [
+          "Fantasy",
+          "Humor"
         ]
       }
     ]

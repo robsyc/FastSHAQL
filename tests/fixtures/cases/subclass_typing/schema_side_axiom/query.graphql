@@ -1,0 +1,20 @@
+"""A superclass link the schema knows but the data does not: the landscape
+study is a sketch, sketches are drawings, and drawings are assets — but the
+first link lives only in the shapes file, and the query walks the data
+alone. The study never reaches the asset view, and the annex holding it
+never surfaces as a holder, while the fully data-typed items appear as
+usual.
+In the SPARQL: nothing differs from any other asset query — the walk simply
+cannot find the missing link.
+REVIEW: the golden is byte-identical to binding_closure's — the missing
+link shows up only as an absence, and the annex's empty holdings would be
+the sharper symptom, but selecting a second root field emits a second
+SPARQL query and the golden model allows exactly one."""
+query SubclassTypingSchemaSideAxiom {
+  asset {
+    label
+    heldBy {
+      name
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "data": {
+    "reading": [
+      {
+        "iri": "http://example.org/reading-203",
+        "status": "VERIFIED"
+      }
+    ]
+  }
+}

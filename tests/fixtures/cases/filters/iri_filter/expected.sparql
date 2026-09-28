@@ -1,0 +1,6 @@
+SELECT ?iri ?title
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Artwork> .
+  ?iri <http://example.org/title> ?title .
+  FILTER(?iri IN (<http://example.org/starry-night>, <http://example.org/water-lilies>))
+}

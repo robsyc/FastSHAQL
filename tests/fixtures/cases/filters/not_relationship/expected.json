@@ -1,5 +1,15 @@
 {
   "data": {
-    "person": [{ "name": "Bob" }]
+    "artwork": [
+      {
+        "title": "Water Lilies"
+      },
+      {
+        "title": "Night Watch"
+      },
+      {
+        "title": "Self-Portrait with Thorn Necklace"
+      }
+    ]
   }
 }

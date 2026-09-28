@@ -1,5 +1,0 @@
-query ScalarGt {
-  person(where: { age: { gt: 28 } }) {
-    name
-  }
-}

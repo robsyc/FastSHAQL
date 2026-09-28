@@ -37,11 +37,28 @@ ex:ThingShape a sh:NodeShape ;
     ] .
 """
 
+# The no-schema cases parse this graph directly: every registered fixture
+# set carries a graphql:Schema (the metadata contract), so the no-schema
+# default lives here as an inline shape.
+NO_SCHEMA_SHAPES = """
+@prefix sh:  <http://www.w3.org/ns/shacl#> .
+@prefix ex:  <http://example.org/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-def test_parse_shapes_without_schema_all_shapes_public(
-    minimal_shapes_graph,
-) -> None:
-    registry = parse_shapes(minimal_shapes_graph)
+ex:ThingShape a sh:NodeShape ;
+    sh:codeIdentifier "Thing" ;
+    sh:targetClass ex:Thing ;
+    sh:property [
+        sh:path ex:label ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1
+    ] .
+"""
+
+
+def test_parse_shapes_without_schema_all_shapes_public() -> None:
+    registry = parse_shapes(Graph().parse(data=NO_SCHEMA_SHAPES, format="turtle"))
     for shape in registry.shapes:
         assert registry.visibility_of(shape) is Visibility.PUBLIC
 
@@ -112,6 +129,6 @@ def test_schema_description_served_from_rdfs_comment() -> None:
     assert registry.schema_description == "The demo API view."
 
 
-def test_schema_description_absent_without_schema(minimal_shapes_graph) -> None:
-    registry = parse_shapes(minimal_shapes_graph)
+def test_schema_description_absent_without_schema() -> None:
+    registry = parse_shapes(Graph().parse(data=NO_SCHEMA_SHAPES, format="turtle"))
     assert registry.schema_description is None

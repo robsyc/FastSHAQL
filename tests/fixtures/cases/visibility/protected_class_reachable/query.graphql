@@ -1,0 +1,12 @@
+"""Shuttle vans are protected by class — no car root field exists — yet a
+customer's van is reached through them: Maria's route shows Van North.
+Van South waits in the data serving no one: protected data surfaces only
+where a public path leads to it, and nothing leads there."""
+query ProtectedClassReachable {
+  person {
+    name
+    shuttle {
+      label
+    }
+  }
+}

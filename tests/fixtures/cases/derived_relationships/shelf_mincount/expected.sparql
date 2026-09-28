@@ -1,0 +1,16 @@
+SELECT ?iri ?reviewedTitles_iri ?reviewedTitles_title
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/library/Member> .
+  OPTIONAL {
+    {
+      SELECT ?iri ?reviewedTitles_iri
+      WHERE {
+        <http://example.org/library/Book> ^a ?reviewedTitles_iri .
+        ?reviewedTitles_iri <http://example.org/library/review> ?reviewedTitles_iri_p0 .
+        FILTER(BOUND(?reviewedTitles_iri))
+      }
+    }
+    ?reviewedTitles_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/library/Book> .
+    ?reviewedTitles_iri <http://example.org/library/title> ?reviewedTitles_title .
+  }
+}

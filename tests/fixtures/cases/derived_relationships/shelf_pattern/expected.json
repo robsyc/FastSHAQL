@@ -1,0 +1,33 @@
+{
+  "data": {
+    "member": [
+      {
+        "iri": "http://example.org/library/m1",
+        "sparqlTitles": [
+          {
+            "iri": "http://example.org/library/b1",
+            "title": "SPARQL 101"
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/library/m2",
+        "sparqlTitles": [
+          {
+            "iri": "http://example.org/library/b1",
+            "title": "SPARQL 101"
+          }
+        ]
+      },
+      {
+        "iri": "http://example.org/library/m3",
+        "sparqlTitles": [
+          {
+            "iri": "http://example.org/library/b1",
+            "title": "SPARQL 101"
+          }
+        ]
+      }
+    ]
+  }
+}

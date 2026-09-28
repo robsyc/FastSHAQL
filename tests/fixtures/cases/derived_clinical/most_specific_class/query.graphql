@@ -1,5 +1,12 @@
+"""A condition reports its most specific class: the deeply coded NASH
+condition resolves to its leaf class rather than the liver-disorder chain
+above it, and a condition still awaiting classification falls back to the
+generic Condition class. A patient with no conditions gets an empty list.
+In the SPARQL: the class-hierarchy walk merges into the outer query, with
+the leaf test as a nested FILTER NOT EXISTS."""
 query MostSpecificClass {
   patient {
+    medicalRecordNumber
     hasCondition {
       mostSpecificClass
     }

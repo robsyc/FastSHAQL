@@ -1,0 +1,10 @@
+SELECT ?iri ?code ?minutes
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/fjord/Crossing> .
+  BIND(REPLACE(STR(?iri), "^.*[/#]", "") AS ?code)
+  ?iri <http://example.org/fjord/minutes> ?minutes .
+  ?iri <http://example.org/fjord/origin> ?origin .
+  ?iri <http://example.org/fjord/destination> ?destination .
+  BIND(CONCAT(?origin, " – ", ?destination) AS ?route)
+  FILTER(CONTAINS(?route, "Bergen"))
+}

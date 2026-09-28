@@ -1,53 +1,71 @@
-# Resolution-grid entities (ADR-0012), conforming to shapes.ttl: A en with a
-# multi-language altLabel list, B en-US, C nl, E the sparse/untagged-union
-# entity (name en, untagged note, everything else absent), F minimal (name
-# only), G two same-step en altLabels (the row-multiplication / determinism
-# case).
 @prefix ex: <http://example.org/> .
 
-ex:personA a ex:Person ;
-    ex:name "Alice"@en ;
-    ex:bio "Bio en"@en ;
-    ex:altLabel "Alt-A-en"@en, "Alt-A-enUS"@en-US, "Alt-A-nl"@nl ;
-    ex:note "Note-A-en"@en ;
-    ex:plain "Plain-A" ;
-    ex:summarySource "Sum-A-en"@en ;
-    ex:employer ex:orgA .
+# The collection. Labels were authored by different departments and eras:
+# English and Dutch wall text, an American-English touring label, a
+# French-only loan, and registry plain text where nobody declared a
+# language. Every artwork conforms to its shape — the languages are the
+# story.
 
-ex:personB a ex:Person ;
-    ex:name "Bob"@en-US ;
-    ex:bio "Bio-B"@en-US ;
-    ex:altLabel "Alt-B"@en-US ;
-    ex:note "Note-B"@en-US ;
-    ex:plain "Plain-B" ;
-    ex:summarySource "Sum-B"@en-US .
+# Fully populated in English, aliases in three languages.
+ex:watch a ex:Artwork ;
+    ex:title "The Night Watch"@en ;
+    ex:caption "A militia company under Captain Banning Cocq"@en ;
+    ex:altTitle "The Shooting Company of Frans Banning Cocq"@en ,
+                "Militia Company of District II"@en ,
+                "De Nachtwacht"@nl ;
+    ex:inventoryNumber "SK-C-5" ;
+    ex:marketingLine "Rembrandt's masterpiece of light and shadow"@en ;
+    ex:artist ex:rembrandt .
 
-ex:personC a ex:Person ;
-    ex:name "Cees"@nl ;
-    ex:bio "Bio-C"@nl ;
-    ex:altLabel "Alt-C"@nl ;
-    ex:note "Note-C"@nl ;
-    ex:plain "Plain-C" ;
-    ex:summarySource "Sum-C"@nl .
+ex:rembrandt a ex:Artist ;
+    ex:name "Rembrandt van Rijn"@en .
 
-# E: the sparse/untagged-union entity — bio/altLabel/summarySource absent so
-# the optional-scalar-null and union-terminal lanes fire on real data.
-ex:personE a ex:Person ;
-    ex:name "Eva"@en ;
-    ex:note "Note-E" ;
-    ex:plain "Plain-E" .
+# The American-labelled tour: every text in en-US, a Dutch alias, and an
+# artist named in Dutch only.
+ex:sunflowers a ex:Artwork ;
+    ex:title "The Sunflowers"@en-US ;
+    ex:caption "Vase with fifteen sunflowers"@en-US ;
+    ex:altTitle "De Zonnebloemen"@nl ;
+    ex:inventoryNumber "SK-A-188" ;
+    ex:marketingLine "Van Gogh's sunlit yellows"@en-US ;
+    ex:artist ex:vincent .
 
-# F: minimal — the minCount-1 name only; everything else absent/null.
-ex:personF a ex:Person ;
-    ex:name "Finn"@en .
+ex:vincent a ex:Artist ;
+    ex:name "Vincent van Gogh"@nl .
 
-ex:personG a ex:Person ;
-    ex:name "Gail"@en ;
-    ex:bio "Bio-G"@en ;
-    ex:altLabel "Alt-G-1"@en, "Alt-G-2"@en ;
-    ex:note "Note-G"@en ;
-    ex:plain "Plain-G" ;
-    ex:summarySource "Sum-G"@en .
+# Dutch throughout.
+ex:milkmaid a ex:Artwork ;
+    ex:title "Het melkmeisje"@nl ;
+    ex:caption "Een keukenmeid schenkt melk uit"@nl ;
+    ex:inventoryNumber "SK-A-2344" ;
+    ex:marketingLine "Vermeers stille keuken"@nl ;
+    ex:artist ex:johannes .
 
-ex:orgA a ex:Org ;
-    ex:label "Acme"@en .
+ex:johannes a ex:Artist ;
+    ex:name "Johannes Vermeer"@nl .
+
+# Sparse: the required title, the inventory number, and one plain loan
+# note on the union caption — every other field resolves to null.
+ex:great-wave a ex:Artwork ;
+    ex:title "The Great Wave off Kanagawa"@en ;
+    ex:caption "On loan from a private collection" ;
+    ex:inventoryNumber "P-1831" .
+
+# The sentinel entity: a Dutch title, a French alias, and plain registry
+# text on the marketing line (the teaser's source).
+ex:delft-vase a ex:Artwork ;
+    ex:title "Delftware vase"@nl ;
+    ex:altTitle "Vase de Delft"@fr ;
+    ex:inventoryNumber "BK-1745" ;
+    ex:marketingLine "Highlight of the ceramics room" .
+
+# French-only loan with its French-named artist.
+ex:liberty a ex:Artwork ;
+    ex:title "La Liberté guidant le peuple"@fr ;
+    ex:caption "Juillet 1830 sur les barricades"@fr ;
+    ex:inventoryNumber "SK-A-1284" ;
+    ex:marketingLine "L'étendard de la révolution"@fr ;
+    ex:artist ex:eugene .
+
+ex:eugene a ex:Artist ;
+    ex:name "Eugène Delacroix"@fr .

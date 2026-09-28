@@ -1,66 +1,34 @@
 {
   "data": {
-    "person": [
+    "artwork": [
       {
-        "iri": "http://example.org/personA",
-        "name": "Alice",
-        "bio": "Bio en",
-        "altLabel": [
-          "Alt-A-en",
-          "Alt-A-enUS"
+        "title": "The Night Watch",
+        "caption": "A militia company under Captain Banning Cocq",
+        "altTitle": [
+          "The Shooting Company of Frans Banning Cocq",
+          "Militia Company of District II"
         ],
-        "note": "Note-A-en",
-        "plain": "Plain-A",
-        "summary": "Sum-A-en",
-        "employer": {
-          "iri": "http://example.org/orgA",
-          "label": "Acme"
+        "inventoryNumber": "SK-C-5",
+        "teaser": "Rembrandt's masterpiece of light and shadow",
+        "artist": {
+          "name": "Rembrandt van Rijn"
         }
       },
       {
-        "iri": "http://example.org/personB",
-        "name": "Bob",
-        "bio": "Bio-B",
-        "altLabel": [
-          "Alt-B"
-        ],
-        "note": "Note-B",
-        "plain": "Plain-B",
-        "summary": "Sum-B",
-        "employer": null
+        "title": "The Sunflowers",
+        "caption": "Vase with fifteen sunflowers",
+        "altTitle": [],
+        "inventoryNumber": "SK-A-188",
+        "teaser": "Van Gogh's sunlit yellows",
+        "artist": null
       },
       {
-        "iri": "http://example.org/personE",
-        "name": "Eva",
-        "bio": null,
-        "altLabel": [],
-        "note": "Note-E",
-        "plain": "Plain-E",
-        "summary": null,
-        "employer": null
-      },
-      {
-        "iri": "http://example.org/personF",
-        "name": "Finn",
-        "bio": null,
-        "altLabel": [],
-        "note": null,
-        "plain": null,
-        "summary": null,
-        "employer": null
-      },
-      {
-        "iri": "http://example.org/personG",
-        "name": "Gail",
-        "bio": "Bio-G",
-        "altLabel": [
-          "Alt-G-1",
-          "Alt-G-2"
-        ],
-        "note": "Note-G",
-        "plain": "Plain-G",
-        "summary": "Sum-G",
-        "employer": null
+        "title": "The Great Wave off Kanagawa",
+        "caption": "On loan from a private collection",
+        "altTitle": [],
+        "inventoryNumber": "P-1831",
+        "teaser": null,
+        "artist": null
       }
     ]
   }

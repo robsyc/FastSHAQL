@@ -1,0 +1,11 @@
+"""Every crossing's booking code is cut from its own identifier: everything
+up to the last slash is stripped away. The expression looks at the focus
+node — the crossing being described — so one rule derives a code for the
+whole network.
+In the SPARQL: a BIND of REPLACE over the crossing's IRI itself."""
+query CrossingCode {
+  crossing {
+    code
+    route
+  }
+}

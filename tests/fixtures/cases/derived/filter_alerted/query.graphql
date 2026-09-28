@@ -1,0 +1,11 @@
+"""Only crossings with a live disruption notice are listed — the flag is
+filtered and selected at once, and the underlying existence test still runs
+once.
+In the SPARQL: one BIND of the EXISTS test feeds both the FILTER and the
+projected value."""
+query FilterAlerted {
+  crossing(where: { isAlerted: { eq: true } }) {
+    code
+    isAlerted
+  }
+}

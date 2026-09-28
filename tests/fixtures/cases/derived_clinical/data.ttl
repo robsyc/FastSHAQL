@@ -1,25 +1,42 @@
 @prefix clinical: <http://example.org/clinical/> .
 @prefix rdfs:     <http://www.w3.org/2000/01/rdf-schema#> .
 
+# Disease-class hierarchy — the substrate the most-specific-class and arm-matching
+# derivations read. Conditions are typed only at their coding leaf (or, while
+# unclassified, at the generic Condition class).
+
 clinical:Condition a rdfs:Class .
 clinical:LiverDisorder a rdfs:Class ;
     rdfs:subClassOf clinical:Condition .
 clinical:HepatitisB a rdfs:Class ;
     rdfs:subClassOf clinical:LiverDisorder .
+clinical:FattyLiverDisease a rdfs:Class ;
+    rdfs:subClassOf clinical:LiverDisorder .
 clinical:NonAlcoholicSteatohepatitis a rdfs:Class ;
-    rdfs:subClassOf clinical:HepatitisB .
+    rdfs:subClassOf clinical:FattyLiverDisease .
 
-clinical:patient-1 a clinical:Patient .
-clinical:patient-2 a clinical:Patient .
-clinical:patient-3 a clinical:Patient .
+clinical:patient-1 a clinical:Patient ;
+    clinical:medicalRecordNumber "MRN-1001" .
+clinical:patient-2 a clinical:Patient ;
+    clinical:medicalRecordNumber "MRN-1002" .
+clinical:patient-3 a clinical:Patient ;
+    clinical:medicalRecordNumber "MRN-1003" .
+clinical:patient-4 a clinical:Patient ;
+    clinical:medicalRecordNumber "MRN-1004" .
 
-clinical:cond-nash a clinical:Condition, clinical:NonAlcoholicSteatohepatitis ;
-    clinical:note "NASH management plan" .
-clinical:cond-hepb a clinical:Condition, clinical:HepatitisB .
+clinical:cond-nash a clinical:NonAlcoholicSteatohepatitis ;
+    clinical:note "NASH management plan" ;
+    clinical:recommendedProtocol clinical:protocol-diet, clinical:protocol-exercise .
+clinical:cond-hepb a clinical:HepatitisB ;
+    clinical:recommendedProtocol clinical:protocol-antiviral .
+clinical:cond-unclassified a clinical:Condition ;
+    clinical:note "Pending workup" .
 
 clinical:patient-1 clinical:hasCondition clinical:cond-nash .
 clinical:patient-2 clinical:hasCondition clinical:cond-hepb .
+clinical:patient-3 clinical:hasCondition clinical:cond-unclassified .
 
+# Protocols: data-only entities reached through the derived title collection.
 clinical:protocol-diet a clinical:Protocol ;
     clinical:title "Low-sodium diet" .
 clinical:protocol-exercise a clinical:Protocol ;
@@ -27,5 +44,13 @@ clinical:protocol-exercise a clinical:Protocol ;
 clinical:protocol-antiviral a clinical:Protocol ;
     clinical:title "Antiviral therapy" .
 
-clinical:patient-1 clinical:appliesProtocol clinical:protocol-diet, clinical:protocol-exercise .
-clinical:patient-2 clinical:appliesProtocol clinical:protocol-antiviral .
+# Arms: enrollsClass (data-only) is the class the arm collects patients for —
+# the matching derivation walks the hierarchy upwards from each condition.
+clinical:arm-lifestyle a clinical:Arm ;
+    clinical:armCode "A" ;
+    clinical:armName "Lifestyle intervention" ;
+    clinical:enrollsClass clinical:FattyLiverDisease .
+clinical:arm-antiviral a clinical:Arm ;
+    clinical:armCode "B" ;
+    clinical:armName "Antiviral regimen" ;
+    clinical:enrollsClass clinical:HepatitisB .

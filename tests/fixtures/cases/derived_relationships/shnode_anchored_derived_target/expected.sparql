@@ -7,6 +7,7 @@ WHERE {
       SELECT ?iri ?featuredEdition_iri
       WHERE {
         ?iri <http://example.org/library/sponsors> ?edition .
+        ?edition a <http://example.org/library/SpecialCollection>, <http://example.org/library/RareBook> .
         BIND(?edition AS ?featuredEdition_iri)
         FILTER(BOUND(?featuredEdition_iri))
       }

@@ -1,1 +1,12 @@
-{ compositeVariant { iri label } }
+"""The same variant records, reached a different way: from the taxonomy term
+itself, walk up the subclass chain — any number of steps, zero included —
+then step out through rdf:type. Two spellings, one set; the path form makes
+the closure explicit instead of leaning on the instances-of shortcut.
+In the SPARQL: the target is one composite inverse path hung off the
+constant Variant term."""
+query VariantsByPathWalk {
+  compositeVariant {
+    iri
+    label
+  }
+}

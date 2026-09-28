@@ -1,9 +1,0 @@
-query ListExpressionRelationship {
-  member {
-    iri
-    friendBranches {
-      iri
-      name
-    }
-  }
-}

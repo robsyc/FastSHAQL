@@ -1,6 +1,8 @@
-SELECT ?iri ?managerName ?employeeId
+SELECT ?iri ?heldOn ?tagline
 WHERE {
-  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Manager> .
-  ?iri <http://example.org/managerName> ?managerName .
-  ?iri <http://example.org/employeeId> ?employeeId .
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Concert> .
+  ?iri <http://example.org/heldOn> ?heldOn .
+  OPTIONAL {
+    ?iri <http://example.org/tagline> ?tagline .
+  }
 }

@@ -2,10 +2,14 @@
   "data": {
     "person": [
       {
-        "name": "Alice",
+        "name": "Maria",
         "address": {
-          "street": "Main St"
+          "street": "12 Elm Street"
         }
+      },
+      {
+        "name": "Jules",
+        "address": null
       }
     ]
   }

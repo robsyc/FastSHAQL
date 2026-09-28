@@ -1,0 +1,24 @@
+"""Dutch first, plain text last: the untagged sentinel matches values
+with no language at all. Only Dutch-titled works survive the required
+title, and on the Delft vase the plain marketing line becomes the teaser
+— without the sentinel in that chain the field would resolve to null,
+because plain text is never an implicit fallback. The French alias stays
+hidden, and so does everything on the English and French works.
+In the SPARQL: the untagged step reads FILTER(LANG(?v) = "").
+REVIEW: in conforming data that step can only ever fire on the union
+caption or the derived teaser — a plain literal fails the langString
+datatype constraint everywhere else — decide whether plain text on a
+langString field should someday be legal instead of routing every plain
+value through a union field."""
+query MuseumDutchThenPlain {
+  artwork {
+    title
+    caption
+    altTitle
+    inventoryNumber
+    teaser
+    artist {
+      name
+    }
+  }
+}

@@ -1,0 +1,17 @@
+SELECT ?iri ?newArrivals_iri ?newArrivals_title
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/library/Member> .
+  OPTIONAL {
+    {
+      SELECT ?iri ?newArrivals_iri
+      WHERE {
+        <http://example.org/library/Book> ^a ?newArrivals_iri .
+        ?newArrivals_iri <http://example.org/library/publicationYear> ?newArrivals_iri_p0 .
+        FILTER(?newArrivals_iri_p0 >= "2020"^^<http://www.w3.org/2001/XMLSchema#integer>)
+        FILTER(BOUND(?newArrivals_iri))
+      }
+    }
+    ?newArrivals_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/library/Book> .
+    ?newArrivals_iri <http://example.org/library/title> ?newArrivals_title .
+  }
+}

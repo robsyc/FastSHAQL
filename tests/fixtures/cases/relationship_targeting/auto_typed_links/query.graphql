@@ -1,8 +1,16 @@
+"""A credit link with no declared classes borrows its typing from the
+shape it targets: a featured artist must be an Artist — a vocalist
+counts through her superclass, and an untyped guest drops out of the
+list even though the link to him is there. The sleeve-note link targets
+a shape with no class of its own, so nothing is typed and untyped notes
+pass through.
+In the SPARQL: the featured lane demands an rdf:type match the note
+lane never makes."""
 query RelationshipTargetingAutoTypedLinks {
-  customer {
-    name
-    address {
-      street
+  album {
+    title
+    featured {
+      name
     }
     note {
       text

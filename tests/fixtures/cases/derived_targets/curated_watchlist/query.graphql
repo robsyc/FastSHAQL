@@ -1,0 +1,12 @@
+"""The curators' watchlist is a literal list of picked records — pinned by
+hand, not derived from any class. A low-score record sits beside high-score
+ones: membership in the list is the only criterion, and typing plays no
+part in it.
+In the SPARQL: the picks arrive as a VALUES block of constants."""
+query CuratorsWatchlist {
+  watchlistVariant {
+    iri
+    label
+    reviewScore
+  }
+}

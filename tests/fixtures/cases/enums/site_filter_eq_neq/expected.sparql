@@ -1,0 +1,6 @@
+SELECT ?iri ?site
+WHERE {
+  ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Reading> .
+  ?iri <http://example.org/site> ?site .
+  FILTER(?site = <http://example.org/state/main-outfall> && ?site != <http://example.org/city/north-pier>)
+}

@@ -34,38 +34,64 @@ def _graph(turtle_body: str) -> Graph:
 
 
 def test_single_parent_inherits_scalar(inheritance_registry) -> None:
-    child = inheritance_registry.by_type_name["SingleChild"]
-    assert "baseTag" in child.property_shapes
-    assert "childTag" in child.property_shapes
+    child = inheritance_registry.by_type_name["Concert"]
+    assert "heldOn" in child.property_shapes
+    assert "tagline" in child.property_shapes
 
 
 def test_multi_parent_union(inheritance_registry) -> None:
-    child = inheritance_registry.by_type_name["MultiChild"]
-    assert set(child.property_shapes) == {"oneTag", "twoTag", "childOnly"}
+    child = inheritance_registry.by_type_name["Workshop"]
+    assert set(child.property_shapes) == {
+        "heldOn",
+        "venue",
+        "venueDistrict",
+        "host",
+        "format",
+        "capacity",
+        "skillLevel",
+    }
 
 
 def test_transitive_chain(inheritance_registry) -> None:
-    leaf = inheritance_registry.by_type_name["TransLeaf"]
-    assert set(leaf.property_shapes) == {"rootTag", "midTag", "leafTag"}
+    leaf = inheritance_registry.by_type_name["GuidedTour"]
+    assert set(leaf.property_shapes) == {
+        "heldOn",
+        "venue",
+        "venueDistrict",
+        "host",
+        "format",
+        "theme",
+    }
 
 
 def test_shared_grandparent_diamond_does_not_raise(inheritance_registry) -> None:
-    child = inheritance_registry.by_type_name["DiamondChild"]
-    assert set(child.property_shapes) == {"diamondTag", "midATag", "midBTag", "rootTag"}
+    child = inheritance_registry.by_type_name["Workshop"]
+    assert set(child.property_shapes) == {
+        "heldOn",
+        "venue",
+        "venueDistrict",
+        "host",
+        "format",
+        "capacity",
+        "skillLevel",
+    }
+    # the timed fields arrive via both parents yet are one property shape
+    tour = inheritance_registry.by_type_name["GuidedTour"]
+    assert child.property_shapes["heldOn"] is tour.property_shapes["heldOn"]
 
 
 def test_inherited_composite_path_is_preserved(inheritance_registry) -> None:
-    child = inheritance_registry.by_type_name["SeqChild"]
-    prop = child.property_shapes["employeeName"]
+    child = inheritance_registry.by_type_name["GuidedTour"]
+    prop = child.property_shapes["venueDistrict"]
     assert isinstance(prop.path, SequencePath)
 
 
 def test_inherited_shape_iris_provenance(inheritance_registry) -> None:
-    child = inheritance_registry.by_type_name["MultiChild"]
-    base = inheritance_registry.by_type_name["SingleBase"]
+    child = inheritance_registry.by_type_name["Workshop"]
+    base = inheritance_registry.by_type_name["Timed"]
     assert child.inherited_shape_iris == (
-        URIRef("http://example.org/ParentOneShape"),
-        URIRef("http://example.org/ParentTwoShape"),
+        URIRef("http://example.org/ProgramItemShape"),
+        URIRef("http://example.org/TicketedShape"),
     )
     assert base.inherited_shape_iris == ()
 
