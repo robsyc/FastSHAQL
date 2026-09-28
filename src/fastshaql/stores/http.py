@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
+from typing import override
 
 try:
     import httpx
@@ -43,6 +44,7 @@ class HttpxSparqlStore(SparqlStore):
     client: httpx.AsyncClient
     query_endpoint: str
 
+    @override
     async def query(
         self, sparql: str, metrics: ExecutionMetrics | None = None
     ) -> list[SparqlRow]:

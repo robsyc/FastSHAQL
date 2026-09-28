@@ -50,7 +50,7 @@ dev = [
     "pytest-cov>=6.0",
     "pytest-django>=4.11",
     "ruff>=0.15",
-    "ty>=0.0.42",
+    "ty>=0.0.82",
     "cffconvert>=2.0.0",
     "testcontainers>=4.9,<5",
     "markdownify>=1.0",
@@ -160,6 +160,14 @@ known-first-party = ["fastshaql"]
 [tool.ruff.format]
 quote-style = "double"
 docstring-code-format = true
+
+# Opt-in rules verified at zero findings on the current tree — guards, not
+# cleanup debt. missing-override-decorator keeps protocol implementations
+# (SparqlStore, StoreSession legs) honest about what they override.
+[tool.ty.rules]
+redundant-condition-strict = "error" # catches the seen.add()-style truthiness traps
+blanket-ignore-comment = "error" # suppressions must name the rule they silence
+missing-override-decorator = "error"
 
 [tool.ty.environment]
 python-version = "3.12"

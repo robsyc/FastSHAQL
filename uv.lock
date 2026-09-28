@@ -464,7 +464,7 @@ dev = [
     { name = "ruff", specifier = ">=0.15" },
     { name = "tach", specifier = "==0.35.1" },
     { name = "testcontainers", specifier = ">=4.9,<5" },
-    { name = "ty", specifier = ">=0.0.42" },
+    { name = "ty", specifier = ">=0.0.82" },
 ]
 
 [[package]]
