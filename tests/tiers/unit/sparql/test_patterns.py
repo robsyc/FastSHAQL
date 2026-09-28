@@ -3,7 +3,7 @@
 Unit tier: ``PredicatePath`` predicate rendering, and ``TriplePattern``,
 ``GroupPattern``, ``OptionalPattern``, and ``FilterPattern`` render output.
 
-Order: predicate paths → triple/group/optional → FilterPattern.
+Order: predicate paths → triple/group/optional → FilterPattern → default-indent and edge-shape hardening.
 """
 
 from __future__ import annotations
@@ -18,8 +18,10 @@ from fastshaql.core.sparql import (
     GroupPattern,
     OptionalPattern,
     PredicatePath,
+    RawGraphPattern,
     TermExpr,
     TriplePattern,
+    ValuesPattern,
 )
 
 EX = URIRef("http://example.org/")
@@ -178,3 +180,40 @@ def test_exists_expr_render_inside_filter_pattern() -> None:
     rendered = FilterPattern(exists).render(indent=1)
     assert rendered.startswith("  FILTER(EXISTS {")
     assert rendered.endswith("})")
+
+
+# --- Mutation hardening: default indent, empty groups, variable predicates ---
+
+
+def test_group_pattern_empty_renders_as_empty_string() -> None:
+    """An empty group has no braces to render — it contributes nothing."""
+    assert GroupPattern(children=()).render() == ""
+
+
+def test_triple_pattern_renders_variable_predicate() -> None:
+    """A variable predicate (cascade ``?p``) renders as a term, not a path."""
+    triple = TriplePattern(
+        subject=Variable("s"), predicate=Variable("p"), object=Variable("o")
+    )
+    assert triple.render() == "?s ?p ?o ."
+
+
+def test_raw_graph_pattern_renders_unindented_by_default() -> None:
+    assert RawGraphPattern("?s ex:p ?o .").render() == "?s ex:p ?o ."
+
+
+def test_raw_graph_pattern_preserves_blank_lines_when_indented() -> None:
+    """Only non-blank lines pick up the indent — blank separators stay empty."""
+    pattern = RawGraphPattern("?s ex:p ?o .\n\n?s ex:q ?r .")
+    assert pattern.render(indent=1) == "  ?s ex:p ?o .\n\n  ?s ex:q ?r ."
+
+
+def test_values_pattern_renders_unindented_by_default() -> None:
+    values = ValuesPattern(var=Variable("v"), terms=(EX + "a",))
+    assert values.render() == "VALUES ?v {\n  <http://example.org/a>\n}"
+
+
+def test_optional_pattern_empty_renders_as_empty_string() -> None:
+    """An optional over an empty group contributes nothing — the defensive
+    guard mirrors ``GroupPattern``'s empty case."""
+    assert OptionalPattern(child=GroupPattern(children=())).render() == ""

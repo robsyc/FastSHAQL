@@ -14,7 +14,12 @@ Every survivor is one of two verdicts — no open gaps remain:
   consulted); a `None` or dropped argument equals the callee's default or
   falsy value; closed-union `match` arms (with `assert_never`) are
   unreachable; and the matchers involved (`find_keyword`, BCP 47 language
-  lookup) are case-insensitive.
+  lookup) are case-insensitive. mutmut 3.8.0 added ternary-condition and
+  decorated-class-method mutants; their recurring equivalents: an unused
+  parameter's default (the body never reads it — the `_indent` renders);
+  a ternary whose dead arm carries the only difference (the value is read
+  only on the arm both forms agree on); and `"_".join` over a one-element
+  list, which is that element.
 - **ineffective** — diagnostic text only: error/warning wording and
   error-context labels. Tests pin the identifier-bearing prefix of
   diagnostics, never full sentences, so wording mutants survive by design.
@@ -31,6 +36,7 @@ not by number alone.
 | `fastshaql.adapters.django.x_build_graphql_view__mutmut_2` | `build_graphql_view` — argument → None | ineffective | — |
 | `fastshaql.adapters.django.x_build_graphql_view__mutmut_3` | `build_graphql_view` — XX-wrap | ineffective | — |
 | `fastshaql.adapters.django.x_build_graphql_view__mutmut_4/5` | `build_graphql_view` — case-flip | ineffective | — |
+| `fastshaql.adapters.django.x_build_graphql_view__mutmut_31` | `build_graphql_view` — CONTENT_TYPE default "" → "XXXX" | equivalent | any default that is not `application/json` fails the envelope prefix check identically (415) |
 
 ### `core.execution.converter`
 
@@ -196,8 +202,13 @@ not by number alone.
 | `fastshaql.core.parser.property_shape.x_parse_property_shape__mutmut_2` | `parse_property_shape` — default "en" → "EN" | equivalent | — |
 | `fastshaql.core.parser.property_shape.x_parse_property_shape__mutmut_43` | `parse_property_shape` — warning argument dropped | ineffective | — |
 | `fastshaql.core.parser.property_shape.x_parse_property_shape__mutmut_44` | `parse_property_shape` — XX-wrap | ineffective | — |
+| `fastshaql.core.parser.property_shape.x_parse_property_shape__mutmut_45` | `parse_property_shape` — warning argument dropped | ineffective | — |
+| `fastshaql.core.parser.property_shape.x_parse_property_shape__mutmut_46` | `parse_property_shape` — warning text XX-wrap | ineffective | — |
 | `fastshaql.core.parser.property_shape.x_parse_property_shape__mutmut_64` | `parse_property_shape` — argument → None | ineffective | — |
+| `fastshaql.core.parser.property_shape.x_parse_property_shape__mutmut_66` | `parse_property_shape` — warning argument → None | ineffective | — |
 | `fastshaql.core.parser.property_shape.x_parse_property_shape__mutmut_69/115` | `parse_property_shape` — XX-wrap | ineffective | — |
+| `fastshaql.core.parser.property_shape.x_parse_property_shape__mutmut_71` | `parse_property_shape` — warning text XX-wrap | ineffective | — |
+| `fastshaql.core.parser.property_shape.x_parse_property_shape__mutmut_117` | `parse_property_shape` — warning text XX-wrap | ineffective | — |
 
 ### `core.parser.shacl_in`
 
@@ -282,6 +293,12 @@ not by number alone.
 | `fastshaql.core.parser.visibility.x__enforce_closed_world__mutmut_6` | `enforce_closed_world` — argument → None | equivalent | same — synthetic shapes never reach the EXCLUDED arm |
 | `fastshaql.core.parser.visibility.x_resolve_visibility__mutmut_12/19/33` | `resolve_visibility` — XX-wrap | ineffective | — |
 
+### `core.registry`
+
+| Mutant | Mutation | Verdict | Reason |
+|---|---|---|---|
+| `fastshaql.core.registry.xǁShapeRegistryǁresolve_relationship_target__mutmut_1` | `resolve_relationship_target` — label → None | ineffective | the label appears only in the two ValueError texts |
+
 ### `core.schema._gql`
 
 | Mutant | Mutation | Verdict | Reason |
@@ -295,6 +312,14 @@ not by number alone.
 | Mutant | Mutation | Verdict | Reason |
 |---|---|---|---|
 | `fastshaql.core.schema.fields.x_wrap_field_type__mutmut_6` | `wrap_field_type` — cast type → None | equivalent | — |
+| `fastshaql.core.schema.fields.x_wrap_field_type__mutmut_10` | `wrap_field_type` — cast type → None | equivalent | — |
+
+### `core.sparql.expressions`
+
+| Mutant | Mutation | Verdict | Reason |
+|---|---|---|---|
+| `fastshaql.core.sparql.expressions.xǁTermExprǁrender__mutmut_1` | `TermExpr.render` — unused indent default 0 → 1 | equivalent | the body `del indent`s it — the default is never read |
+| `fastshaql.core.sparql.expressions.xǁRawSparqlExprǁrender__mutmut_1` | `RawSparqlExpr.render` — unused indent default 0 → 1 | equivalent | same — the body `del indent`s it |
 
 ### `core.sparql.lex`
 
@@ -309,11 +334,27 @@ not by number alone.
 | `fastshaql.core.sparql.lex.x_find_keyword__mutmut_9` | `find_keyword` — guard `<=` → `<` | equivalent | a zero-width search window can never match a non-empty keyword |
 | `fastshaql.core.sparql.lex.x_map_code_spans__mutmut_2` | `map_code_spans` — initializer 0 → None | equivalent | None is 0 as a slice start |
 
+### `core.sparql.paths`
+
+| Mutant | Mutation | Verdict | Reason |
+|---|---|---|---|
+| `fastshaql.core.sparql.paths.xǁPredicatePathǁrender__mutmut_1` and the sibling path renders (`SequencePath`, `AlternativePath`, `InversePath`, `OneOrMorePath`, `ZeroOrMorePath`, `ZeroOrOnePath`) | `render` — unused `_indent` default 0 → 1 | equivalent | path renders never read `_indent` — the default is dead |
+
 ### `core.sparql.queries`
 
 | Mutant | Mutation | Verdict | Reason |
 |---|---|---|---|
 | `fastshaql.core.sparql.queries.x__validate_solution_modifiers__mutmut_6/14` | `validate_solution_modifiers` — XX-wrap | ineffective | — |
+| `fastshaql.core.sparql.queries.xǁSelectQueryǁrender__mutmut_15/18` | `SelectQuery.render` — subquery-pad ternary mutated | equivalent | `pad` is read only on the `as_subquery` arm, where `or True` and the mutated else coincide |
+| `fastshaql.core.sparql.queries.xǁSelectQueryǁrender__mutmut_21/24` | `SelectQuery.render` — content-indent ternary mutated | equivalent | the top-level arm never reads `content_indent` (WHERE renders at its own default) |
+| `fastshaql.core.sparql.queries.xǁSelectQueryǁrender__mutmut_27` | `SelectQuery.render` — `cp` ternary `or True` | equivalent | on the top-level arm `content_indent` is 0, so `cp` is `""` either way |
+| `fastshaql.core.sparql.queries.xǁSelectQueryǁrender__mutmut_33` | `SelectQuery.render` — where-body ternary `or True` | equivalent | `where.render(0)` equals `where.render()` and `lstrip()` is a no-op on a `{`-led block |
+
+### `core.translation.field_binding`
+
+| Mutant | Mutation | Verdict | Reason |
+|---|---|---|---|
+| `fastshaql.core.translation.field_binding.xǁFieldBindingsǁbind_promoted_fields__mutmut_22` | `bind_promoted_fields` — project=False → None | equivalent | `if project:` — None is falsy, identical to False |
 
 ### `core.translation.filter_shape`
 
@@ -324,6 +365,13 @@ not by number alone.
 | `fastshaql.core.translation.filter_shape.x__translate_conjunct__mutmut_110` | `translate_conjunct` — XX-wrap | ineffective | — |
 | `fastshaql.core.translation.filter_shape.x__translate_conjunct__mutmut_111/112` | `translate_conjunct` — case-flip | ineffective | — |
 | `fastshaql.core.translation.filter_shape.x__translate_conjunct__mutmut_113` | `translate_conjunct` — assert_never(None) | equivalent | — |
+
+### `core.translation.filters.exists_scope`
+
+| Mutant | Mutation | Verdict | Reason |
+|---|---|---|---|
+| `fastshaql.core.translation.filters.exists_scope.xǁRootFilterContextǁscalar_var__mutmut_2` | `scalar_var` — unreachable raise text → None | equivalent | the promotion invariant pre-binds every filter field — the KeyError arm never runs |
+| `fastshaql.core.translation.filters.exists_scope.xǁRootFilterContextǁtranslate_relationship__mutmut_6` | `translate_relationship` — unreachable raise text → None | equivalent | same — relationships are pre-bound before WHERE translation |
 
 ### `core.translation.filters.literals`
 
@@ -339,6 +387,7 @@ not by number alone.
 | `fastshaql.core.translation.filters.operators.x__enum_term__mutmut_4` | `enum_term` — or → and | equivalent | the parser guarantees enum terms are URIRef/Literal |
 | `fastshaql.core.translation.filters.operators.x_translate_operator_field__mutmut_20` | `translate_operator_field` — argument → None | equivalent | XSD.string and None produce the same plain literal |
 | `fastshaql.core.translation.filters.operators.x_translate_scalar_ops__mutmut_23` | `translate_scalar_ops` — argument → None | equivalent | — |
+| `fastshaql.core.translation.filters.operators.x_translate_scalar_ops__mutmut_25` | `translate_scalar_ops` — iri_values=False → None | equivalent | every use is a truthiness check — None is falsy, identical to False |
 
 ### `core.translation.filters.where`
 
@@ -399,6 +448,12 @@ not by number alone.
 |---|---|---|---|
 | `fastshaql.core.translation.selection.x_iter_field_selections__mutmut_3/4/6` | `iter_field_selections` — argument → None | ineffective | — |
 
+### `core.translation.scope`
+
+| Mutant | Mutation | Verdict | Reason |
+|---|---|---|---|
+| `fastshaql.core.translation.scope.xǁTranslationScopeǁappend_projection__mutmut_2` | `append_projection` — seen-set add(var) → add(None) | equivalent | membership is only queried with real `Variable`s — a None member never matches |
+
 ### `core.translation.variables`
 
 | Mutant | Mutation | Verdict | Reason |
@@ -406,6 +461,8 @@ not by number alone.
 | `fastshaql.core.translation.variables.xǁVariableAllocatorǁallocate__mutmut_13` | `allocate` — argument → None | ineffective | — |
 | `fastshaql.core.translation.variables.xǁVariableAllocatorǁallocate__mutmut_14` | `allocate` — XX-wrap | ineffective | — |
 | `fastshaql.core.translation.variables.xǁVariableAllocatorǁallocate__mutmut_15` | `allocate` — case-flip | ineffective | — |
+| `fastshaql.core.translation.variables.xǁVariableAllocatorǁallocate__mutmut_3` | `allocate` — scoping ternary `or True` | equivalent | `"_".join([stem])` is `stem` — the empty-scope arm yields the same variable |
+| `fastshaql.core.translation.variables.xǁVariableAllocatorǁallocate__mutmut_16/17` | `allocate` — unreachable raise text XX-wrap/case-flip | equivalent | `count(2)` always yields a fresh name — the raise never runs |
 
 ### `executable`
 

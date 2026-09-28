@@ -27,7 +27,7 @@ import tempfile
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import httpx
 from rdflib import ConjunctiveGraph
@@ -73,6 +73,7 @@ class QleverSession(StoreSession):
             tail = (result.output or b"")[-2000:].decode(errors="replace")
             raise RuntimeError(f"qlever exec failed ({cmd!r}): {tail}")
 
+    @override
     def load_graph(self, graph: Graph) -> None:
         """Rebuild the index from *graph* and restart the server on it."""
         if isinstance(graph, ConjunctiveGraph):
@@ -126,6 +127,7 @@ class QleverSession(StoreSession):
             sparql_triple_count(self._client, self.query_endpoint),
         )
 
+    @override
     def close(self) -> None:
         """Close the long-lived HTTP client (call from the session teardown)."""
         self._client.close()

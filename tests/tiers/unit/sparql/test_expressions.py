@@ -4,7 +4,7 @@ Unit tier: render output of the expression AST nodes — ``TermExpr``,
 ``CompareExpr``, ``FunctionCall``, ``InExpr``, ``AndExpr``/``OrExpr``
 parenthesization, ``NotExpr``, and ``ExistsExpr``.
 
-Order: term → compare operators → function call → IN → AND/OR combinators → NOT → EXISTS.
+Order: term → compare operators → function call → IN → AND/OR combinators → NOT → EXISTS → default-indent threading.
 """
 
 from __future__ import annotations
@@ -216,6 +216,21 @@ EXISTS_SINGLE_TRIPLE_SPARQL = """EXISTS {
 }"""
 
 
+def _exists() -> ExistsExpr:
+    """A populated ``EXISTS`` — the one expression whose render reads *indent*."""
+    return ExistsExpr(
+        pattern=GroupPattern(
+            children=(
+                TriplePattern(
+                    subject=Variable("iri"),
+                    predicate=PredicatePath(RDF_TYPE),
+                    object=EX + "Thing",
+                ),
+            )
+        )
+    )
+
+
 def test_exists_expr_renders_group_pattern() -> None:
     iri = Variable("iri")
     pattern = GroupPattern(
@@ -228,6 +243,42 @@ def test_exists_expr_renders_group_pattern() -> None:
         )
     )
     assert ExistsExpr(pattern=pattern).render() == EXISTS_SINGLE_TRIPLE_SPARQL
+
+
+# --- Indent threading at the default call (mutation hardening) ---
+#
+# ``EXISTS`` is the only expression that reads *indent* (its body pad). The
+# combinator/operand default of ``0`` — and the explicit pass-through — are
+# pinned through it: a dropped or shifted indent mis-pads or crashes.
+
+
+def test_and_expr_single_child_renders_exists_at_default_indent() -> None:
+    assert AndExpr(children=(_exists(),)).render() == EXISTS_SINGLE_TRIPLE_SPARQL
+
+
+def test_or_expr_single_child_renders_exists_at_default_indent() -> None:
+    assert OrExpr(children=(_exists(),)).render() == EXISTS_SINGLE_TRIPLE_SPARQL
+
+
+def test_not_expr_renders_exists_at_default_indent() -> None:
+    assert NotExpr(child=_exists()).render() == f"!({EXISTS_SINGLE_TRIPLE_SPARQL})"
+
+
+def test_compare_expr_renders_exists_operand_at_default_indent() -> None:
+    """The right operand threads the caller's default indent — ``EXISTS`` is
+    atomic (unbracketed) and pads from the indent it receives."""
+    expr = CompareExpr(op="=", left=TermExpr(Literal(True)), right=_exists())
+    assert expr.render() == f"true = {EXISTS_SINGLE_TRIPLE_SPARQL}"
+
+
+def test_function_call_renders_exists_argument_at_default_indent() -> None:
+    expr = FunctionCall("BOUND", (_exists(),))
+    assert expr.render() == f"BOUND({EXISTS_SINGLE_TRIPLE_SPARQL})"
+
+
+def test_in_expr_renders_exists_subject_at_default_indent() -> None:
+    expr = InExpr(expr=_exists(), values=(Literal("a"),))
+    assert expr.render() == f'{EXISTS_SINGLE_TRIPLE_SPARQL} IN ("a")'
 
 
 def test_compare_expr_threads_indent_into_exists_operand() -> None:

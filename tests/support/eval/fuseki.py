@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import httpx
 
@@ -51,6 +51,7 @@ class FusekiSession(StoreSession):
     image: str = FUSEKI_IMAGE
     _client: httpx.Client = field(default_factory=lambda: httpx.Client(timeout=60.0))
 
+    @override
     def load_graph(self, graph: Graph) -> None:
         """Replace the dataset's contents with *graph* (per-case data reset)."""
         response = self._client.post(
@@ -70,6 +71,7 @@ class FusekiSession(StoreSession):
                 gsp_triple_count(self._client, f"{self.base_url}/mem/data", target),
             )
 
+    @override
     def close(self) -> None:
         """Close the long-lived HTTP client (call from the session teardown)."""
         self._client.close()

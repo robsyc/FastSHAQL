@@ -8,7 +8,7 @@ import time
 from collections.abc import Iterable
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Protocol, cast, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, cast, override, runtime_checkable
 
 import orjson
 from rdflib import BNode, Graph, Literal, URIRef
@@ -99,10 +99,11 @@ class InMemoryStore(SparqlStore):
         self._graph = graph
         self._lock = threading.Lock()
 
+    @override
     async def query(
         self,
         sparql: str,
-        metrics: ExecutionMetrics | None = None,  # noqa: ARG002 — protocol slot
+        metrics: ExecutionMetrics | None = None,  # protocol slot
     ) -> list[SparqlRow]:
         """Execute via ``rdflib.Graph.query()`` and return row dicts.
 

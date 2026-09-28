@@ -17,7 +17,7 @@ import os
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import httpx
 import pytest
@@ -75,6 +75,7 @@ class GraphDbSession(StoreSession):
         if response.status_code not in {200, 204, 404}:
             check(response)
 
+    @override
     def load_graph(self, graph: Graph) -> None:
         """Replace repository contents with *graph*.
 
@@ -112,6 +113,7 @@ class GraphDbSession(StoreSession):
         loaded.parse(data=readback.text, format="trig")
         verify_loaded("graphdb", triple_total(graph), triple_total(loaded))
 
+    @override
     def close(self) -> None:
         """Close the long-lived HTTP client (call from the session fixture teardown)."""
         self._client.close()

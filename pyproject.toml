@@ -20,7 +20,10 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "graphql-core>=3.2",
+    # Floor 3.2.12: security release fixing two High DoS CVEs (CVE-2026-75507
+    # validator, CVE-2026-75508 parser) — the adapters validate client-supplied
+    # operations, so the floor protects downstream users, not just this repo.
+    "graphql-core>=3.2.12",
     "orjson>=3.10",
     "rdflib>=7.6.0",
 ]
@@ -50,15 +53,15 @@ dev = [
     "pytest-cov>=6.0",
     "pytest-django>=4.11",
     "ruff>=0.15",
-    "ty>=0.0.42",
+    "ty>=0.0.82",
     "cffconvert>=2.0.0",
     "testcontainers>=4.9,<5",
     "markdownify>=1.0",
     "beautifulsoup4>=4.12",
     "complexipy>=7.0.1",
     "lefthook>=2.1.11",
-    "mutmut==3.7.0",
-    "tach==0.35.0",
+    "mutmut==3.8.0",
+    "tach==0.35.1",
     "pyshacl>=0.40.1",
 ]
 
@@ -160,6 +163,14 @@ known-first-party = ["fastshaql"]
 [tool.ruff.format]
 quote-style = "double"
 docstring-code-format = true
+
+# Opt-in rules verified at zero findings on the current tree — guards, not
+# cleanup debt. missing-override-decorator keeps protocol implementations
+# (SparqlStore, StoreSession legs) honest about what they override.
+[tool.ty.rules]
+redundant-condition-strict = "error" # catches the seen.add()-style truthiness traps
+blanket-ignore-comment = "error" # suppressions must name the rule they silence
+missing-override-decorator = "error"
 
 [tool.ty.environment]
 python-version = "3.12"

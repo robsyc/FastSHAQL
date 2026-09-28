@@ -82,6 +82,38 @@ def test_bind_promoted_fields_skips_selected_field() -> None:
     )
 
 
+def test_bind_promoted_fields_continues_past_selected_field() -> None:
+    """Skipping a selected promoted field must not end the walk: promoted
+    fields sorting after it still bind (a ``break`` would strand them and
+    trip the promoted-bound invariant)."""
+    shape = NodeShapeIR(
+        iri=URIRef("http://example.org/PersonShape"),
+        graphql_type_name="Person",
+        property_shapes={
+            "age": scalar_property("age", min_count=0, max_count=1),
+            "name": scalar_property("name", min_count=0, max_count=1),
+        },
+    )
+    bindings = FieldBindings(promoted=frozenset({"age", "name"}))
+    bindings.note_selected("age")  # sorts before "name"
+    patterns = bindings.bind_promoted_fields(shape, _empty_scope())
+    assert len(patterns) == 1  # name's bind triple; age skipped
+
+
+def test_bind_promoted_fields_continues_past_unknown_promoted_name() -> None:
+    """A promoted name missing from the shape is skipped, not fatal: later
+    promoted fields still bind (the promotion pre-scan guarantees real
+    inputs never hit the guard — the defensive skip is pinned here)."""
+    shape = NodeShapeIR(
+        iri=URIRef("http://example.org/PersonShape"),
+        graphql_type_name="Person",
+        property_shapes={"name": scalar_property("name", min_count=0, max_count=1)},
+    )
+    bindings = FieldBindings(promoted=frozenset({"ghost", "name"}))
+    patterns = bindings.bind_promoted_fields(shape, _empty_scope())
+    assert len(patterns) == 1  # name's bind triple; ghost skipped
+
+
 def test_bind_promoted_fields_emits_in_name_order() -> None:
     """Promoted-field emission is sorted by field name — deterministic
     pattern order whatever the set's iteration order (the SPARQL sequence
