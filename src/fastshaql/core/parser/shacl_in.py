@@ -6,6 +6,7 @@ See: https://www.w3.org/TR/shacl12-core/#in
 from __future__ import annotations
 
 import logging
+from collections import Counter
 from typing import TYPE_CHECKING
 
 from rdflib import BNode, Literal, URIRef
@@ -83,10 +84,8 @@ def parse_shacl_in(
         return ()
 
     result = tuple(terms)
-    seen: set[Node] = set()
-    duplicates: set[str] = {
-        term.n3() for term in result if term in seen or seen.add(term)
-    }
+    counts = Counter(term.n3() for term in result)
+    duplicates = {n3 for n3, count in counts.items() if count > 1}
     if duplicates:
         logger.warning(
             "Duplicate sh:in members on %s: %s — enum members get distinct "
