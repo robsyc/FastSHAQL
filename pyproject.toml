@@ -20,7 +20,10 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "graphql-core>=3.2",
+    # Floor 3.2.12: security release fixing two High DoS CVEs (CVE-2026-75507
+    # validator, CVE-2026-75508 parser) — the adapters validate client-supplied
+    # operations, so the floor protects downstream users, not just this repo.
+    "graphql-core>=3.2.12",
     "orjson>=3.10",
     "rdflib>=7.6.0",
 ]

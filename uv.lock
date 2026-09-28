@@ -441,7 +441,7 @@ requires-dist = [
     { name = "django", marker = "extra == 'django'", specifier = ">=5.2" },
     { name = "fastapi", marker = "extra == 'fastapi'", specifier = ">=0.130" },
     { name = "fastshaql", extras = ["fastapi", "django", "httpx"], marker = "extra == 'all'" },
-    { name = "graphql-core", specifier = ">=3.2" },
+    { name = "graphql-core", specifier = ">=3.2.12" },
     { name = "httpx", marker = "extra == 'httpx'", specifier = ">=0.28" },
     { name = "orjson", specifier = ">=3.10" },
     { name = "rdflib", specifier = ">=7.6.0" },
