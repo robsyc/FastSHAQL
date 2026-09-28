@@ -44,6 +44,9 @@ class VisibilityMap:
     _by_iri: Mapping[URIRef, Visibility]
     """Shape resource IRI → resolved visibility."""
 
+    schema_description: str | None = None
+    """The ``graphql:Schema`` resource's description parsed from ``rdfs:comment``."""
+
     @classmethod
     def all_public(cls, shape_iris: Sequence[URIRef]) -> VisibilityMap:
         """Build a map where every shape is ``PUBLIC`` (no-schema backward compat)."""
@@ -104,6 +107,10 @@ class ShapeRegistry:
     _visibility: VisibilityMap = dataclasses.field(init=False)
     """Resolved visibility (internal — use ``visibility_of`` / ``visible_shapes`` / ``public_root_shapes``)."""
 
+    schema_description: str | None = dataclasses.field(init=False)
+    """The ``graphql:Schema`` resource's description parsed from ``rdfs:comment``;
+    ``None`` when no schema is declared; the built ``GraphQLSchema`` description."""
+
     by_type_name: dict[str, NodeShapeIR] = dataclasses.field(init=False)
     """``graphql_type_name`` → :class:`NodeShapeIR`."""
 
@@ -127,6 +134,9 @@ class ShapeRegistry:
             visibility
             if visibility is not None
             else VisibilityMap.all_public([s.iri for s in shape_tuple]),
+        )
+        object.__setattr__(
+            self, "schema_description", self._visibility.schema_description
         )
         object.__setattr__(self, "shapes", shape_tuple)
         object.__setattr__(

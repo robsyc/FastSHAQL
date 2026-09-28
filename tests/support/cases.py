@@ -26,6 +26,11 @@ from rdflib import Dataset, Graph
 from fastshaql.core.kernel.context import QueryContext
 from fastshaql.core.kernel.io import load_shapes as _load_shapes
 from fastshaql.core.parser import parse_shapes
+from support.graphql_utils import operation_description
+
+ALLOWED_CONFIG_KEYS = frozenset({"lang_tags", "read_graphs"})
+"""The config.json envelope — request-scoped parameters only (ADR-0021);
+transport headers are the adapter tier's concern (ADR-0019)."""
 
 if TYPE_CHECKING:
     from fastshaql.core.registry import ShapeRegistry
@@ -42,8 +47,10 @@ CASES: dict[str, tuple[str, ...]] = {
         "mixed_members",
         "nested_member_relationship",
         "derived_union",
+        "path_derived_union",
         "binding_union",
-        "list_form_equivalence",
+        "list_form_union",
+        "mixed_member_syntax",
         "required_union",
         "pagination_union",
     ),
@@ -178,6 +185,7 @@ class E2eCase:
     expected_json: object | None
     expected_sparql: str | None
     query_context: QueryContext | None = None
+    description: str | None = None
 
 
 class CaseSource(Protocol):
@@ -218,17 +226,25 @@ def load_case_from(directory: Path, case: str) -> E2eCase:
     query_context: QueryContext | None = None
     if config_path.exists():
         config = json.loads(config_path.read_text(encoding="utf-8"))
+        unknown = set(config) - ALLOWED_CONFIG_KEYS
+        if unknown:
+            raise ValueError(
+                f"case {case}: unknown config.json keys {sorted(unknown)} — "
+                f"allowed: {sorted(ALLOWED_CONFIG_KEYS)}"
+            )
         query_context = QueryContext(
             lang_tags=tuple(config.get("lang_tags", ())),
             read_graphs=tuple(config.get("read_graphs", ())),
         )
 
+    query_text = query_path.read_text(encoding="utf-8")
     return E2eCase(
         name=case,
-        query=query_path.read_text(encoding="utf-8"),
+        query=query_text,
         expected_json=expected_json,
         expected_sparql=expected_sparql,
         query_context=query_context,
+        description=operation_description(query_text),
     )
 
 
@@ -270,7 +286,13 @@ class CaseSet:
         return ds
 
     def load_case(self, case: str) -> E2eCase:
-        return load_case_from(self.case_dir(case), case)
+        loaded = load_case_from(self.case_dir(case), case)
+        if loaded.expected_sparql is None:
+            raise ValueError(
+                f"case {self.name}/{case} is missing expected.sparql "
+                "(required by the case contract, ADR-0021)"
+            )
+        return loaded
 
 
 @cache

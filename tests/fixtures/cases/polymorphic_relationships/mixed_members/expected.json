@@ -3,7 +3,7 @@
     "article": [
       {
         "title": "Syntax highlights",
-        "block": [
+        "body": [
           {
             "__typename": "Paragraph",
             "text": "Intro paragraph"
@@ -16,7 +16,7 @@
       },
       {
         "title": "Dual types",
-        "block": [
+        "body": [
           {
             "__typename": "Paragraph",
             "text": "Dual-typed block"
@@ -25,7 +25,7 @@
       },
       {
         "title": "Childless",
-        "block": []
+        "body": []
       }
     ]
   }

@@ -2,7 +2,8 @@
 
 Integration tier: ``build_schema`` emits root fields per PUBLIC/PROTECTED/EXCLUDED declarations.
 
-Order: protected no-root → public class closure → protected class closure → private override.
+Order: protected no-root → public class closure → protected class closure → private override →
+schema description.
 """
 
 from __future__ import annotations
@@ -10,6 +11,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from fastshaql.core.schema import build_schema
+from support.cases import registry_for
 from support.schema_helpers import field_shape, object_type
 
 if TYPE_CHECKING:
@@ -79,3 +81,13 @@ def test_build_schema_private_shape_no_root_field(
 
     assert "secret" not in query.fields
     assert schema.get_type("Secret") is None
+
+
+# --- Schema description ---
+
+
+def test_build_schema_description_from_graphql_schema_resource() -> None:
+    """The ``graphql:Schema`` resource's ``rdfs:comment`` becomes the ``GraphQLSchema`` description."""
+    schema = build_schema(registry_for("polymorphic_relationships"))
+    assert schema.description is not None
+    assert schema.description.startswith("Publishing kiosk view:")

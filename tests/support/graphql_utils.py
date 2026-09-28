@@ -27,6 +27,15 @@ def root_field_node(query: str) -> FieldNode:
     return field
 
 
+def operation_description(query: str) -> str | None:
+    """The leading ``\"\"\"…\"\"\"`` description on a query operation, if any."""
+    doc = gql_parse(query)
+    op = doc.definitions[0]
+    if not isinstance(op, OperationDefinitionNode):
+        raise TypeError("expected an operation definition")
+    return op.description.value if op.description is not None else None
+
+
 def shape_for_root_field(registry: ShapeRegistry, field_name: str) -> NodeShapeIR:
     """Resolve the node shape for a root query field name."""
     from fastshaql.core.schema.build import root_field_name

@@ -3,7 +3,7 @@
     "article": [
       {
         "title": "Syntax highlights",
-        "related": [
+        "picks": [
           {
             "__typename": "Paragraph",
             "text": "Related paragraph",
@@ -19,7 +19,7 @@
       },
       {
         "title": "Dual types",
-        "related": [
+        "picks": [
           {
             "__typename": "Paragraph",
             "text": "Related paragraph",
@@ -35,7 +35,7 @@
       },
       {
         "title": "Childless",
-        "related": [
+        "picks": [
           {
             "__typename": "Paragraph",
             "text": "Related paragraph",

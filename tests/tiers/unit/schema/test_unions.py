@@ -129,20 +129,22 @@ def test_filter_inputs_omit_polymorphic_fields() -> None:
     article_filter = build_schema(registry).get_type("ArticleFilter")
     assert isinstance(article_filter, GraphQLInputObjectType)
     filter_fields = set(article_filter.fields)
-    assert {"block", "chunk", "related"}.isdisjoint(filter_fields)
+    assert {"body", "sidebar", "picks", "spotlight", "bookends"}.isdisjoint(
+        filter_fields
+    )
     assert "asset" in filter_fields
 
 
 def test_both_declaration_forms_build_equivalent_unions() -> None:
-    """The ``sh:or`` form (``block``) and the list form (``chunk``) expose
-    identical member object types — the equivalence the e2e golden shows in
-    values, asserted here at the schema level."""
+    """The ``sh:or`` form (``body``) and the list form (``sidebar``) expose
+    identical member object types — two spellings, one lane, asserted here
+    at the schema level."""
     registry = registry_for("polymorphic_relationships")
     schema = build_schema(registry)
-    block_union = schema.get_type("ArticleBlock")
-    chunk_union = schema.get_type("ArticleChunk")
-    assert isinstance(block_union, GraphQLUnionType)
-    assert isinstance(chunk_union, GraphQLUnionType)
-    block_members = [t.name for t in block_union.types]
-    chunk_members = [t.name for t in chunk_union.types]
-    assert block_members == chunk_members == ["Paragraph", "Image"]
+    body_union = schema.get_type("ArticleBody")
+    sidebar_union = schema.get_type("ArticleSidebar")
+    assert isinstance(body_union, GraphQLUnionType)
+    assert isinstance(sidebar_union, GraphQLUnionType)
+    body_members = [t.name for t in body_union.types]
+    sidebar_members = [t.name for t in sidebar_union.types]
+    assert body_members == sidebar_members == ["Paragraph", "Image"]

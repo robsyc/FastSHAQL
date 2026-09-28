@@ -1,31 +1,31 @@
-SELECT ?iri ?title ?related_iri ?related_member ?related_1_text ?related_2_url
+SELECT ?iri ?title ?picks_iri ?picks_member ?picks_1_text ?picks_2_url
 WHERE {
   ?iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Article> .
   ?iri <http://example.org/title> ?title .
   OPTIONAL {
     {
-      SELECT ?iri ?related_iri
+      SELECT ?iri ?picks_iri
       WHERE {
-        VALUES ?related_iri {
+        VALUES ?picks_iri {
           <http://example.org/para-2>
           <http://example.org/img-2>
           <http://example.org/none-1>
         }
-        FILTER(BOUND(?related_iri))
+        FILTER(BOUND(?picks_iri))
       }
     }
-    VALUES ?related_member {
+    VALUES ?picks_member {
       <http://example.org/Paragraph>
       <http://example.org/Image>
     }
-    ?related_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* ?related_member .
+    ?picks_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* ?picks_member .
     OPTIONAL {
-      ?related_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Paragraph> .
-      ?related_iri <http://example.org/text> ?related_1_text .
+      ?picks_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Paragraph> .
+      ?picks_iri <http://example.org/text> ?picks_1_text .
     }
     OPTIONAL {
-      ?related_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Image> .
-      ?related_iri <http://example.org/url> ?related_2_url .
+      ?picks_iri a/<http://www.w3.org/2000/01/rdf-schema#subClassOf>* <http://example.org/Image> .
+      ?picks_iri <http://example.org/url> ?picks_2_url .
     }
   }
 }

@@ -3,25 +3,29 @@
     "article": [
       {
         "title": "Syntax highlights",
-        "body": [
-          {
-            "__typename": "Paragraph",
-            "text": "Intro paragraph"
-          },
+        "spotlight": [
           {
             "__typename": "Image",
             "url": "https://example.org/img-1.png"
+          },
+          {
+            "__typename": "Asset",
+            "caption": "Site photo"
           }
         ]
       },
       {
         "title": "Dual types",
-        "body": [
+        "spotlight": [
           {
-            "__typename": "Paragraph",
-            "text": "Dual-typed block"
+            "__typename": "Asset",
+            "caption": "Vector art"
           }
         ]
+      },
+      {
+        "title": "Childless",
+        "spotlight": []
       }
     ]
   }

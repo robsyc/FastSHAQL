@@ -147,4 +147,8 @@ def build_schema(
         *operator_inputs.values(),
         *filter_types.values(),
     ]
-    return GraphQLSchema(query_type, types=all_types)
+    return GraphQLSchema(
+        query_type,
+        types=all_types,
+        description=registry.schema_description,
+    )

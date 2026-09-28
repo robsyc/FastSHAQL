@@ -53,17 +53,7 @@ The codebase maps directly to external specifications (SHACL 1.2, SPARQL 1.2, Gr
 
 ## Testing
 
-`just test` runs the default suite; a single tier: `just test -m e2e`. The store-matrix evaluation tier (`just eval`) requires Docker; a license only for the GraphDB Free leg.
-
-The full test reference — directory layout, the tier model, fixtures (cases vs scenarios), the evaluation harness, the `demo/`↔`tests/` boundary, and coverage mechanics — lives in [tests/README.md](tests/README.md). Tier markers are auto-stamped from the test directory, and coverage runs in CI with branch coverage.
-
-### Coverage exception policy
-
-The deliverable is **100% accounted-for, not 100% executed**: every uncovered line is either covered by a test or annotated with a rationale.
-
-- **Gate** — `[tool.coverage.report] fail_under` in [pyproject.toml](pyproject.toml) is **100**, locking the achieved floor against drift; CI enforces it via the `just test-cov` recipe.
-- **Annotation convention** — `# pragma: no cover` plus a short inline reason that states *why*, not just *that*: `unreachable — graphql-core validates …`, `defensive — direct-call contract only`. A bare pragma without a reason is not accepted.
-- **Mutation floor** — `just mutate` gates on the committed floor (`mutmut-floor.json`); raising it is deliberate, via the same recorded-rationale discipline.
+`just test` runs the default suite; a single tier: `just test -m e2e`. The full test reference — layout, tiers, fixtures, the evaluation harness, and the coverage policy (100% accounted-for, not 100% executed; the mutation floor rises only deliberately) — lives in [tests/README.md](tests/README.md).
 
 ## CI
 
@@ -71,9 +61,7 @@ CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same `just` r
 
 ## Demo / benchmarking environment
 
-The `demo/` package is a workspace member and is **not** published. It combines the quickstart playground (guided tour in [demo/README.md](demo/README.md)) with reference FastAPI wiring (the shipped `httpx`-extra store + FastAPI lifespan) over your own shapes and data.
-
-See [demo/README.md](demo/README.md) for the tour, reference wiring, and throughput/load-test usage.
+The `demo/` package is an unpublished workspace member: the quickstart playground plus reference FastAPI wiring (the shipped `httpx`-extra store) over your own shapes and data. See [demo/README.md](demo/README.md) for the tour, wiring, and load-test usage.
 
 ## Release
 

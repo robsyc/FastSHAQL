@@ -1,0 +1,19 @@
+"""A union can be computed from the article's own links: the bookends are
+the lead block plus the closing image, wherever both exist. Articles with
+no closing link still show their lead.
+In the SPARQL: the two links are traversed by one alternative path, then
+guarded by the member lanes like any asserted union."""
+query PolymorphicPathDerivedUnion {
+  article {
+    title
+    bookends {
+      __typename
+      ... on Paragraph {
+        text
+      }
+      ... on Image {
+        url
+      }
+    }
+  }
+}

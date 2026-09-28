@@ -95,8 +95,8 @@ A member of an enum property's `sh:in` list — homogeneous in term kind. GraphQ
 _Avoid_: enum member, code
 
 **Relationship**:
-A Property whose value is another RDF resource — `sh:node` names the linked shape (the target), `sh:class` types the binding (ADR-0025).
-_Avoid_: link, reference, association
+A Property whose value is another RDF resource — `sh:node` names the linked shape (the target), `sh:class` types the binding (ADR-0025). The `sh:class` list form beside `sh:node` is a **binding union**: several classes type the binding while `sh:node` keeps one GraphQL target — no union artifact (contrast Polymorphic relationship).
+_Avoid_: link, reference, association; "binding union" for anything that lowers to a union type
 
 **Polymorphic relationship**:
 A relationship Property whose values may conform to any of several member shapes (`sh:or` members carrying `sh:class`/`sh:node`, or the `sh:class` list form) — one link traversing several object types; lowered to a union type.
@@ -263,6 +263,18 @@ _Avoid_: treating the matrix as authoritative over code or the specs; "feature l
 **Test tier**:
 The level of the test pyramid a test belongs to — unit, integration, e2e, evaluation, or adapter — auto-stamped from its `tests/tiers/` directory. Persistent harness structure.
 _Avoid_: bare "tier" for node-expression lowering (Flat tier and Sub-SELECT tier own that sense)
+
+**Case**:
+A hand-authored, committed correctness unit under `tests/fixtures/cases/` — a set of shapes and data plus per-case `query.graphql` with expected JSON and SPARQL goldens. Registered in `CASES`.
+_Avoid_: test (a test is code; a case is data)
+
+**Scenario**:
+A generated-data unit under `tests/fixtures/scenarios/` — committed shapes, synthetic data produced at any scale in memory. Registered in `SCENARIOS`.
+_Avoid_: case (cases are hand-authored and committed)
+
+**Fixture**:
+The RDF/GraphQL artifacts a case or scenario is made of. "pytest fixture" is never shortened to "fixture".
+_Avoid_: "fixture" for a pytest fixture
 
 **Store matrix**:
 The set of triple stores the evaluation tier runs — one `StoreSession` adapter per store (Oxigraph, Fuseki, QLever, GraphDB Free), selected by name via `EVAL_STORE` (ADR-0022).

@@ -1,7 +1,11 @@
+"""A union can be derived: every article surfaces the same editor's picks,
+and a value matching no member — a sidebar widget — is dropped instead of
+appearing half-selected.
+In the SPARQL: the picks are constant IRIs, not triples at a path."""
 query PolymorphicDerivedUnion {
   article {
     title
-    related {
+    picks {
       ... on Paragraph {
         text
       }

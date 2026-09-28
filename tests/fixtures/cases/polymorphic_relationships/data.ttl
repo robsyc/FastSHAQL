@@ -1,9 +1,9 @@
 @prefix ex:  <http://example.org/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-# Asserted values all conform (integrity tier validates); the
-# non-member ex:none-1 reaches the data only through sh:values
-# constants (the kiosk precedent — pySHACL never evaluates them).
+# The kiosk's content. Asserted values all conform to their shapes; the
+# sidebar widget (ex:none-1) appears only as a derived constant, where no
+# shape constraint reaches it.
 
 ex:para-1 a ex:Paragraph ;
     ex:text "Intro paragraph" .
@@ -11,15 +11,13 @@ ex:para-1 a ex:Paragraph ;
 ex:img-1 a ex:Image ;
     ex:url "https://example.org/img-1.png" .
 
-# Overlap: typed as both members — member-order priority stamps
-# Paragraph; the Image lane's fields stay hidden.
+# Typed as both a Paragraph and an Image — the first declared member wins,
+# and the other side stays hidden.
 ex:both-1 a ex:Paragraph, ex:Image ;
     ex:text "Dual-typed block" ;
     ex:url "https://example.org/both.png" .
 
-# Reaches the derived union's Paragraph lane only through the subclass
-# closure (rdf:type/rdfs:subClassOf*) — the lane stamps it Paragraph, and
-# the nested author relationship resolves inside the member fragment.
+# A subclass of Paragraph carrying a nested author link.
 ex:para-2 a ex:SubParagraph ;
     ex:text "Related paragraph" ;
     ex:author ex:person-1 .
@@ -33,38 +31,45 @@ ex:para-3 a ex:Paragraph ;
 ex:img-2 a ex:Image ;
     ex:url "https://example.org/img-2.png" .
 
+# Matches no union member anywhere — only the derived picks reference it.
 ex:none-1 a ex:Sidebar .
 
 ex:photo-1 a ex:Photo ;
     ex:caption "Site photo" .
 
-# Reaches the binding union only through the subclass closure
-# (rdf:type/rdfs:subClassOf* — ADR-0025).
+# Reaches the Asset lane through its superclass chain.
 ex:vector-1 a ex:VectorPhoto ;
     ex:caption "Vector art" .
 
 ex:video-1 a ex:Video ;
     ex:caption "Demo clip" .
 
-# The required lead (minCount 1/maxCount 1): exactly one child per
-# article — the lead may also appear among the ex:block values.
 ex:article-1 a ex:Article ;
     ex:title "Syntax highlights" ;
     ex:lead ex:para-1 ;
-    ex:block ex:para-1, ex:img-1 ;
+    ex:body ex:para-1, ex:img-1 ;
+    ex:sidebar ex:para-3, ex:img-2 ;
+    ex:spotlight ex:img-1, ex:photo-1 ;
+    ex:closing ex:img-2 ;
     ex:asset ex:photo-1, ex:video-1 .
 
 ex:article-2 a ex:Article ;
     ex:title "Dual types" ;
     ex:lead ex:img-1 ;
-    ex:block ex:both-1 ;
+    ex:body ex:both-1 ;
+    ex:spotlight ex:vector-1 ;
     ex:asset ex:vector-1 .
 
-# Childless only for the optional union fields (block/asset resolve to
-# [], never null); the required lead still binds exactly one child.
+# Childless for every optional relationship — body, sidebar, spotlight,
+# closing, and asset resolve to [] / null, never a missing key; the
+# required lead still binds exactly one child.
 ex:article-3 a ex:Article ;
     ex:title "Childless" ;
     ex:lead ex:para-3 .
 
+# Class hierarchy — values reach their lane or binding through the
+# superclass closure, never by listing every subclass.
 ex:VectorPhoto rdfs:subClassOf ex:Photo .
 ex:SubParagraph rdfs:subClassOf ex:Paragraph .
+ex:Photo rdfs:subClassOf ex:Asset .
+ex:Video rdfs:subClassOf ex:Asset .

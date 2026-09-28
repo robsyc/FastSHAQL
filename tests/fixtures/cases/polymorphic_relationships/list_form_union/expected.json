@@ -3,25 +3,24 @@
     "article": [
       {
         "title": "Syntax highlights",
-        "body": [
+        "sidebar": [
           {
             "__typename": "Paragraph",
-            "text": "Intro paragraph"
+            "text": "Lead summary"
           },
           {
             "__typename": "Image",
-            "url": "https://example.org/img-1.png"
+            "url": "https://example.org/img-2.png"
           }
         ]
       },
       {
         "title": "Dual types",
-        "body": [
-          {
-            "__typename": "Paragraph",
-            "text": "Dual-typed block"
-          }
-        ]
+        "sidebar": []
+      },
+      {
+        "title": "Childless",
+        "sidebar": []
       }
     ]
   }

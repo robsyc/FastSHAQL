@@ -3,11 +3,20 @@
     "article": [
       {
         "title": "Syntax highlights",
-        "body": [
+        "bookends": [
           {
             "__typename": "Paragraph",
             "text": "Intro paragraph"
           },
+          {
+            "__typename": "Image",
+            "url": "https://example.org/img-2.png"
+          }
+        ]
+      },
+      {
+        "title": "Dual types",
+        "bookends": [
           {
             "__typename": "Image",
             "url": "https://example.org/img-1.png"
@@ -15,11 +24,11 @@
         ]
       },
       {
-        "title": "Dual types",
-        "body": [
+        "title": "Childless",
+        "bookends": [
           {
             "__typename": "Paragraph",
-            "text": "Dual-typed block"
+            "text": "Lead summary"
           }
         ]
       }
