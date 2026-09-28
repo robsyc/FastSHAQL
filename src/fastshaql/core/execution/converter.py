@@ -7,6 +7,7 @@ RDF terms to Python values (ADR-0013, ADR-0014).
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import TYPE_CHECKING, cast
 
 from rdflib import IdentifiedNode, Literal
@@ -35,7 +36,8 @@ def coerce_value(term: SparqlTerm | None) -> object:
         case None:
             return None
         case Literal():
-            return term.toPython()
+            value = term.toPython()
+            return float(value) if isinstance(value, Decimal) else value
         case IdentifiedNode():
             return str(term)
         case _:

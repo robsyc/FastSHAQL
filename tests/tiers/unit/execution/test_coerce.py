@@ -29,6 +29,13 @@ def test_coerce_double_literal() -> None:
     assert coerce_value(Literal("3.14", datatype=XSD.double)) == 3.14
 
 
+def test_coerce_decimal_literal_returns_float() -> None:
+    """``xsd:decimal`` maps to ``Float``; graphql-core rejects ``Decimal``."""
+    value = coerce_value(Literal("1.50", datatype=XSD.decimal))
+    assert type(value) is float
+    assert value == 1.5
+
+
 def test_coerce_uriref() -> None:
     assert coerce_value(URIRef("http://ex/s")) == "http://ex/s"
 
