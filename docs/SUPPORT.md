@@ -164,7 +164,8 @@ One SPARQL query per operation: relationships lower to inline join triples and `
 
 ## 4. Not consumed
 
-- **SHACL Rules (`sh:rule`, Inference Rules spec)** — never parsed or executed today. The writes-era design ([ADR-0024](adr/0024-mutations-via-shape-rules.md), Proposed).
+- **SHACL Rules (`sh:rule`, Inference Rules spec)** — never parsed or executed today. The writes-era design ([ADR-0024](adr/0024-mutations-via-dash-templates.md), Proposed rev. 3) is DASH-construct-template-first; rules are a documented later widening.
+- **DASH templates (`dash:SPARQLConstructTemplate`, `dash:SPARQLSelectTemplate`/multifunctions)** — not consumed today; the chosen basis for the writes-era Mutation template surface and its read-side Query template counterpart ([ADR-0024](adr/0024-mutations-via-dash-templates.md), Proposed rev. 3).
 - **SHACL UI** — never read.
 - **ShEx** — no bridge.
 - **SPARQL Update / Graph Store Protocol** — reserved for the writes era.

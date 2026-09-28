@@ -280,7 +280,7 @@ A Property whose value is a named graph (`sh:class` resolving to `rdfg:Graph`); 
 A Node shape targeting an `rdfg:Graph` subclass — a type marker for a graph scope, not a field source. The linkage to shapes queryable inside the graph is an open design fork.
 
 **SHACL rule**:
-A rule from the SHACL 1.2 Inference Rules spec (`sh:rule`) that infers triples from the data graph. Distinct from a node expression, which derives values at query time.
+A rule from the SHACL 1.2 Inference Rules spec (`sh:rule`) that infers triples from the data graph. Distinct from a node expression, which derives values at query time. A documented later widening of the Mutation template (target-driven `$this` binding over a template body; ADR-0024).
 _Avoid_: inference rule (imprecise); mixing with node expressions; "SRL rule" for a `sh:rule` rule
 
 **Process contract**:
@@ -288,5 +288,21 @@ A mutation whose effect crosses multiple nodes — minting entities, linking ref
 _Avoid_: write model, business logic
 
 **Dry-run**:
-The designed mutation mode returning the would-be triples (a CONSTRUCT result) without committing — the staged-transaction preview (ADR-0024).
+The designed mutation mode returning the would-be triples (a CONSTRUCT result, skolemized) without committing — same computation as commit minus the insert (ADR-0024).
 _Avoid_: preview query, plan
+
+**Mutation template**:
+A DASH `dash:SPARQLConstructTemplate` (`sh:construct` + `sh:parameter`) published by an API view; the unit of mutation — a command, not a record (ADR-0024). Inert until a view publishes it.
+_Avoid_: SPARQL rule (the later widening), write model
+
+**Query template**:
+A DASH `dash:SPARQLSelectTemplate`/multifunction published for reads — a parameterized derived query (ADR-0024, backlog).
+_Avoid_: magic property
+
+**Template parameter**:
+A `sh:Parameter` on a template: `$variable` from the `sh:path` local name; the GraphQL argument name overridable by `sh:codeIdentifier`.
+_Avoid_: argument (the GraphQL artifact)
+
+**Skolem IRI**:
+The deterministic IRI fastshaql mints for a constructed blank node — same mutation template + same input ⇒ same IRI, so dry-run ≡ commit (ADR-0024).
+_Avoid_: generated IRI, blank-node label
