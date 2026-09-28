@@ -62,6 +62,23 @@ def test_translate_scalar_ops_eq() -> None:
     assert expr.op == "="
 
 
+def test_translate_scalar_ops_honors_explicit_lhs() -> None:
+    """A caller-supplied ``lhs`` (the EXISTS re-emission seam) is used
+    verbatim — not recomputed from the property and variable."""
+    prop = scalar_property("name", min_count=1, max_count=1)
+    node = ObjectValueNode(
+        fields=(
+            ObjectFieldNode(
+                name=NameNode(value="eq"),
+                value=StringValueNode(value="Alice"),
+            ),
+        )
+    )
+    lhs = FunctionCall("COALESCE", (TermExpr(Variable("rebound")),))
+    expr = translate_scalar_ops(node, prop, Variable("name"), lhs=lhs)
+    assert expr == CompareExpr("=", lhs, TermExpr(Literal("Alice")))
+
+
 def test_filter_lhs_wraps_str_for_union_properties() -> None:
     """``is_language_typed`` includes the union space — operators on union
     fields get ``STR(?var)`` (valid across both lexical forms; plain values

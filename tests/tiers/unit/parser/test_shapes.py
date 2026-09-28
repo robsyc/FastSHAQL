@@ -429,6 +429,34 @@ def test_property_shape_description_falls_back_to_sh_name() -> None:
     assert thing.property_shapes["label"].description == "Display name"
 
 
+def test_named_property_shape_keeps_own_iri() -> None:
+    """A property shape referenced by IRI keeps that IRI as its
+    ``PropertyShapeIR.iri`` — only blank-node property shapes receive the
+    synthesized ``urn:fastshaql:inline:…`` form."""
+    graph = Graph()
+    graph.parse(
+        data="""
+        @prefix ex:  <http://example.org/> .
+        @prefix sh:  <http://www.w3.org/ns/shacl#> .
+        @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+        ex:ThingShape a sh:NodeShape ;
+            sh:codeIdentifier "Thing" ;
+            sh:targetClass ex:Thing ;
+            sh:property ex:LabelProp .
+
+        ex:LabelProp a sh:PropertyShape ;
+            sh:path ex:label ;
+            sh:datatype xsd:string ;
+            sh:minCount 1 .
+        """,
+        format="turtle",
+    )
+    registry = parse_shapes(graph)
+    thing = registry.by_type_name["Thing"]
+    assert thing.property_shapes["label"].iri == EX + "LabelProp"
+
+
 def test_node_shape_description_predicate_priority_over_language() -> None:
     """A foreign-language ``rdfs:comment`` beats a preferred-language ``rdfs:label``."""
     graph = Graph()

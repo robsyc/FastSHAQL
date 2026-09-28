@@ -4,7 +4,7 @@ Unit tier: top-level ``SELECT`` rendering, sub-query emission with modifiers
 (``DISTINCT``, ``ORDER BY``, ``LIMIT``/``OFFSET``), and fail-loud validation
 of negative limit/offset values.
 
-Order: SelectQuery assembly → subquery modifiers → LIMIT/OFFSET validation.
+Order: SelectQuery assembly → subquery modifiers → subquery default indent → LIMIT/OFFSET validation.
 """
 
 from __future__ import annotations
@@ -68,6 +68,34 @@ def test_select_query_render_as_subquery_with_modifiers() -> None:
     OFFSET 1
   }"""
     )
+
+
+def test_select_query_subquery_renders_at_default_indent() -> None:
+    """A subquery rendered with no explicit indent sits at column zero — the
+    pipeline always passes one, so the default is pinned here."""
+    query = SelectQuery(
+        projection=(Variable("iri"),),
+        where=GroupPattern(children=(_type_triple(),)),
+        as_subquery=True,
+    )
+    assert query.render() == (
+        """{
+  SELECT ?iri
+  WHERE {
+    ?iri a <http://example.org/Person> .
+  }
+}"""
+    )
+
+
+def test_select_query_order_by_spaces_multiple_variables() -> None:
+    """``ORDER BY`` joins its variables with single spaces (§15.1)."""
+    query = SelectQuery(
+        projection=(Variable("iri"),),
+        where=GroupPattern(children=(_type_triple(),)),
+        order_by=(Variable("a"), Variable("b")),
+    )
+    assert "ORDER BY ?a ?b" in query.render()
 
 
 def test_select_query_rejects_negative_limit() -> None:

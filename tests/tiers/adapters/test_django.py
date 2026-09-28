@@ -180,12 +180,39 @@ def test_django_graphiql_served_when_ide_enabled(minimal_schema, minimal_store) 
     assert "graphiql" in response.content.decode().lower()
 
 
+def test_django_graphiql_content_type_is_text_html(
+    minimal_schema, minimal_store
+) -> None:
+    """The IDE response declares ``text/html`` exactly — the explicit value,
+    not Django's ``text/html; charset=utf-8`` default."""
+    client = _wire_view(minimal_schema, minimal_store, ide=True)
+
+    response = client.get("/graphql/")
+
+    assert response.headers["Content-Type"] == "text/html"
+
+
 def test_django_graphiql_disabled(minimal_schema, minimal_store) -> None:
     client = _wire_view(minimal_schema, minimal_store, ide=False)
 
     response = client.get("/graphql/")
 
     assert response.status_code == 405
+    assert response.headers["Allow"] == "POST"
+
+
+def test_django_post_without_content_type_returns_415(
+    minimal_schema, minimal_store
+) -> None:
+    """A request carrying no Content-Type at all (an empty POST body never
+    sets one in WSGI) is rejected 415 by the envelope — the adapter's empty
+    default must be a string, not ``None``."""
+    client = _wire_view(minimal_schema, minimal_store)
+
+    response = client.post("/graphql/", data=b"", content_type="")
+
+    assert response.status_code == 415
+    assert b"Unsupported Content-Type" in response.content
 
 
 def test_django_ide_defaults_to_enabled(minimal_schema, minimal_store) -> None:

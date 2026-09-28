@@ -3,7 +3,7 @@
 Unit tier: ``RootFilterContext`` flat vs isolated scalar-var re-emission, and
 ``ExistsContext`` relationship-filter variable allocation.
 
-Order: root flat scalar var → root isolated re-emit → EXISTS relationship re-emit → EXISTS scalar var.
+Order: root flat scalar var → root isolated re-emit → EXISTS relationship re-emit → EXISTS scalar var → EXISTS child scope.
 """
 
 from __future__ import annotations
@@ -144,3 +144,25 @@ def test_exists_context_scalar_var_emits_derived_merge() -> None:
         and p.var == Variable("_rf_hasCondition_mostSpecificClass")
         for p in patterns
     )
+
+
+def test_exists_context_child_scope_inherits_lang_tags() -> None:
+    """A nested EXISTS scope keeps the request's language chain — scalar
+    bindings inside it emit the same lang filters as the parent block —
+    and grows the prefix chain with the nested field name."""
+    parent = ExistsContext(
+        subject=Variable("employer_iri"), rf_prefix="employer", lang_tags=("en",)
+    )
+    child = parent.child_scope(Variable("employer_department_iri"), "department")
+    assert child.lang_tags == ("en",)
+    assert child.rf_prefix == "employer_department"
+
+
+def test_exists_context_child_scope_without_prefix_starts_chain() -> None:
+    """A scope with an empty prefix seeds the chain at the field name —
+    no leading underscore (the pipeline always seeds non-empty, this pins
+    the guard)."""
+    child = ExistsContext(subject=Variable("iri"), rf_prefix="").child_scope(
+        Variable("department_iri"), "department"
+    )
+    assert child.rf_prefix == "department"

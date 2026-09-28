@@ -179,6 +179,60 @@ def test_filter_shape_over_if_distributes_into_branches() -> None:
     )
 
 
+def test_filter_shape_over_if_without_then_keeps_then_none() -> None:
+    """An ``shnex:if`` with only ``shnex:else`` keeps ``then=None`` under
+    distribution — the absent branch is not wrapped in a filter shape."""
+    graph, prop = graph_with_values(
+        """
+        ex:prop a sh:PropertyShape ;
+            sh:values [
+                shnex:nodes [
+                    shnex:if [ shnex:exists [ shnex:pathValues ex:review ] ] ;
+                    shnex:else [ shnex:pathValues ex:provisionalTag ] ;
+                ] ;
+                shnex:filterShape [ sh:class ex:Tag ] ;
+            ] .
+        """
+    )
+    assert parse_node_expr(graph, prop) == IfNodeExpr(
+        cond=ExistsNodeExpr(
+            inner=PathValuesNodeExpr(path=PredicatePath(EX + "review"))
+        ),
+        then=None,
+        otherwise=FilterShapeNodeExpr(
+            nodes=PathValuesNodeExpr(path=PredicatePath(EX + "provisionalTag")),
+            shape=FilterShapeIR(conjuncts=(FilterClass((EX + "Tag",)),)),
+        ),
+    )
+
+
+def test_filter_shape_over_if_without_else_keeps_otherwise_none() -> None:
+    """An ``shnex:if`` with only ``shnex:then`` keeps ``otherwise=None`` under
+    distribution — the absent branch is not wrapped in a filter shape."""
+    graph, prop = graph_with_values(
+        """
+        ex:prop a sh:PropertyShape ;
+            sh:values [
+                shnex:nodes [
+                    shnex:if [ shnex:exists [ shnex:pathValues ex:review ] ] ;
+                    shnex:then [ shnex:pathValues ex:reviewedTag ] ;
+                ] ;
+                shnex:filterShape [ sh:class ex:Tag ] ;
+            ] .
+        """
+    )
+    assert parse_node_expr(graph, prop) == IfNodeExpr(
+        cond=ExistsNodeExpr(
+            inner=PathValuesNodeExpr(path=PredicatePath(EX + "review"))
+        ),
+        then=FilterShapeNodeExpr(
+            nodes=PathValuesNodeExpr(path=PredicatePath(EX + "reviewedTag")),
+            shape=FilterShapeIR(conjuncts=(FilterClass((EX + "Tag",)),)),
+        ),
+        otherwise=None,
+    )
+
+
 def test_filter_shape_without_nodes_raises() -> None:
     graph, prop = graph_with_values(
         """
