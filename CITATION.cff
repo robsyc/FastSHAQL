@@ -11,8 +11,8 @@ authors:
     alias: robsyc
     email: robbe@pointcare.be
     orcid: "https://orcid.org/0009-0004-6091-1372"
-version: 0.1.0
-date-released: "2026-08-30"
+version: 0.2.0
+date-released: "2026-09-29"
 license: MIT
 repository-code: https://github.com/robsyc/fastshaql
 keywords:

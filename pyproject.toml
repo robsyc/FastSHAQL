@@ -1,6 +1,6 @@
 [project]
 name = "fastshaql"
-version = "0.1.0"
+version = "0.2.0"
 description = "SHACL shapes to GraphQL schema; GraphQL operations to SPARQL"
 readme = "README.md"
 authors = [{ name = "robsyc", email = "robbe@pointcare.be" }]
